@@ -1,0 +1,33 @@
+name: Deploy Power Pages
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Authenticate to Power Platform
+        shell: pwsh
+        run: |
+          pac auth create `
+            --environment "${{ secrets.POWER_PLATFORM_ENVIRONMENT_URL }}" `
+            --applicationId "${{ secrets.POWER_PLATFORM_CLIENT_ID }}" `
+            --clientSecret "${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}" `
+            --tenant "${{ secrets.POWER_PLATFORM_TENANT_ID }}"
+
+      - name: Upload Power Pages Site
+        shell: pwsh
+        run: |
+          pac pages upload --path ".\it-support---etgithubportal"
