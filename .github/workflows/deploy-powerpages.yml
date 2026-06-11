@@ -32,4 +32,6 @@ jobs:
       - name: Upload Power Pages Site
         shell: pwsh
         run: |
-          pac pages upload --path ".\it-support---etgithubportal"
+          pac pages upload `
+            --path ".\it-support---etgithubportal\IT Support - etgithubportal" `
+            --modelVersion Enhanced
