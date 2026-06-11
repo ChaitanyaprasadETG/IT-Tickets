@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
@@ -22,10 +21,15 @@ jobs:
         shell: pwsh
         run: |
           pac auth create `
-            --environment "${{ secrets.POWER_PLATFORM_ENVIRONMENT_URL }}" `
-            --applicationId "${{ secrets.POWER_PLATFORM_CLIENT_ID }}" `
+            --environment "https://org4b3b2682.crm4.dynamics.com/" `
+            --applicationId "8a8713ff-00b5-489c-bfb6-4dd18364a779" `
             --clientSecret "${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}" `
-            --tenant "${{ secrets.POWER_PLATFORM_TENANT_ID }}"
+            --tenant "9324bd15-b7b3-4e59-b23e-9f53050507bb"
+
+      - name: Verify Authentication
+        shell: pwsh
+        run: |
+          pac auth list
 
       - name: Upload Power Pages Site
         shell: pwsh
