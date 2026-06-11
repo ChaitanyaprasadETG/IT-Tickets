@@ -1,37 +1,21 @@
 name: Deploy Power Pages
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
-  deploy:
+  test:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Power Platform CLI
         uses: microsoft/powerplatform-actions/actions-install@v1
 
-      - name: Verify PAC Installation
+      - name: Check PAC
         shell: pwsh
         run: |
+          where.exe pac
           Get-Command pac -ErrorAction SilentlyContinue
           pac help
-
-      - name: Authenticate to Power Platform
-        uses: microsoft/powerplatform-actions/authenticate@v1
-        with:
-          environment-url: https://org4b3b2682.crm4.dynamics.com/
-          app-id: 8a8713ff-00b5-489c-bfb6-4dd18364a779
-          client-secret: ${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}
-          tenant-id: 9324bd15-b7b3-4e59-b23e-9f53050507bb
-
-      - name: Upload Power Pages Site
-        shell: pwsh
-        run: |
-          pac pages upload --path ".\it-support---etgithubportal"
