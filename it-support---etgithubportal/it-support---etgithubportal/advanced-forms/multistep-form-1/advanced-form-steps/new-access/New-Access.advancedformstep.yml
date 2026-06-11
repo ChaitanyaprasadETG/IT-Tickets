@@ -1,0 +1,19 @@
+adx_attachfilelabel: ''
+adx_attachfilemaxsize: 
+adx_attachfilestoragelocation: 756150000
+adx_containername: ''
+adx_entitypermissionsenabled: true
+adx_formname: Information
+adx_hideformonsuccess: true
+adx_maximumnooffiles: 5
+adx_mode: 100000000
+adx_movepreviouspermitted: false
+adx_name: New Access
+adx_referencequerystringisprimarykey: true
+adx_storageaccountname: ''
+adx_successmessage: ''
+adx_targetentitylogicalname: cr2b4_it_access_requests
+adx_type: 100000001
+adx_validationsummarylinksenabled: true
+adx_webform: 390c79de-5a0a-495b-81d5-9819ffb2db6f
+adx_webformstepid: 3f1e3669-2dbe-459d-9918-707fbe3a49ca

@@ -1,0 +1,41 @@
+- adx_adddescription: false
+  adx_attributelogicalname: cr2b4_email
+  adx_description: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": ""
+      }
+    ]
+  adx_descriptionposition: 100000000
+  adx_entityform: 14e36052-d81b-4028-81b5-5e82a825e22c
+  adx_entityformmetadataid: 047d0d0c-684c-48a4-9415-dfcc6f992e25
+  adx_fieldisrequired: true
+  adx_label: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": "Email"
+      }
+    ]
+  adx_name: Information cr2b4_email
+  adx_prepopulatefromattribute: emailaddress2
+  adx_prepopulatetype: 100000002
+  adx_prepopulatevalue: 
+  adx_requiredfieldvalidationerrormessage: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": ""
+      }
+    ]
+  adx_type: 100000000
+  adx_useattributedescriptionproperty: false
+  adx_validationregularexpression: ''
+  adx_validationregularexpressionerrormessage: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": ""
+      }
+    ]

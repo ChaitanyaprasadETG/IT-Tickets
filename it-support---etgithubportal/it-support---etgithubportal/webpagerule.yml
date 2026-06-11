@@ -1,0 +1,66 @@
+- adx_name: Restrict Read on Home
+  adx_right: 2
+  adx_scope: 2
+  adx_webpageaccesscontrolrule_webrole:
+  - 3f1240c8-e564-f111-a826-7c1e5251d90e
+  - f06e02ca-f664-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 2c655517-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: 2c6c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Restrict Read on My Registrations
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 9c6c4623-855e-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 2d6c4623-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: 156c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Restrict Read on Create Course
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - af854829-855e-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 31e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: f9645517-855e-f111-a826-7c1e5251d90e
+- adx_name: Grant Change to Administrators
+  adx_right: 1
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - c9df4d1d-855e-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 42e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: 2c6c4623-855e-f111-a826-7c1e5251d90e
+  statecode: 1
+  statuscode: 2
+- adx_name: Restrict Read on Duplicate Course
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - af854829-855e-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 63854829-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: cf6c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Restrict Read on Edit Course
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - af854829-855e-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: 7c655517-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: 4ae14d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: Grant Change to Content
+  adx_right: 1
+  adx_scope: 1
+  adx_webpageaccesscontrolruleid: bcde4d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: Restrict Read on [Admin] Courses Home
+  adx_right: 2
+  adx_scope: 2
+  adx_webpageaccesscontrolrule_webrole:
+  - 3f1240c8-e564-f111-a826-7c1e5251d90e
+  - 9c6c4623-855e-f111-a826-7c1e5251d90e
+  - af854829-855e-f111-a826-7c1e5251d90e
+  - c9df4d1d-855e-f111-a826-7c1e5251d90e
+  - f06e02ca-f664-f111-a826-7c1e5251d90e
+  adx_webpageaccesscontrolruleid: c2e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_webpageid: 7ddf4d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: Restrict Read on Access Requests
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole: []
+  adx_webpageaccesscontrolruleid: da280a37-40b6-1e13-24a5-e14961d0d019
+  adx_webpageid: 067150b8-85e9-ef4f-cbe1-ec764198ef7d

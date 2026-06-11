@@ -1,0 +1,13 @@
+adx_append: true
+adx_appendto: true
+adx_create: true
+adx_delete: false
+adx_entitylogicalname: cr2b4_it_security_list
+adx_entityname: IT Security List
+adx_entitypermission_webrole:
+- 9c6c4623-855e-f111-a826-7c1e5251d90e
+- c9df4d1d-855e-f111-a826-7c1e5251d90e
+adx_entitypermissionid: 5f2f0fc1-2ae2-4c73-b819-7a4f98f4d113
+adx_read: true
+adx_scope: 756150000
+adx_write: true

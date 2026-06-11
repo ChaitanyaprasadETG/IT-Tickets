@@ -1,0 +1,16 @@
+adx_accountrelationship: 
+adx_append: false
+adx_appendto: false
+adx_contactrelationship: 
+adx_create: true
+adx_delete: false
+adx_entitylogicalname: cr2b4_it_access_requests
+adx_entityname: Portal Requestor
+adx_entitypermission_webrole:
+- d5cf515a-fc64-f111-a826-7c1e5251d90e
+adx_entitypermissionid: b8c812a0-625d-4d3d-abd3-e30e89e4b296
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: true

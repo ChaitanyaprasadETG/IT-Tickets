@@ -1,0 +1,8 @@
+adx_CloudFlowConsumer_adx_webrole:
+- 9c6c4623-855e-f111-a826-7c1e5251d90e
+adx_cloudflowconsumerid: 211e515a-ff5f-f111-a826-7c1e5251d90e
+adx_flowapiurl: /_api/cloudflow/v1.0/trigger/b6e089e9-fd5f-f111-a826-7c1e5251d90e
+adx_flowtriggerurl: ''
+adx_metadata: ''
+adx_name: PowerPages -> Create item
+adx_processid: b6e089e9-fd5f-f111-a826-7c1e5251d90e

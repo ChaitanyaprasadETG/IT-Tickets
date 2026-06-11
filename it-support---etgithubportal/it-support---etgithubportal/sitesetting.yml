@@ -1,0 +1,346 @@
+- adx_description: Sets whether or not the portal can redirect the user to the profile page after successful sign-in. By default, it is set to true.
+  adx_name: Authentication/Registration/ProfileRedirectEnabled
+  adx_sitesettingid: 0c6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Search/IndexQueryName
+  adx_sitesettingid: 0d6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Portal Search
+- adx_name: Authentication/OpenAuth/Facebook/AppSecret
+  adx_sitesettingid: 0de14d1d-855e-f111-a826-7c1e5251d90e
+- adx_description: 'The amount of time the Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress are to be within before the IP address has to wait Authentication/LoginThrottling/IpAddressTimeoutTimeSpan. Default: 00:05:00 (5 mins)'
+  adx_name: Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan
+  adx_sitesettingid: 13e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: 00:05:00
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/MetadataAddress
+  adx_sitesettingid: 1852072f-c0c4-444a-80f9-43b04129e11f
+  adx_value: https://login.microsoftonline.com/9324bd15-b7b3-4e59-b23e-9f53050507bb/v2.0/.well-known/openid-configuration
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ExternalLogoutEnabled
+  adx_sitesettingid: 1a489253-2891-4d33-9e59-f03dbc2a3b7a
+  adx_value: false
+- adx_name: Metadata/Template-Version
+  adx_sitesettingid: 1be14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: 3.0.2511.1
+- adx_description: Denies use of the portal to minors without parental consent. By default, it is set to false.
+  adx_name: Authentication/Registration/DenyMinorsWithoutParentalConsent
+  adx_sitesettingid: 1d6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/Caption
+  adx_sitesettingid: 27d8d64f-a540-471e-933b-0b8f7cfa9acd
+  adx_value: Microsoft Entra External ID
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ClientId
+  adx_sitesettingid: 2b89cb92-0698-4acd-95e6-d9b51ef2679e
+  adx_value: 8a8713ff-00b5-489c-bfb6-4dd18364a779
+- adx_description: Set whether the footer web template is output cached.
+  adx_name: Footer/OutputCache/Enabled
+  adx_sitesettingid: 2ce04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: True
+- adx_description: Setting controls whether attachments will be displayed on Knowledge articles
+  adx_name: KnowledgeManagement/DisplayNotes
+  adx_sitesettingid: 32655517-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: ASP/Pagination/CardsPerRow
+  adx_sitesettingid: 32e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: 3
+- adx_name: Authentication/Registration/LocalLoginEnabled
+  adx_sitesettingid: 336c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ResponseMode
+  adx_sitesettingid: 3416e11c-2b13-4739-aa5e-83790a838549
+  adx_value: form_post
+- adx_name: ASP/Course/Form/Validation/Field/Category
+  adx_sitesettingid: 366c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Category
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ValidateAudience
+  adx_sitesettingid: 38b826a6-3b8b-434a-8a81-765c166f0a15
+  adx_value: false
+- adx_name: Authentication/Registration/EmailConfirmationEnabled
+  adx_sitesettingid: 38e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: ASP/Course/Form/Validation/Field/EndTime
+  adx_sitesettingid: 39e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: End time
+- adx_name: Webapi/adx_webrole/fields
+  adx_sitesettingid: 3fe04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: adx_name,adx_webroleid
+- adx_description: Determines if faceted search is used for this portal.
+  adx_name: Search/FacetedView
+  adx_sitesettingid: 41e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: True
+- adx_name: ASP/Course/Form/Validation/Field/StartDate
+  adx_sitesettingid: 45655517-855e-f111-a826-7c1e5251d90e
+  adx_value: Start date
+- adx_name: Authentication/OpenIdConnect/AzureAD/ExternalLogoutEnabled
+  adx_sitesettingid: 4601ad71-ba44-4c8c-bdfd-f48fe80e0ab7
+  adx_value: false
+- adx_description: A date/time value in GMT format to represent the effective date of the current published terms and conditions. If the terms agreement is enabled, portal users that have not accepted the terms after this date will be asked to accept them the next time they sign in. If the date is not provided, and the terms agreement is enabled, the terms will be presented every time portal users sign in.
+  adx_name: Authentication/Registration/TermsPublicationDate
+  adx_sitesettingid: 466c4623-855e-f111-a826-7c1e5251d90e
+- adx_description: 'The Prefix entered here will be used to filter Notes Text, allowing you to control notes exposed on the Portal ex: *WEB*'
+  adx_name: KnowledgeManagement/NotesFilter
+  adx_sitesettingid: 4be14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: '*WEB*'
+- adx_name: Authentication/Registration/Enabled
+  adx_sitesettingid: 4c655517-855e-f111-a826-7c1e5251d90e
+  adx_source: 0
+  adx_value: false
+- adx_name: Webapi/cr2b4_it_security_list/enabled
+  adx_sitesettingid: 4f85473a-5a7c-4f96-9e86-2e4a90c1d111
+  adx_value: true
+- adx_name: Authentication/OpenIdConnect/AzureAD/Caption
+  adx_sitesettingid: 51cbdb5c-855e-f111-a826-7c1e5251d90e
+  adx_value: SSO Login
+- adx_name: Authentication/OpenIdConnect/AzureAD/RebrandDisclaimerEnabled
+  adx_sitesettingid: 53cbdb5c-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/RedirectUri
+  adx_sitesettingid: 54461425-03ef-48df-82b1-9f880a5d7267
+  adx_value: https://etgithubportal.powerappsportals.com/signin-entraexternalid_1
+- adx_name: Authentication/UserManager/UserValidator/RequireUniqueEmail
+  adx_sitesettingid: 55a72cdd-4695-4141-91de-b7f1aba68aa8
+  adx_value: true
+- adx_description: Site setting that determines if the language code is included in the portal URL.
+  adx_name: MultiLanguage/DisplayLanguageCodeInURL
+  adx_sitesettingid: 55e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: False
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/Scope
+  adx_sitesettingid: 57c2367b-11d6-4ecd-a18f-c3653d825286
+  adx_value: openid email profile
+- adx_name: Webapi/msdynce_course/fields
+  adx_sitesettingid: 5a6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: '*'
+- adx_name: ASP/Course/Form/Validation/Field/Format
+  adx_sitesettingid: 5b6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Format
+- adx_name: ASP/Course/Form/Validation/Field/StartTime
+  adx_sitesettingid: 5be14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: Start time
+- adx_name: Webapi/contact/fields
+  adx_sitesettingid: 5ce04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: '*'
+- adx_name: Authentication/OpenAuth/Twitter/ConsumerKey
+  adx_sitesettingid: 61854829-855e-f111-a826-7c1e5251d90e
+- adx_name: HTTP/X-Frame-Options
+  adx_sitesettingid: 6b6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: SAMEORIGIN
+- adx_description: Enabling this setting will show all customer activity on the portal timeline.
+  adx_name: CustomerSupport/DisplayAllUserActivitiesOnTimeline
+  adx_sitesettingid: 6d6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: ASP/Course/Form/Validation/Field/StartDateInFuture
+  adx_sitesettingid: 6d854829-855e-f111-a826-7c1e5251d90e
+  adx_value: Start date cannot be in the past
+- adx_name: Profile/ForceSignUp
+  adx_sitesettingid: 6de14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: False
+- adx_description: 'Override query for site search, to apply additional weights and filters. @Query is the query text entered by a user. Lucene query syntax reference: http://lucene.apache.org/core/old_versioned_docs/versions/2_9_1/queryparsersyntax.html'
+  adx_name: search/query
+  adx_sitesettingid: 6e6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: +(@Query) _title:(@Query) _logicalname:knowledgearticle~0.9^0.3 _logicalname:annotation~0.9^0.25 _logicalname:adx_webpage~0.9^0.2 -_logicalname:adx_webfile~0.9 adx_partialurl:(@Query) _logicalname:adx_blogpost~0.9^0.1 -_logicalname:adx_communityforumthread~0.9
+- adx_name: Authentication/Registration/OpenRegistrationEnabled
+  adx_sitesettingid: 6f854829-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: ThemeFeature
+  adx_sitesettingid: 72655517-855e-f111-a826-7c1e5251d90e
+- adx_name: OnlineDomains
+  adx_sitesettingid: 74e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: sharepoint.com;microsoftonline.com
+- adx_name: Webapi/cr2b4_it_security_list/fields
+  adx_sitesettingid: 7c8f87a1-3f62-4d96-a12c-9c54ff11d112
+  adx_value: '*'
+- adx_description: C1 home page
+  adx_name: C1/Home
+  adx_sitesettingid: 7de04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: /admin-home
+- adx_name: ASP/Course/ProcessingMessage
+  adx_sitesettingid: 826c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Processing...
+- adx_name: Authentication/OpenAuth/Twitter/ConsumerSecret
+  adx_sitesettingid: 85e14d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: Authentication/OpenAuth/LinkedIn/ConsumerSecret
+  adx_sitesettingid: 876c4623-855e-f111-a826-7c1e5251d90e
+- adx_description: A true or false value. If set to true, the portal will display the terms and conditions of the site. Users must agree to the terms and conditions before they are considered authenticated and can use the site.
+  adx_name: Authentication/Registration/TermsAgreementEnabled
+  adx_sitesettingid: 8903e310-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: Site/BootstrapV5Enabled
+  adx_sitesettingid: 8a03e310-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Webapi/msdynce_registration/enabled
+  adx_sitesettingid: 8ae04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Authentication/Registration/LoginButtonAuthenticationType
+  adx_sitesettingid: 8de14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: https://login.windows.net/9324bd15-b7b3-4e59-b23e-9f53050507bb/
+- adx_name: Search/IndexNotesAttachments
+  adx_sitesettingid: 8fe14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: ASP/Course/Form/Validation/Field/Required
+  adx_sitesettingid: 91854829-855e-f111-a826-7c1e5251d90e
+  adx_value: 'Missing required fields:'
+- adx_name: ASP/Course/Form/Validation/Field/MaxCapacity
+  adx_sitesettingid: 93854829-855e-f111-a826-7c1e5251d90e
+  adx_value: Max capacity
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/UseTokenLifetime
+  adx_sitesettingid: 94a95156-baf4-4144-91ab-d5a00935ca97
+  adx_value: false
+- adx_name: Authentication/Registration/ExternalLoginEnabled
+  adx_sitesettingid: 94e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_description: 'The amount of time the IP address will have to wait if Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress occur within Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan amount of time. Default: 00:15:00 (15 mins)'
+  adx_name: Authentication/LoginThrottling/IpAddressTimeoutTimeSpan
+  adx_sitesettingid: 95e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: 00:15:00
+- adx_description: 'The default number of unauthenticated login attempts from an IP address before the IP address is blocked for Authentication/LoginThrottling/IpAddressTimeoutTimeSpan if the attempts occur within Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan amount of time. Default: 5'
+  adx_name: Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress
+  adx_sitesettingid: 97854829-855e-f111-a826-7c1e5251d90e
+  adx_value: 5
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ValidateIssuer
+  adx_sitesettingid: 97b9a962-c750-47af-83ff-af9dd8274842
+  adx_value: false
+- adx_name: ASP/Course/Form/Validation/Field/EndDateBeforeStartDate
+  adx_sitesettingid: 99e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: End date can't come before the start date.
+- adx_name: Authentication/OpenIdConnect/AzureAD/AllowContactMappingWithEmail
+  adx_sitesettingid: 99e3c532-f3a8-4e7e-8cfa-4eab7824c4ca
+  adx_value: true
+- adx_name: ASP/Pagination/CardsPerPage
+  adx_sitesettingid: 9d854829-855e-f111-a826-7c1e5251d90e
+  adx_value: 18
+- adx_name: ASP/Pagination/PagesInLine
+  adx_sitesettingid: a06c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: 6
+- adx_description: Set whether the header web template is output cached.
+  adx_name: Header/OutputCache/Enabled
+  adx_sitesettingid: a1854829-855e-f111-a826-7c1e5251d90e
+  adx_value: False
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ProviderType
+  adx_sitesettingid: a2a6c344-192f-47dd-a581-3610d9ac8168
+  adx_value: EntraExternalID
+- adx_name: Webapi/adx_webrole/enabled
+  adx_sitesettingid: a3655517-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Webapi/msdynce_registration/fields
+  adx_sitesettingid: a7645517-855e-f111-a826-7c1e5251d90e
+  adx_value: '*'
+- adx_name: Search/Enabled
+  adx_sitesettingid: a8e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: ASP/Course/Form/Validation/Field/DescriptionToLong
+  adx_sitesettingid: a9854829-855e-f111-a826-7c1e5251d90e
+  adx_value: Description can't be longer than 1000 characters.
+- adx_name: ASP/Course/Form/Validation/Field/Level
+  adx_sitesettingid: aa6c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Level
+- adx_name: Webapi/adx_webrole_contact/enabled
+  adx_sitesettingid: aae14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/AllowContactMappingWithEmail
+  adx_sitesettingid: abd677cf-d258-4d44-aaa7-b37caf6f0bd8
+  adx_value: false
+- adx_name: Authentication/OpenIdConnect/AzureAD/RegistrationEnabled
+  adx_sitesettingid: af63ad21-2ba0-4bf0-8e51-30bc3b107edb
+  adx_value: true
+- adx_name: Webapi/adx_webrole_contact/fields
+  adx_sitesettingid: b8e14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: '*'
+- adx_name: Webapi/msdynce_course/enabled
+  adx_sitesettingid: b96c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Profile/ShowMarketingOptionsPanel
+  adx_sitesettingid: bce04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: True
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/Authority
+  adx_sitesettingid: bd8e8db5-a6ab-46ec-8329-864383bbbd85
+  adx_value: https://login.microsoftonline.com/9324bd15-b7b3-4e59-b23e-9f53050507bb/v2.0
+- adx_name: Authentication/Registration/InvitationEnabled
+  adx_sitesettingid: be645517-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: Webapi/contact/enabled
+  adx_sitesettingid: bee14d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: WebAPI/enableReadOperationPreview
+  adx_sitesettingid: bf645517-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/RPInitiatedLogout
+  adx_sitesettingid: c113e15b-11ca-48f3-ba41-fb5507ae1105
+  adx_value: false
+- adx_name: ASP/Icon/Validation/Error
+  adx_sitesettingid: c36c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: /validation-icon.svg
+- adx_description: A true or false value. If set to true, the Last Successful Login field on the portal user’s contact will be updated with the date and time when they successfully signed in.
+  adx_name: Authentication/LoginTrackingEnabled
+  adx_sitesettingid: c56c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: False
+- adx_description: Specifies the default value for the SameSite attribute on HTTP cookies set by the portal.
+  adx_name: HTTP/SameSite/Default
+  adx_sitesettingid: c9e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: Lax
+- adx_description: Enables or disables Azure AD as an external identity provider. By default, it is set to true.
+  adx_name: Authentication/Registration/AzureADLoginEnabled
+  adx_sitesettingid: cae04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Card/ChildFiller
+  adx_sitesettingid: cb645517-855e-f111-a826-7c1e5251d90e
+  adx_value: /child-filler.svg
+- adx_description: Site setting that controls the depth of the webpage hierarchy that’s cloned in a newly-added supported language. Web link sets and content snippets are cloned in the newly-added language when webpages are cloned.
+  adx_name: MultiLanguage/MaximumDepthToClone
+  adx_sitesettingid: ccdf4d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: 3
+- adx_name: Authentication/OpenIdConnect/EntraExternalID_1/ResponseType
+  adx_sitesettingid: d2965749-a8b4-498f-ad46-cfc40d899ef6
+  adx_value: code id_token
+- adx_name: ASP/Course/Form/Validation/Field/MaxCapacityLow
+  adx_sitesettingid: d2e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: Max capacity should be higher than 1.
+- adx_description: >-
+    A collection of search logical name filter options. Defining a value here will add dropdown filter options to site-wide search.
+
+
+    This value should be in the form of name/value pairs, with name and value separated by a colon, and pairs separated by a semicolon. For example: "Forums:adx_communityforum,adx_communityforumthread,adx_communityforumpost;Blogs:adx_blog,adx_blogpost,adx_blogpostcomment".
+  adx_name: search/filters
+  adx_sitesettingid: d5645517-855e-f111-a826-7c1e5251d90e
+- adx_name: Webapi/error/innererror
+  adx_sitesettingid: d6645517-855e-f111-a826-7c1e5251d90e
+  adx_value: true
+- adx_name: Authentication/OpenAuth/Microsoft/ClientId
+  adx_sitesettingid: d76c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: ASP/Course/Form/Validation/Field/Days
+  adx_sitesettingid: df645517-855e-f111-a826-7c1e5251d90e
+  adx_value: Days
+- adx_description: Denies use of the portal to minors. By default, it is set to false.
+  adx_name: Authentication/Registration/DenyMinors
+  adx_sitesettingid: e0e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: false
+- adx_name: ASP/Course/Form/Validation/Field/Deadline
+  adx_sitesettingid: e16c4623-855e-f111-a826-7c1e5251d90e
+  adx_value: Deadline
+- adx_name: Authentication/OpenAuth/LinkedIn/ConsumerKey
+  adx_sitesettingid: e3645517-855e-f111-a826-7c1e5251d90e
+- adx_name: ASP/Course/Form/Validation/Field/MaxCapacityNumber
+  adx_sitesettingid: e7645517-855e-f111-a826-7c1e5251d90e
+  adx_value: Max capacity must be a whole number.
+- adx_name: ASP/Course/Form/Validation/Field/EndDate
+  adx_sitesettingid: eadf4d1d-855e-f111-a826-7c1e5251d90e
+  adx_value: End date
+- adx_name: ASP/Course/Form/Validation/Field/EndTimeBeforeStartTime
+  adx_sitesettingid: ec645517-855e-f111-a826-7c1e5251d90e
+  adx_value: End time can't come before the start time.
+- adx_name: Authentication/OpenAuth/Facebook/AppId
+  adx_sitesettingid: efe04d1d-855e-f111-a826-7c1e5251d90e
+- adx_description: Power Pages cloud flow GUID that creates an item in SharePoint IT_Tickets.
+  adx_name: ITSupport/CreateTicketCloudFlowId
+  adx_sitesettingid: f01dc1a9-f589-444a-8e3f-ce341a81cf25
+  adx_value: ''
+- adx_name: Authentication/OpenAuth/Microsoft/ClientSecret
+  adx_sitesettingid: f1e04d1d-855e-f111-a826-7c1e5251d90e
+- adx_description: Used to group a set of entities under an entry in the record type facet view.
+  adx_name: Search/RecordTypeFacetsEntities
+  adx_sitesettingid: f5645517-855e-f111-a826-7c1e5251d90e
+  adx_value: Downloads:annotation,adx_webfile
+- adx_description: A true or false value. If set to true, the local account will be marked as deprecated. The portal user will be required to migrate to a non-deprecated account.
+  adx_name: Authentication/Registration/LocalLoginDeprecated
+  adx_sitesettingid: f7645517-855e-f111-a826-7c1e5251d90e
+  adx_value: False
+- adx_name: ASP/Course/Form/Validation/Field/ClassName
+  adx_sitesettingid: fd655517-855e-f111-a826-7c1e5251d90e
+  adx_value: Class name

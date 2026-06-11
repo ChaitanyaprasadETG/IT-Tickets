@@ -1,0 +1,23 @@
+<div class="wrapper-body">
+  <div class="container">
+    <div class="page-heading">
+      {% block breadcrumbs %}
+      {% include 'Breadcrumbs' %}
+      {% endblock %}
+      {% block title %}
+      {% include 'Page Header' %}
+      {% endblock %}
+    </div>
+    <div class="row">
+      <div class="col-lg-4 col-xxl-3 start-column">
+        {% block aside %}{% endblock %}
+      </div>
+      <div class="col-lg-8 col-xxl-9 end-column">
+        {% block main %}
+        {% include 'Page Copy' %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+  <div class="push"></div>
+  </div>

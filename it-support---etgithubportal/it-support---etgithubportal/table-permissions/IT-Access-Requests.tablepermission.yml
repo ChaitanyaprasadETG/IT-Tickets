@@ -1,0 +1,15 @@
+adx_accountrelationship: 
+adx_append: true
+adx_appendto: true
+adx_contactrelationship: 
+adx_create: true
+adx_delete: true
+adx_entitylogicalname: cr2b4_it_access_requests
+adx_entityname: IT Access Requests
+adx_entitypermission_webrole: []
+adx_entitypermissionid: fdb65db5-cfdd-41a1-a673-5e61cacd57dc
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: true

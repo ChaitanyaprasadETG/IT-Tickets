@@ -1,0 +1,16 @@
+adx_accountrelationship: 
+adx_append: false
+adx_appendto: false
+adx_contactrelationship: 
+adx_create: false
+adx_delete: false
+adx_entitylogicalname: cr2b4_it_access_requests
+adx_entityname: Information
+adx_entitypermission_webrole:
+- d5cf515a-fc64-f111-a826-7c1e5251d90e
+adx_entitypermissionid: 4ee45444-a740-4b85-8fc6-0f0f05814c9f
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: false
+adx_scope: 756150000
+adx_write: false

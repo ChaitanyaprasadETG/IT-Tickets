@@ -1,0 +1,20 @@
+- adx_anonymoususersrole: true
+  adx_authenticatedusersrole: false
+  adx_name: Anonymous Users
+  adx_webroleid: 3b655517-855e-f111-a826-7c1e5251d90e
+- adx_anonymoususersrole: false
+  adx_authenticatedusersrole: false
+  adx_name: IT Support User
+  adx_webroleid: 3f1240c8-e564-f111-a826-7c1e5251d90e
+- adx_anonymoususersrole: false
+  adx_authenticatedusersrole: false
+  adx_name: Administrators
+  adx_webroleid: c9df4d1d-855e-f111-a826-7c1e5251d90e
+- adx_anonymoususersrole: false
+  adx_authenticatedusersrole: true
+  adx_name: Portal Requestor
+  adx_webroleid: d5cf515a-fc64-f111-a826-7c1e5251d90e
+- adx_anonymoususersrole: false
+  adx_authenticatedusersrole: false
+  adx_name: IT Support Admin
+  adx_webroleid: f06e02ca-f664-f111-a826-7c1e5251d90e

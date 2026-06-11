@@ -1,0 +1,12 @@
+adx_append: false
+adx_appendto: false
+adx_create: false
+adx_delete: false
+adx_entitylogicalname: adx_webrole
+adx_entityname: ASP C1 Role
+adx_entitypermission_webrole:
+- af854829-855e-f111-a826-7c1e5251d90e
+adx_entitypermissionid: 6edf4d1d-855e-f111-a826-7c1e5251d90e
+adx_read: true
+adx_scope: 756150000
+adx_write: false

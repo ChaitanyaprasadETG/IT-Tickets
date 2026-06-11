@@ -1,0 +1,31 @@
+- adx_name: Knowledge Base
+  adx_sitemarkerid: 27655517-855e-f111-a826-7c1e5251d90e
+- adx_name: Attendee Information
+  adx_pageid: 9ee04d1d-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 296c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Access Denied
+  adx_pageid: c5e04d1d-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 2be14d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: Page Not Found
+  adx_pageid: 66655517-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 376c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: C1 Home
+  adx_pageid: 7ddf4d1d-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 406c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Profile
+  adx_pageid: bd6c4623-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 4bdf4d1d-855e-f111-a826-7c1e5251d90e
+- adx_name: View Course Details
+  adx_pageid: 886c4623-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 6a6c4623-855e-f111-a826-7c1e5251d90e
+- adx_name: Search
+  adx_pageid: afe14d1d-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: 8b854829-855e-f111-a826-7c1e5251d90e
+- adx_name: Knowledge Base Search Results
+  adx_sitemarkerid: ae655517-855e-f111-a826-7c1e5251d90e
+- adx_name: Registration Success
+  adx_pageid: 35655517-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: b1854829-855e-f111-a826-7c1e5251d90e
+- adx_name: Home
+  adx_pageid: 2c6c4623-855e-f111-a826-7c1e5251d90e
+  adx_sitemarkerid: e36c4623-855e-f111-a826-7c1e5251d90e

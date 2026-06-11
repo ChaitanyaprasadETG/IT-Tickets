@@ -1,0 +1,13 @@
+adx_append: true
+adx_appendto: true
+adx_create: true
+adx_delete: false
+adx_entitylogicalname: msdynce_registration
+adx_entityname: ASP C2 Registration
+adx_entitypermission_webrole:
+- 9c6c4623-855e-f111-a826-7c1e5251d90e
+- af854829-855e-f111-a826-7c1e5251d90e
+adx_entitypermissionid: da655517-855e-f111-a826-7c1e5251d90e
+adx_read: true
+adx_scope: 756150000
+adx_write: true

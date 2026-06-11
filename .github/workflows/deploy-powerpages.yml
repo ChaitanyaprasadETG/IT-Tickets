@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  PORTAL_MODEL_VERSION: Enhanced
+
 jobs:
   deploy:
     runs-on: windows-latest
@@ -29,9 +32,31 @@ jobs:
             --clientSecret "${{ secrets.POWER_PLATFORM_CLIENT_SECRET }}" `
             --tenant "9324bd15-b7b3-4e59-b23e-9f53050507bb"
 
+      - name: Validate Power Pages folder
+        id: portal_root
+        shell: pwsh
+        run: |
+          $websiteFile = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Recurse -Filter "website.yml" | Select-Object -First 1
+
+          if (-not $websiteFile) {
+            throw "No website.yml found anywhere under $env:GITHUB_WORKSPACE"
+          }
+
+          $portalPath = $websiteFile.Directory.FullName
+          Write-Host "Portal path: $portalPath"
+
+          if (-not (Test-Path (Join-Path $portalPath "website.yml"))) {
+            throw "website.yml not found under $portalPath"
+          }
+
+          if (-not (Test-Path (Join-Path $portalPath ".portalconfig"))) {
+            throw ".portalconfig not found under $portalPath"
+          }
+
+          Get-ChildItem -Force $portalPath | Select-Object Name, Mode
+          "portal_path=$portalPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Upload Power Pages Site
         shell: pwsh
         run: |
-          pac pages upload `
-            --path ".\it-support---etgithubportal\IT Support - etgithubportal" `
-            --modelVersion Enhanced
+          pac pages upload --path "${{ steps.portal_root.outputs.portal_path }}" --modelVersion "$env:PORTAL_MODEL_VERSION"

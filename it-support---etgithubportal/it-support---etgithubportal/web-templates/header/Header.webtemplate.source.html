@@ -1,0 +1,1721 @@
+<!-- Navigation based on web roles -->
+{% if user and user.roles contains 'C1' %}
+    {% assign selectednav = "C1 Navigation" %}
+    {% assign showprofile = false %}
+{% endif %}
+<!-- END Navigation based on web roles -->
+
+{% assign defaultlang = settings['LanguageLocale/Code'] | default: 'en-us' %}
+{% assign homeurl = website.adx_partialurl %}
+{% assign request_path = request.path | downcase %}
+{% assign is_signin_page = false %}
+{% assign is_create_ticket_page = false %}
+{% if request_path contains 'signin' or request_path contains 'account/login' %}
+  {% assign is_signin_page = true %}
+{% endif %}
+{% if request_path contains 'create-ticket' or request_path contains 'new-ticket' or request_path contains 'ticket/create' %}
+  {% assign is_create_ticket_page = true %}
+{% endif %}
+{% if is_signin_page %}
+<style>
+  body {
+    background:
+      radial-gradient(circle at 20% 12%, rgba(104, 160, 255, 0.15), transparent 24%),
+      linear-gradient(180deg, #f7fbff 0%, #edf4ff 100%) !important;
+    overflow-x: hidden;
+  }
+
+  .static-top.navbar,
+  .page-heading,
+  .breadcrumb,
+  footer,
+  .footer-bottom,
+  .page-copy {
+    display: none !important;
+  }
+
+  main[role="main"],
+  .container[role="main"] {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .signin .container,
+  .registration .container,
+  .container.custom-container {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+  }
+
+  .login-heading-section,
+  h1#mainContent,
+  .nav-account,
+  .nav.nav-tabs,
+  .account-form__legend,
+  .external-auth-heading {
+    display: none !important;
+  }
+
+  .row > [class*='col-'] {
+    width: 100%;
+    max-width: none;
+    flex: 0 0 100%;
+  }
+
+  .form-container,
+  .signin-container,
+  .login-container,
+  .account-login-container,
+  .external-login-container,
+  .external-login,
+  .register-container {
+    width: 100%;
+  }
+
+  .external-login,
+  .signin .row,
+  .register-container .row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .external-login,
+  .signin {
+    min-height: 100vh;
+    padding: 18px;
+    box-sizing: border-box;
+  }
+
+  .external-login form,
+  .signin form,
+  .external-login .panel,
+  .signin .panel,
+  .external-login .card,
+  .signin .card {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .external-login .panel-body,
+  .signin .panel-body,
+  .external-login .card-body,
+  .signin .card-body {
+    padding: 0;
+    background: transparent;
+  }
+
+  .itops-signin-card {
+    width: 100%;
+    min-height: calc(100vh - 36px);
+    background: transparent;
+  }
+
+  .signin-stage {
+    min-height: calc(100vh - 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .signin-card {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 36px);
+    border: 1px solid rgba(103, 141, 214, 0.18);
+    border-radius: 24px;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+    overflow: hidden;
+    box-shadow: 0 18px 44px rgba(19, 55, 120, 0.14);
+  }
+
+  .signin-brand {
+    position: absolute;
+    top: 24px;
+    left: 28px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    pointer-events: none;
+  }
+
+  .signin-brand svg {
+    display: block;
+    width: 78px;
+    height: 31px;
+  }
+
+  .signin-board-left {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: clamp(24px, 4vw, 56px);
+    background:
+      radial-gradient(circle at 22% 20%, rgba(61, 121, 241, 0.18), transparent 24%),
+      linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
+  }
+
+  .signin-board-left::after {
+    content: "";
+    position: absolute;
+    left: -6%;
+    right: -6%;
+    bottom: -4%;
+    height: 36%;
+    background:
+      radial-gradient(120% 90% at 20% 100%, rgba(94, 155, 255, 0.26) 0%, rgba(94, 155, 255, 0) 58%),
+      linear-gradient(180deg, rgba(178, 213, 255, 0.20), rgba(178, 213, 255, 0));
+    clip-path: polygon(0 72%, 8% 52%, 17% 64%, 28% 45%, 38% 58%, 50% 50%, 62% 63%, 73% 50%, 84% 58%, 93% 46%, 100% 58%, 100% 100%, 0 100%);
+    opacity: 0.95;
+  }
+
+  .signin-art {
+    position: relative;
+    z-index: 1;
+    width: min(820px, 100%);
+    aspect-ratio: 1 / 1;
+  }
+
+  .signin-art svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .signin-board-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(28px, 4vw, 72px);
+    background: #ffffff;
+  }
+
+  .signin-board-right::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(31, 103, 216, 0.08), rgba(31, 103, 216, 0.42), rgba(31, 103, 216, 0.08));
+  }
+
+  .signin-panel {
+    position: relative;
+    z-index: 1;
+    width: min(560px, 100%);
+    display: grid;
+    gap: 22px;
+  }
+
+  .signin-title {
+    margin: 0;
+    color: #0f1d3a;
+    font-size: clamp(36px, 3vw, 58px);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: 0;
+  }
+
+  .signin-title .accent {
+    color: #1f67d8;
+  }
+
+  .signin-title-line {
+    width: 108px;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1f67d8, #3b7df2);
+  }
+
+  .signin-subtitle {
+    margin: 0;
+    color: #5c6e8e;
+    font-size: clamp(18px, 1.25vw, 22px);
+    line-height: 1.5;
+  }
+
+  .signin-field {
+    display: grid;
+    gap: 12px;
+  }
+
+  .signin-field label {
+    color: #15223e;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  .signin-input-shell {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 86px;
+    padding: 0 22px;
+    border: 1px solid #a9c6ff;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .signin-input-shell svg {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    color: #1f67d8;
+  }
+
+  .signin-input-shell input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #20314d;
+    font-size: 20px;
+    font-family: inherit;
+  }
+
+  .signin-button {
+    width: 100%;
+    min-height: 84px;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #1f67d8 0%, #1556c8 100%);
+    color: #ffffff !important;
+    font-size: 28px;
+    font-weight: 700;
+    box-shadow: 0 14px 26px rgba(31, 103, 216, 0.26);
+    cursor: pointer;
+  }
+
+  .signin-button-inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .signin-button svg {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+  }
+
+  .signin-security {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #6b7fa8;
+    font-size: 18px;
+    line-height: 1.35;
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .signin-security svg {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    color: #1f67d8;
+  }
+
+  .signin-footer {
+    color: #6d7a9a;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .signin-button:focus,
+  .signin-input-shell input:focus {
+    outline: 2px solid rgba(31, 103, 216, 0.22);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 1160px) {
+    .signin-card {
+      grid-template-columns: 1fr;
+    }
+
+    .signin-board-right::before {
+      display: none;
+    }
+
+    .signin-board-left {
+      min-height: 360px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .external-login,
+    .signin {
+      padding: 12px;
+    }
+
+    .signin-card {
+      border-radius: 18px;
+    }
+
+    .signin-board-left {
+      min-height: 280px;
+    }
+
+    .signin-title {
+      font-size: clamp(30px, 9vw, 42px);
+    }
+
+    .signin-field label {
+      font-size: 17px;
+    }
+
+    .signin-input-shell {
+      min-height: 72px;
+      padding: 0 16px;
+    }
+
+    .signin-input-shell input {
+      font-size: 17px;
+    }
+
+    .signin-button {
+      min-height: 68px;
+      font-size: 22px;
+    }
+
+    .signin-subtitle,
+    .signin-security,
+    .signin-footer {
+      font-size: 15px;
+    }
+  }
+</style>
+{% endif %}
+<style>
+  .itops-ticket-page {
+    background:
+      radial-gradient(circle at top left, rgba(52, 120, 235, 0.10), transparent 24%),
+      linear-gradient(180deg, #f4f7fc 0%, #eef3fb 100%);
+  }
+
+  .itops-ticket-page .page-header,
+  .itops-ticket-page .breadcrumb,
+  .itops-ticket-page .page-heading {
+    display: none !important;
+  }
+
+  .itops-ticket-page main[role="main"],
+  .itops-ticket-page .container[role="main"] {
+    width: 100%;
+    max-width: none;
+  }
+
+  .itops-ticket-page .container {
+    max-width: 100%;
+  }
+
+  .itops-ticket-page .itops-create-ticket {
+    display: grid;
+    gap: 20px;
+    padding: 20px 18px 36px;
+  }
+
+  .itops-ticket-page .itops-ticket-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    border-radius: 0;
+    background: linear-gradient(90deg, #0b3d8c 0%, #124ea9 56%, #1765d8 100%);
+    box-shadow: 0 16px 36px rgba(18, 66, 141, 0.20);
+    color: #ffffff;
+  }
+
+  .itops-ticket-page .itops-ticket-hero-copy,
+  .itops-ticket-page .itops-ticket-hero-actions,
+  .itops-ticket-page .itops-ticket-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .itops-ticket-page .itops-ticket-hero-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .itops-ticket-page .itops-ticket-title-wrap {
+    align-items: flex-start;
+  }
+
+  .itops-ticket-page .itops-ticket-badge,
+  .itops-ticket-page .itops-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+    flex: 0 0 auto;
+  }
+
+  .itops-ticket-page .itops-ticket-hero h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+
+  .itops-ticket-page .itops-ticket-hero p {
+    margin: 2px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 15px;
+  }
+
+  .itops-ticket-page .itops-ticket-hero-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .itops-ticket-page .itops-ticket-hero-actions .btn,
+  .itops-ticket-page .itops-ticket-hero-actions input[type="submit"],
+  .itops-ticket-page .itops-ticket-hero-actions button,
+  .itops-ticket-page .itops-ticket-hero-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.10);
+    color: #ffffff !important;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: none;
+  }
+
+  .itops-ticket-page .itops-ticket-hero-actions .btn-primary,
+  .itops-ticket-page .itops-ticket-hero-actions input[type="submit"] {
+    border-color: transparent;
+    background: linear-gradient(180deg, #2d7dff 0%, #1f67d8 100%);
+  }
+
+  .itops-ticket-page .itops-ticket-hero-actions svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    flex: 0 0 auto;
+  }
+
+  .itops-ticket-page .itops-ticket-grid,
+  .itops-ticket-page .itops-ticket-grid-secondary {
+    display: grid;
+    gap: 20px;
+  }
+
+  .itops-ticket-page .itops-ticket-grid-secondary {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .itops-ticket-page .itops-ticket-card {
+    padding: 18px;
+    border: 1px solid rgba(20, 79, 170, 0.10);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 26px rgba(16, 52, 110, 0.08);
+  }
+
+  .itops-ticket-page .itops-ticket-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .itops-ticket-page .itops-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(31, 103, 216, 0.10);
+    color: #1f67d8;
+  }
+
+  .itops-ticket-page .itops-ticket-card-header h2 {
+    margin: 0;
+    color: #17305f;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .itops-ticket-page .itops-ticket-card-header p {
+    margin: 3px 0 0;
+    color: #6c7e9f;
+    font-size: 14px;
+  }
+
+  .itops-ticket-page .itops-ticket-fields {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px 20px;
+  }
+
+  .itops-ticket-page .itops-field {
+    grid-column: span 6;
+    min-width: 0;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-3 {
+    grid-column: span 3;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-4 {
+    grid-column: span 4;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-5 {
+    grid-column: span 5;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-6 {
+    grid-column: span 6;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-7 {
+    grid-column: span 7;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-8 {
+    grid-column: span 8;
+  }
+
+  .itops-ticket-page .itops-field.itops-span-12 {
+    grid-column: 1 / -1;
+  }
+
+  .itops-ticket-page .itops-field label,
+  .itops-ticket-page .itops-field .control-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    color: #233b67;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .itops-ticket-page .itops-field .form-control,
+  .itops-ticket-page .itops-field input[type="text"],
+  .itops-ticket-page .itops-field input[type="email"],
+  .itops-ticket-page .itops-field input[type="number"],
+  .itops-ticket-page .itops-field input[type="file"],
+  .itops-ticket-page .itops-field select,
+  .itops-ticket-page .itops-field textarea {
+    min-height: 46px;
+    border: 1px solid #d9e1ee;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 2px rgba(16, 52, 110, 0.03);
+    color: #253a61;
+  }
+
+  .itops-ticket-page .itops-field textarea,
+  .itops-ticket-page .itops-field .ql-container {
+    min-height: 160px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .itops-ticket-page .itops-field .ql-toolbar {
+    border: 1px solid #d9e1ee;
+    border-radius: 8px 8px 0 0;
+    background: #fbfcfe;
+  }
+
+  .itops-ticket-page .itops-field .ql-container {
+    border: 1px solid #d9e1ee;
+    border-top: 0;
+    background: #ffffff;
+  }
+
+  .itops-ticket-page .itops-field .form-control[readonly],
+  .itops-ticket-page .itops-field .form-control[disabled],
+  .itops-ticket-page .itops-field input[readonly],
+  .itops-ticket-page .itops-field input[disabled],
+  .itops-ticket-page .itops-field select[disabled] {
+    background: #f8fbff;
+    color: #5f7191;
+  }
+
+  .itops-ticket-page .itops-field .description,
+  .itops-ticket-page .itops-field .help-block,
+  .itops-ticket-page .itops-field .text-muted {
+    color: #7b8ba8;
+    font-size: 12px;
+  }
+
+  .itops-ticket-page .itops-field .validators,
+  .itops-ticket-page .itops-field .notification {
+    margin-top: 8px;
+  }
+
+  .itops-ticket-page .itops-field .fileAttachment,
+  .itops-ticket-page .itops-field .attachments,
+  .itops-ticket-page .itops-field .notescontrol,
+  .itops-ticket-page .itops-field .dropzone {
+    padding: 18px;
+    border: 1px dashed #c9d5e8;
+    border-radius: 10px;
+    background: #fbfdff;
+  }
+
+  .itops-ticket-page .itops-field .table {
+    margin-bottom: 0;
+  }
+
+  .itops-ticket-page .itops-hidden-source {
+    display: none !important;
+  }
+
+  @media (max-width: 1024px) {
+    .itops-ticket-page .itops-ticket-grid-secondary {
+      grid-template-columns: 1fr;
+    }
+
+    .itops-ticket-page .itops-ticket-hero {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .itops-ticket-page .itops-ticket-hero-actions {
+      justify-content: flex-start;
+    }
+
+    .itops-ticket-page .itops-field.itops-span-3,
+    .itops-ticket-page .itops-field.itops-span-4,
+    .itops-ticket-page .itops-field.itops-span-5,
+    .itops-ticket-page .itops-field.itops-span-6,
+    .itops-ticket-page .itops-field.itops-span-7,
+    .itops-ticket-page .itops-field.itops-span-8 {
+      grid-column: span 6;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .itops-ticket-page .itops-create-ticket {
+      padding: 14px 12px 24px;
+    }
+
+    .itops-ticket-page .itops-ticket-hero {
+      padding: 16px;
+    }
+
+    .itops-ticket-page .itops-ticket-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .itops-ticket-page .itops-field,
+    .itops-ticket-page .itops-field.itops-span-3,
+    .itops-ticket-page .itops-field.itops-span-4,
+    .itops-ticket-page .itops-field.itops-span-5,
+    .itops-ticket-page .itops-field.itops-span-6,
+    .itops-ticket-page .itops-field.itops-span-7,
+    .itops-ticket-page .itops-field.itops-span-8,
+    .itops-ticket-page .itops-field.itops-span-12 {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+<div class="navbar-expand-xl navbar navbar-dark static-top" style="flex-wrap:wrap;" role="banner">
+  <div class="skip-to-content"><a href="#mainContent">{{ resx.Skip_To_Content | default: "Skip to main content" }}</a></div><div class="container custom-container">
+    <!--div class="visible-xs-block">
+      {% editable snippets 'Mobile Header' type: 'html' %}
+    </div-->
+    <div class="d-xs-block d-sm-block d-md-block d-lg-block navbar-brand navbar-header">
+      {% editable snippets 'Mobile Header' type: 'html' %}
+    </div>
+    <button type="button" class="navbar-toggler collapsed custom-navbar-toggler" title="{{ snippets["Header/Toggle Navigation"] | default: resx['Toggle_Navigation'] | h }}" data-bs-toggle="collapse" data-bs-target="#navbar" aria-expanded="false" onclick="setHeight();">
+      <span class="visually-hidden">{{ snippets["Header/Toggle Navigation"] | default: resx['Toggle_Navigation'] | h }}</span>
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="navbar-collapse collapse">
+      {% assign primary_nav = weblinks["Primary Navigation"] %}
+      {% if primary_nav %}
+      <nav aria-label="{{ resx.Main_Navigation | default: "Main Navigation" }}" class="ms-auto menu-bar {% if primary_nav.editable %}xrm-entity xrm-editable-adx_weblinkset{% endif %}" data-weblinks-maxdepth="2">
+        <ul class="nav navbar-nav weblinks">
+          {% for link in primary_nav.weblinks %}
+          {% unless forloop.first %}
+          <li class="nav-item divider-vertical" aria-hidden="true"></li>
+          {% endunless %}
+          {% if link.display_page_child_links %}
+          {% if link.url != null %}
+          {% assign sublinks = sitemap[link.url].children %}
+          {% endif %}
+          {% else %}
+          {% assign sublinks = link.weblinks %}
+          {% endif %}
+          <li class="nav-item weblink {% if sublinks.size > 0 %} dropdown{% endif %}">
+            <a aria-label="{{ link.name | escape }}" {% if sublinks.size > 0 -%} href="#" role="button" class="dropdown-toggle nav-link" data-bs-toggle="dropdown" {%- else -%} href="{{ link.url | escape }}" class="nav-link" aria-roledescription="link" {%- endif -%} {%- if link.Open_In_New_Window %} target="_blank" {% endif -%} {%- if link.nofollow %} rel="nofollow" {% endif -%} {%- if link.tooltip %} title="{{ link.tooltip | escape }}" {% endif %}>
+              {%- if link.image -%}
+              {%- if link.image.url  -%}
+              {%- if link.image.url.first == '.' -%}
+              <span class="{{ link.image.url | split:'.' | join }}" aria-hidden="true"></span>
+              {%- endif -%}
+              {%- else -%}
+              <img src="{{ link.image.url | escape }}" alt="{{ link.image.alternate_text | default:link.tooltip | escape }}" {% if link.image.width %}width="{{ link.image.width | escape }}" {% endif %} {% if link.image.height %}height="{{ link.image.height | escape }}" {% endif %} />
+              {%- endif -%}
+              {%- endif -%}
+              {%- unless link.display_image_only -%}
+              {{ link.name | escape }}
+              {%- endunless -%}
+              {%- if sublinks.size > 0 -%}
+              {%- endif -%}
+            </a>
+            {% if sublinks.size > 0 %}
+            <ul class="dropdown-menu dropdown-menu-end">
+              {% if link.name %}
+              <li>
+                <a class="dropdown-item" aria-label="{{ link.name | escape }}" href="{{ link.url }}" {% if link.Open_In_New_Window %} target="_blank" {% endif %} {% if link.nofollow %}rel="nofollow" {% endif %} {% if link.tooltip %}title="{{ link.tooltip | escape }}" {% endif %}>{{ link.name | escape }}</a>
+              </li>
+              <div class="dropdown-divider"></div>
+              {% endif %}
+              {% for sublink in sublinks %}
+              <li>
+                <a class="dropdown-item" aria-label="{{ sublink.name | default:sublink.title | escape }}" href="{{ sublink.url }}" {% if sublink.Open_In_New_Window %} target="_blank" {% endif %} {% if sublink.nofollow %}rel="nofollow" {% endif %} {% if sublink.tooltip %}title="{{ sublink.tooltip | escape }}" {% endif %}>
+                  {{ sublink.name | default:sublink.title | escape }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </li>
+          {% endfor %}
+          {% assign search_enabled = settings['Search/Enabled'] | boolean | default:true %}
+          {% if search_enabled %}
+          <li class=" nav-item divider-vertical" aria-hidden="true"></li>
+          <li class=" nav-item dropdown">
+            <a id="search" class=" nav-link navbar-icon" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-label="{{ snippets["Header/Search/ToolTip"] | default:resx["Search_DefaultText"] | escape }}">
+              <span class="glyphicon fa-solid fa-magnifying-glass">
+            </a>
+            </a>
+            <div class="dropdown-menu dropdown-search dropdown-menu-end">
+              {% include 'Search', search_id:'q' %}
+            </div>
+          </li>
+          {% endif %}
+          <li class="nav-item divider-vertical" aria-hidden="true"></li>
+          {% if website.languages.size > 1 %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-label="{{ website.selected_language.name | escape }}" aria-haspopup="true" aria-expanded="false" title="{{ website.selected_language.name | escape }}">
+              <span class="drop_language">{{ website.selected_language.name | escape }}</span>
+            </a>
+            {% include 'Languages Dropdown' %}
+          </li>
+          <li class="nav-item divider-vertical" aria-hidden="true"></li>
+          {% endif %}
+          {% if user %}
+          <li class="nav-item dropdown">
+            {% assign username=user.fullname | escape %}
+            <a href="#" class="nav-link dropdown-toggle" title="{{username | default: resx['Default_Profile_name'] }}" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+              <span class="username">{{ username | default: resx['Default_Profile_name'] }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              {% assign show_profile_nav = settings["Header/ShowAllProfileNavigationLinks"] | boolean | default:true %}
+              {% if show_profile_nav %}
+              {% assign profile_nav = weblinks["Profile Navigation"] %}
+              {% if profile_nav %}
+              {% for link in profile_nav.weblinks %}
+              <li>
+                <a class="dropdown-item" aria-label="{{ link.name | escape }}" href="{{ link.url | escape }}" title="{{ link.name | escape }}">{{ link.name | escape }}</a>
+              </li>
+              {% endfor %}
+              {% endif %}
+              {% else %}
+              <li><a class="dropdown-item" aria-label="{{ snippets["Profile Link Text"] | default:resx["Profile_Text"] | escape }}" href="{{ sitemarkers['Profile'].url | escape }}">{{ snippets["Profile Link Text"] | default:resx["Profile_Text"] | escape }}</a></li>
+              {% endif %}
+              <li class="dropdown-divider" role="separator" aria-hidden="true"></li>
+              <li>
+                <a class="dropdown-item" aria-label="{{ snippets["links/logout"] | default:resx["Sign_Out"] | escape }}" href="{% if homeurl%}/{{ homeurl }}{% endif %}{{ website.sign_out_url_substitution }}" title="{{ snippets["links/logout"] | default:resx["Sign_Out"] | escape }}">
+                  {{ snippets["links/logout"] | default:resx["Sign_Out"] | escape }}
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" aria-label="{{ snippets["links/login"] | default:resx["Sign_In"] | escape }}" href="{% if homeurl%}/{{ homeurl }}{% endif %}{{ website.sign_in_url_substitution }}">
+              {{ snippets["links/login"] | default:resx["Sign_In"] | escape }}
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+        {% editable primary_nav %}
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% substitution %}
+{% assign current_page = page.id %}
+{% assign sr_page = sitemarkers["Search"].id %}
+{% assign forum_page = sitemarkers["Forums"].id %}
+{% if current_page %}
+{% if current_page == sr_page or current_page == forum_page %}
+{% assign section_class = "section-landing-search" %}
+{% if current_page == forum_page %}
+{% assign section_class = "section-landing-forums" %}
+{% endif %}
+<section class="page_section {{ section_class | h }} color-inverse">
+  <div class="row sectionBlockLayout sectionFixedStyle" style="display: flex; flex-wrap: wrap; text-align: center; min-height: 420px; background: url('/Homehero.png') center / cover no-repeat; padding: 8px; margin: 0px;">
+    <div class="container" style="display: flex; flex-wrap: wrap;">
+      <div class="col-lg-12 columnBlockLayout" style="display: flex; flex-direction: column; justify-content: center;">
+        {% if current_page == sr_page %}
+        <h1 id="mainContent">{% editable snippets 'Search/Title' default: resx["Discover_Contoso"] %}</h1>
+        {% include 'Search' search_id:'search_control' %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endif %}
+{% endsubstitution %}
+<script type="text/javascript">
+  function normalizeTicketText(value) {
+    return (value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function createTicketIcon(iconName) {
+    var paths = {
+      ticket: '<path d="M5 7.5A2.5 2.5 0 0 1 7.5 5h9A2.5 2.5 0 0 1 19 7.5v2.2a1.3 1.3 0 1 0 0 2.6v2.2A2.5 2.5 0 0 1 16.5 17h-9A2.5 2.5 0 0 1 5 14.5v-2.2a1.3 1.3 0 1 0 0-2.6V7.5Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M10 8.6h4M10 12h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      info: '<path d="M6 7.5A2.5 2.5 0 0 1 8.5 5h7A2.5 2.5 0 0 1 18 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 6 16.5v-9Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 9h6M9 12h6M9 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      users: '<path d="M9 10.2a2.7 2.7 0 1 0 0-5.4 2.7 2.7 0 0 0 0 5.4ZM15.2 11.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4.5 18a4.5 4.5 0 0 1 9 0M13 18a3.5 3.5 0 0 1 7 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>',
+      description: '<path d="M7 5.5h10A1.5 1.5 0 0 1 18.5 7v10A1.5 1.5 0 0 1 17 18.5H7A1.5 1.5 0 0 1 5.5 17V7A1.5 1.5 0 0 1 7 5.5Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.5 9.5h7M8.5 12h7M8.5 14.5H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      attachment: '<path d="M8.5 12.5 13 8a2.5 2.5 0 1 1 3.5 3.5l-5.8 5.8a4 4 0 0 1-5.7-5.7l6.5-6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+      back: '<path d="m10 7-5 5 5 5M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+      submit: '<path d="M4 12h12M12 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+    };
+
+    return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' + (paths[iconName] || paths.info) + '</svg>';
+  }
+
+  function dispatchTicketFieldEvents(control) {
+    if (!control) {
+      return;
+    }
+
+    ["input", "change", "blur"].forEach(function (eventName) {
+      control.dispatchEvent(new Event(eventName, { bubbles: true }));
+    });
+  }
+
+  function setTicketFieldValue(control, value) {
+    if (!control || value === null || value === undefined || value === "") {
+      return false;
+    }
+
+    var normalizedValue = String(value);
+    var tagName = control.tagName ? control.tagName.toLowerCase() : "";
+
+    if (tagName === "select") {
+      var options = Array.prototype.slice.call(control.options || []);
+      var match = options.find(function (option) {
+        var optionText = normalizeTicketText(option.textContent || "");
+        var optionValue = normalizeTicketText(option.value || "");
+        var expectedValue = normalizeTicketText(normalizedValue);
+        return optionText === expectedValue || optionValue === expectedValue;
+      });
+
+      if (!match) {
+        return false;
+      }
+
+      if (control.value === match.value) {
+        return true;
+      }
+
+      control.value = match.value;
+      dispatchTicketFieldEvents(control);
+      return true;
+    }
+
+    if (control.value === normalizedValue) {
+      return true;
+    }
+
+    control.value = normalizedValue;
+    dispatchTicketFieldEvents(control);
+    return true;
+  }
+
+  function lockTicketField(control) {
+    if (!control) {
+      return;
+    }
+
+    var tagName = control.tagName ? control.tagName.toLowerCase() : "";
+    if (tagName === "select") {
+      control.setAttribute("disabled", "disabled");
+      return;
+    }
+
+    control.setAttribute("readonly", "readonly");
+  }
+
+  function getTicketControlValue(control) {
+    if (!control) {
+      return "";
+    }
+
+    var tagName = control.tagName ? control.tagName.toLowerCase() : "";
+    if (tagName === "select") {
+      var selectedOption = control.options && control.selectedIndex >= 0 ? control.options[control.selectedIndex] : null;
+      return selectedOption ? (selectedOption.text || selectedOption.value || "") : (control.value || "");
+    }
+
+    return control.value || "";
+  }
+
+  function ensureTicketAlertHost() {
+    var host = document.getElementById("itops-ticket-alert");
+    if (host) {
+      return host;
+    }
+
+    host = document.createElement("div");
+    host.id = "itops-ticket-alert";
+    host.style.display = "none";
+    host.style.margin = "0 0 16px";
+    host.style.padding = "12px 14px";
+    host.style.border = "1px solid #f0c2c2";
+    host.style.background = "#fff5f5";
+    host.style.color = "#9f1d1d";
+    host.style.borderRadius = "8px";
+    host.style.fontSize = "14px";
+    host.style.lineHeight = "1.45";
+
+    var main = document.querySelector("main[role='main'], .container[role='main'], .entity-form, .crmEntityFormView, form");
+    if (main && main.parentNode) {
+      main.parentNode.insertBefore(host, main);
+    }
+
+    return host;
+  }
+
+  function showTicketAlert(message, tone) {
+    var host = ensureTicketAlertHost();
+    if (!host) {
+      window.alert(message);
+      return;
+    }
+
+    host.style.display = "block";
+    host.textContent = message;
+
+    if (tone === "success") {
+      host.style.borderColor = "#b7e1c1";
+      host.style.background = "#f3fbf5";
+      host.style.color = "#166534";
+      return;
+    }
+
+    host.style.borderColor = "#f0c2c2";
+    host.style.background = "#fff5f5";
+    host.style.color = "#9f1d1d";
+  }
+
+  function clearTicketAlert() {
+    var host = document.getElementById("itops-ticket-alert");
+    if (!host) {
+      return;
+    }
+
+    host.style.display = "none";
+    host.textContent = "";
+  }
+
+  function waitForPowerPagesSubmitApi(maxAttempts, delayMs, callback) {
+    var attempt = 0;
+
+    function check() {
+      attempt += 1;
+
+      if (getPowerPagesSubmitInvoker()) {
+        callback(null, getPowerPagesSubmitInvoker());
+        return;
+      }
+
+      if (attempt >= maxAttempts) {
+        callback(new Error("Power Pages submit API is not ready"));
+        return;
+      }
+
+      window.setTimeout(check, delayMs);
+    }
+
+    check();
+  }
+
+  function createPowerPagesAjaxFallback() {
+    if (!window.shell || typeof window.shell.getTokenDeferred !== "function" || typeof window.jQuery === "undefined") {
+      return null;
+    }
+
+    return function (ajaxOptions) {
+      var deferredAjax = window.jQuery.Deferred();
+
+      window.shell.getTokenDeferred().done(function (token) {
+        var options = window.jQuery.extend(true, {}, ajaxOptions);
+        options.headers = options.headers || {};
+        options.headers.__RequestVerificationToken = token;
+
+        window.jQuery.ajax(options)
+          .done(function (data, textStatus, jqXHR) {
+            if (typeof window.validateLoginSession === "function") {
+              window.validateLoginSession(data, textStatus, jqXHR, deferredAjax.resolve);
+            } else {
+              deferredAjax.resolve(data, textStatus, jqXHR);
+            }
+          })
+          .fail(function () {
+            deferredAjax.rejectWith(this, arguments);
+          });
+      }).fail(function () {
+        deferredAjax.rejectWith(this, arguments);
+      });
+
+      return deferredAjax.promise();
+    };
+  }
+
+  function getPowerPagesSubmitInvoker() {
+    if (window.shell && typeof window.shell.ajaxSafePost === "function") {
+      return window.shell.ajaxSafePost.bind(window.shell);
+    }
+
+    return createPowerPagesAjaxFallback();
+  }
+
+  function replaceWithCleanNode(node) {
+    if (!node || !node.parentNode) {
+      return node;
+    }
+
+    var clone = node.cloneNode(true);
+    node.parentNode.replaceChild(clone, node);
+    return clone;
+  }
+
+  function findCreateTicketFormRoot() {
+    var selectors = [
+      ".entity-form",
+      ".crmEntityFormView",
+      ".webform-step",
+      "form"
+    ];
+
+    for (var i = 0; i < selectors.length; i += 1) {
+      var node = document.querySelector(selectors[i]);
+      if (node && node.querySelector("input, select, textarea")) {
+        return node;
+      }
+    }
+
+    return null;
+  }
+
+  function findFieldCells(root) {
+    return Array.prototype.slice.call(root.querySelectorAll(".cell, .control, .form-group, td, .clearfix")).filter(function (node) {
+      if (!node || node.classList && node.classList.contains("itops-hidden-source")) {
+        return false;
+      }
+
+      return !!node.querySelector("label, .control-label") && !!node.querySelector("input, select, textarea, .ql-toolbar, .notescontrol, .attachments, .fileAttachment");
+    });
+  }
+
+  function findCellByLabels(cells, names) {
+    for (var i = 0; i < cells.length; i += 1) {
+      var label = cells[i].querySelector("label, .control-label");
+      var text = normalizeTicketText(label ? label.textContent : "");
+      for (var j = 0; j < names.length; j += 1) {
+        if (text.indexOf(names[j]) !== -1) {
+          return cells[i];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function findFieldControlByLabels(cells, names) {
+    var cell = findCellByLabels(cells, names);
+    if (!cell) {
+      return null;
+    }
+
+    return cell.querySelector("input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea");
+  }
+
+  function collectTicketPayload(cells) {
+    return {
+      TicketTitle: getTicketControlValue(findFieldControlByLabels(cells, ["ticket title", "title"])),
+      Project: getTicketControlValue(findFieldControlByLabels(cells, ["project"])),
+      TicketStatus: getTicketControlValue(findFieldControlByLabels(cells, ["ticket status", "status"])),
+      Type: getTicketControlValue(findFieldControlByLabels(cells, ["type"])),
+      Module: getTicketControlValue(findFieldControlByLabels(cells, ["module"])),
+      SubModule: getTicketControlValue(findFieldControlByLabels(cells, ["sub module", "submodule"])),
+      Requestor: getTicketControlValue(findFieldControlByLabels(cells, ["requestor", "requester"])),
+      Assignee: getTicketControlValue(findFieldControlByLabels(cells, ["assignee"])),
+      Description: getTicketControlValue(findFieldControlByLabels(cells, ["description"]))
+    };
+  }
+
+  function submitCreateTicketToCloudFlow(button, payload, triggerUrl) {
+    if (!payload.TicketTitle || !payload.Project || !payload.TicketStatus) {
+      showTicketAlert("Please fill Ticket Title, Project, and Status before submitting.");
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+    }
+
+    waitForPowerPagesSubmitApi(20, 300, function () {
+      var ajaxSafePost = getPowerPagesSubmitInvoker();
+      var apiError = ajaxSafePost ? null : new Error("Power Pages submit API is not ready");
+      if (apiError) {
+        console.error("Cloud flow submit API unavailable", {
+          hasShell: !!window.shell,
+          ajaxSafePostType: window.shell ? typeof window.shell.ajaxSafePost : "missing",
+          hasTokenApi: !!(window.shell && typeof window.shell.getTokenDeferred === "function"),
+          hasJQuery: typeof window.jQuery !== "undefined"
+        });
+        if (button) {
+          button.disabled = false;
+        }
+        showTicketAlert("Power Pages submit API is not ready yet. Refresh the page once, then try Submit again. If it still fails, the page may still have an older script bound.");
+        return;
+      }
+
+      ajaxSafePost({
+        type: "POST",
+        url: triggerUrl,
+        contentType: "application/json",
+        data: JSON.stringify({
+          eventData: JSON.stringify(payload)
+        })
+      }).done(function () {
+          showTicketAlert("Ticket created successfully.", "success");
+          window.setTimeout(function () {
+            window.location.href = "/";
+          }, 700);
+        }).fail(function () {
+          console.error("Cloud flow trigger failed", arguments);
+          if (button) {
+            button.disabled = false;
+          }
+          showTicketAlert("Ticket creation failed. Check whether the cloud flow trigger is published and the flow input names match the payload fields.");
+        });
+    });
+  }
+
+  function bindCreateTicketCloudFlow(formRoot, cells, submitButtons) {
+    var triggerUrl = "/_api/cloudflow/v1.0/trigger/b6e089e9-fd5f-f111-a826-7c1e5251d90e";
+    if (!{{ is_create_ticket_page | json }}) {
+      return;
+    }
+
+    if (formRoot && formRoot.getAttribute("data-itops-cloudflow-form-bound") !== "true") {
+      formRoot.setAttribute("data-itops-cloudflow-form-bound", "true");
+      formRoot.addEventListener("submit", function (event) {
+        var primaryButton = formRoot.querySelector("[data-itops-primary-submit='true']");
+        var payload;
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") {
+          event.stopImmediatePropagation();
+        }
+
+        clearTicketAlert();
+        if (formRoot.getAttribute("data-itops-cloudflow-submitting") === "true") {
+          return false;
+        }
+
+        formRoot.setAttribute("data-itops-cloudflow-submitting", "true");
+        payload = collectTicketPayload(cells);
+        submitCreateTicketToCloudFlow(primaryButton, payload, triggerUrl);
+        window.setTimeout(function () {
+          formRoot.removeAttribute("data-itops-cloudflow-submitting");
+        }, 1000);
+        return false;
+      }, true);
+    }
+
+    Array.prototype.slice.call(submitButtons).forEach(function (button) {
+      if (!button) {
+        return;
+      }
+
+      var label = normalizeTicketText(button.textContent || button.value || "");
+      if (label.indexOf("submit") === -1 && label.indexOf("save") === -1) {
+        return;
+      }
+
+      button = replaceWithCleanNode(button);
+      if (!button || button.getAttribute("data-itops-cloudflow-bound") === "true") {
+        return;
+      }
+
+      if (button.tagName === "INPUT" || button.tagName === "BUTTON") {
+        button.setAttribute("type", "button");
+      }
+
+      button.setAttribute("data-itops-cloudflow-bound", "true");
+      button.setAttribute("data-itops-primary-submit", "true");
+      button.addEventListener("click", function (event) {
+        var payload = collectTicketPayload(cells);
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === "function") {
+          event.stopImmediatePropagation();
+        }
+        clearTicketAlert();
+
+        if (formRoot && formRoot.getAttribute("data-itops-cloudflow-submitting") === "true") {
+          return;
+        }
+
+        if (formRoot) {
+          formRoot.setAttribute("data-itops-cloudflow-submitting", "true");
+        }
+        submitCreateTicketToCloudFlow(button, payload, triggerUrl);
+        window.setTimeout(function () {
+          if (formRoot) {
+            formRoot.removeAttribute("data-itops-cloudflow-submitting");
+          }
+        }, 1000);
+      });
+    });
+  }
+
+  function moveFieldContents(source, target, spanClass) {
+    if (!source || !target) {
+      return;
+    }
+
+    var field = document.createElement("div");
+    field.className = "itops-field " + (spanClass || "itops-span-6");
+
+    while (source.firstChild) {
+      field.appendChild(source.firstChild);
+    }
+
+    source.classList.add("itops-hidden-source");
+    target.appendChild(field);
+  }
+
+  function createTicketCard(title, subtitle, iconName) {
+    var card = document.createElement("section");
+    card.className = "itops-ticket-card";
+    card.innerHTML =
+      '<div class="itops-ticket-card-header">' +
+        '<span class="itops-card-icon">' + createTicketIcon(iconName) + '</span>' +
+        '<div>' +
+          '<h2>' + title + '</h2>' +
+          '<p>' + subtitle + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="itops-ticket-fields"></div>';
+
+    return card;
+  }
+
+  function enhanceCreateTicketPage() {
+    if (document.body.classList.contains("itops-ticket-page-ready")) {
+      return;
+    }
+
+    var formRoot = findCreateTicketFormRoot();
+    if (!formRoot) {
+      return;
+    }
+
+    var cells = findFieldCells(formRoot);
+    if (!cells.length) {
+      return;
+    }
+
+    var signals = [
+      "ticket title",
+      "project",
+      "ticket status",
+      "type",
+      "module",
+      "sub module",
+      "requestor",
+      "assignee",
+      "description",
+      "attachment"
+    ];
+
+    var hitCount = 0;
+    for (var i = 0; i < signals.length; i += 1) {
+      if (findCellByLabels(cells, [signals[i]])) {
+        hitCount += 1;
+      }
+    }
+
+    if (hitCount < 4 && !{{ is_create_ticket_page | json }}) {
+      return;
+    }
+
+    document.body.classList.add("itops-ticket-page", "itops-ticket-page-ready");
+
+    var pageTitle = document.getElementById("mainContent");
+    var titleText = pageTitle ? pageTitle.textContent.trim() : "New Ticket";
+    var hero = document.createElement("div");
+    hero.className = "itops-ticket-hero";
+    hero.innerHTML =
+      '<div class="itops-ticket-hero-copy">' +
+        '<span class="itops-ticket-badge">' + createTicketIcon("ticket") + '</span>' +
+        '<div class="itops-ticket-title-wrap">' +
+          '<div>' +
+            '<h1>' + titleText + '</h1>' +
+            '<p>Submit a new request to IT Support</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="itops-ticket-hero-actions"></div>';
+
+    var shell = document.createElement("div");
+    shell.className = "itops-create-ticket";
+
+    var ticketInfoCard = createTicketCard("Ticket Information", "Provide the basic details about your request", "info");
+    var assignmentCard = createTicketCard("Assignment", "Select the requester and assignee", "users");
+    var descriptionCard = createTicketCard("Description", "Provide a detailed description of your issue", "description");
+    var attachmentsCard = createTicketCard("Attachments", "Upload any relevant files or screenshots", "attachment");
+
+    var topGrid = document.createElement("div");
+    topGrid.className = "itops-ticket-grid";
+    topGrid.appendChild(ticketInfoCard);
+    topGrid.appendChild(assignmentCard);
+
+    var bottomGrid = document.createElement("div");
+    bottomGrid.className = "itops-ticket-grid-secondary";
+    bottomGrid.appendChild(descriptionCard);
+    bottomGrid.appendChild(attachmentsCard);
+
+    shell.appendChild(hero);
+    shell.appendChild(topGrid);
+    shell.appendChild(bottomGrid);
+    formRoot.insertBefore(shell, formRoot.firstChild);
+
+    var cardTargets = {
+      title: { labels: ["ticket title", "title"], card: ticketInfoCard, span: "itops-span-4" },
+      project: { labels: ["project"], card: ticketInfoCard, span: "itops-span-3" },
+      status: { labels: ["ticket status", "status"], card: ticketInfoCard, span: "itops-span-3" },
+      type: { labels: ["type"], card: ticketInfoCard, span: "itops-span-2" },
+      module: { labels: ["module"], card: ticketInfoCard, span: "itops-span-4" },
+      submodule: { labels: ["sub module", "submodule"], card: ticketInfoCard, span: "itops-span-4" },
+      requestor: { labels: ["requestor", "requester"], card: assignmentCard, span: "itops-span-6" },
+      assignee: { labels: ["assignee"], card: assignmentCard, span: "itops-span-6" },
+      description: { labels: ["description"], card: descriptionCard, span: "itops-span-12" },
+      attachment: { labels: ["attachment", "attachments"], card: attachmentsCard, span: "itops-span-12" }
+    };
+
+    var movedCells = [];
+    Object.keys(cardTargets).forEach(function (key) {
+      var config = cardTargets[key];
+      var source = findCellByLabels(cells, config.labels);
+      if (source) {
+        movedCells.push(source);
+        moveFieldContents(source, config.card.querySelector(".itops-ticket-fields"), config.span);
+      }
+    });
+
+    var remainingTargets = ticketInfoCard.querySelector(".itops-ticket-fields");
+    cells.forEach(function (cell) {
+      if (movedCells.indexOf(cell) !== -1) {
+        return;
+      }
+
+      if (!cell.querySelector("input, select, textarea, .ql-toolbar, .notescontrol, .attachments, .fileAttachment")) {
+        return;
+      }
+
+      moveFieldContents(cell, remainingTargets, "itops-span-6");
+    });
+
+    var actionHost = hero.querySelector(".itops-ticket-hero-actions");
+    var actionButtons = formRoot.querySelectorAll(".actions input, .actions button, .actions a, .form-action-container input, .form-action-container button, .form-action-container a, .entity-action-button, .submit-btn");
+    Array.prototype.slice.call(actionButtons).forEach(function (button) {
+      var label = normalizeTicketText(button.textContent || button.value || "");
+      var canInsertIcon = button.tagName !== "INPUT";
+      if (label.indexOf("submit") !== -1 || label.indexOf("save") !== -1) {
+        if (canInsertIcon) {
+          button.insertAdjacentHTML("afterbegin", createTicketIcon("submit"));
+        }
+        button.classList.add("btn-primary");
+      } else if (label.indexOf("back") !== -1 || label.indexOf("cancel") !== -1) {
+        if (canInsertIcon) {
+          button.insertAdjacentHTML("afterbegin", createTicketIcon("back"));
+        }
+      }
+
+      actionHost.appendChild(button);
+    });
+
+    bindCreateTicketCloudFlow(formRoot, cells, actionButtons);
+
+    Array.prototype.slice.call(formRoot.querySelectorAll(".tab, .section, table, tbody, tr, .actions, .form-action-container")).forEach(function (node) {
+      if (!shell.contains(node) && !hero.contains(node)) {
+        node.classList.add("itops-hidden-source");
+      }
+    });
+
+    var currentUser = {
+      name: {{ user.fullname | default: user.name | default: "" | json }},
+      email: {{ user.email | default: user.emailaddress1 | default: "" | json }}
+    };
+    var requestorControl = findFieldControlByLabels(cells, ["requestor", "requester"]);
+    var assigneeControl = findFieldControlByLabels(cells, ["assignee"]);
+    var statusControl = findFieldControlByLabels(cells, ["ticket status", "status"]);
+
+    if (requestorControl) {
+      if (!setTicketFieldValue(requestorControl, currentUser.name)) {
+        setTicketFieldValue(requestorControl, currentUser.email);
+      }
+
+      if (currentUser.name || currentUser.email) {
+        lockTicketField(requestorControl);
+      }
+    }
+
+    if (statusControl) {
+      setTicketFieldValue(statusControl, "Open") || setTicketFieldValue(statusControl, "Working");
+    }
+
+    if (assigneeControl && assigneeControl.tagName && assigneeControl.tagName.toLowerCase() === "select") {
+      var placeholderOption = Array.prototype.slice.call(assigneeControl.options || []).find(function (option) {
+        var optionText = normalizeTicketText(option.textContent || "");
+        return optionText === "" || optionText.indexOf("select") !== -1 || optionText.indexOf("choose") !== -1;
+      });
+
+      if (placeholderOption && !assigneeControl.value) {
+        assigneeControl.value = placeholderOption.value;
+      }
+    }
+  }
+
+  window.onload = function() {
+    if (window.navigator.appName == "Microsoft Internet Explorer" || window.navigator.userAgent.indexOf("Trident") > 0) {
+      var searchElement = document.getElementById("search");
+      if (searchElement != null) searchElement.setAttribute("href", "");
+    }
+
+    {% if is_signin_page %}
+    var externalLogin = document.querySelector(".external-login, .signin");
+    var signedInEmail = "{{ user.email | default: user.emailaddress1 | default: '' | escape }}";
+
+    if (externalLogin && !document.querySelector(".itops-signin-card")) {
+      var wrapper = document.createElement("div");
+      wrapper.className = "itops-signin-card";
+      externalLogin.innerHTML = "";
+      wrapper.innerHTML =
+          '<div class="signin-stage">' +
+          '<div class="signin-card">' +
+            '<div class="signin-brand" aria-hidden="true">' +
+              '<svg viewBox="0 0 90 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ETG logo">' +
+                '<rect x="0.5" y="0.5" width="89" height="35" rx="2" fill="#111111"/>' +
+                '<text x="10" y="24" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="800">ETG</text>' +
+                '<path d="M67 9 75 17 67 25" fill="none" stroke="#ff3c2f" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<circle cx="74.5" cy="17" r="2.4" fill="#ff3c2f"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div class="signin-board-left" aria-hidden="true">' +
+              '<div class="signin-art">' +
+                '<svg viewBox="0 0 920 920" xmlns="http://www.w3.org/2000/svg" role="presentation">' +
+                  '<defs>' +
+                    '<linearGradient id="signinGlowHeader" x1="120" y1="120" x2="820" y2="820" gradientUnits="userSpaceOnUse">' +
+                      '<stop offset="0" stop-color="#2f79e4"/>' +
+                      '<stop offset="1" stop-color="#1b59cb"/>' +
+                    '</linearGradient>' +
+                    '<filter id="signinShadowHeader" x="-20%" y="-20%" width="140%" height="140%">' +
+                      '<feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#214e9b" flood-opacity="0.12"/>' +
+                    '</filter>' +
+                  '</defs>' +
+                  '<path d="M48 780c150-96 258-96 380 0s238 96 444 0" fill="none" stroke="#cfe3ff" stroke-width="2" opacity="0.9"/>' +
+                  '<path d="M32 732c186-116 312-116 476 0s320 116 380 0" fill="none" stroke="#b9d4ff" stroke-width="2" opacity="0.55"/>' +
+                  '<path d="M4 692c176-110 322-110 470 0s286 110 442 0" fill="none" stroke="#a7c8ff" stroke-width="2" opacity="0.5"/>' +
+                  '<g filter="url(#signinShadowHeader)">' +
+                    '<circle cx="456" cy="448" r="168" fill="#ffffff" stroke="url(#signinGlowHeader)" stroke-width="6"/>' +
+                    '<circle cx="456" cy="448" r="123" fill="#ffffff" stroke="#1f67d8" stroke-width="14"/>' +
+                    '<path d="M396 446c0-31 27-56 60-56s60 25 60 56" fill="none" stroke="#1f67d8" stroke-width="16" stroke-linecap="round"/>' +
+                    '<rect x="384" y="468" width="42" height="88" rx="18" fill="#1f67d8"/>' +
+                    '<rect x="486" y="468" width="42" height="88" rx="18" fill="#1f67d8"/>' +
+                    '<rect x="424" y="542" width="64" height="24" rx="12" fill="#1f67d8"/>' +
+                  '</g>' +
+                  '<g stroke="#1f67d8" stroke-width="3" fill="#ffffff">' +
+                    '<circle cx="456" cy="188" r="60"/>' +
+                    '<circle cx="710" cy="330" r="60"/>' +
+                    '<circle cx="706" cy="608" r="60"/>' +
+                    '<circle cx="456" cy="736" r="60"/>' +
+                    '<circle cx="194" cy="608" r="60"/>' +
+                    '<circle cx="190" cy="330" r="60"/>' +
+                  '</g>' +
+                  '<g fill="none" stroke="#1f67d8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<path d="M430 159v-16c0-14 12-25 26-25s26 11 26 25v16"/>' +
+                    '<rect x="416" y="160" width="80" height="82" rx="6"/>' +
+                    '<path d="M193 314l22 24 28-34"/>' +
+                    '<path d="M185 348h20"/>' +
+                    '<path d="M196 608h-18"/>' +
+                    '<path d="M178 608c0-22 18-40 40-40h6"/>' +
+                    '<path d="M696 330h28"/>' +
+                    '<path d="M696 330l-25-24"/>' +
+                    '<path d="M696 330l-25 24"/>' +
+                    '<rect x="691" y="567" width="32" height="32" rx="6"/>' +
+                    '<path d="M435 734h42"/>' +
+                    '<path d="M456 710v44"/>' +
+                  '</g>' +
+                  '<g fill="#1f67d8">' +
+                    '<circle cx="456" cy="270" r="8"/>' +
+                    '<circle cx="336" cy="352" r="8"/>' +
+                    '<circle cx="298" cy="520" r="8"/>' +
+                    '<circle cx="456" cy="610" r="8"/>' +
+                    '<circle cx="614" cy="520" r="8"/>' +
+                    '<circle cx="576" cy="352" r="8"/>' +
+                    '<circle cx="456" cy="188" r="10"/>' +
+                    '<circle cx="710" cy="330" r="10"/>' +
+                    '<circle cx="706" cy="608" r="10"/>' +
+                    '<circle cx="456" cy="736" r="10"/>' +
+                    '<circle cx="194" cy="608" r="10"/>' +
+                    '<circle cx="190" cy="330" r="10"/>' +
+                  '</g>' +
+                  '<path d="M456 188C405 188 365 203 336 228" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M456 188C507 188 546 203 576 228" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M710 330C682 306 651 286 616 273" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M706 608C676 634 646 652 612 668" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M456 736C410 736 371 725 336 703" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M194 608C224 634 254 652 288 668" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<path d="M190 330C217 305 249 286 284 274" fill="none" stroke="#7ca8ff" stroke-width="2" stroke-dasharray="8 12"/>' +
+                  '<rect x="385" y="790" width="142" height="60" rx="10" fill="#ffffff" stroke="#1f67d8" stroke-width="6"/>' +
+                  '<rect x="400" y="805" width="112" height="30" rx="6" fill="#1f67d8"/>' +
+                  '<text x="456" y="827" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="800" fill="#ffffff">TICKET</text>' +
+                  '<path d="M385 850h142" stroke="#1f67d8" stroke-width="8" stroke-linecap="round"/>' +
+                '</svg>' +
+              '</div>' +
+            '</div>' +
+            '<div class="signin-board-right">' +
+              '<div class="signin-panel">' +
+                '<div>' +
+                  '<h1 class="signin-title"><span class="accent">ETG-</span> IT Support Hub</h1>' +
+                  '<div class="signin-title-line"></div>' +
+                '</div>' +
+                '<p class="signin-subtitle">Sign in to your account to continue</p>' +
+                '<div class="signin-field">' +
+                  '<label for="signin-email">Email</label>' +
+                  '<div class="signin-input-shell">' +
+                    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+                      '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.8"/>' +
+                      '<path d="m5.5 7.5 6.5 5 6.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+                    '</svg>' +
+                    '<input id="signin-email" type="email" placeholder="Enter your email" autocomplete="email" value="' + signedInEmail + '" />' +
+                  '</div>' +
+                '</div>' +
+                '<button class="signin-button" id="signin-login-button" type="button">' +
+                  '<span class="signin-button-inner">' +
+                    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+                      '<path d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5v7A2.5 2.5 0 0 0 6.5 18H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+                      '<path d="M13 12h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+                      '<path d="m16 9 4 3-4 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+                    '</svg>' +
+                    '<span>Login</span>' +
+                  '</span>' +
+                '</button>' +
+                '<div class="signin-security">' +
+                  '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+                    '<path d="M12 3 19 6.5v5.1c0 4.7-3.1 7.9-7 9.9-3.9-2-7-5.2-7-9.9V6.5L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>' +
+                    '<path d="M9.5 12.2 11.2 14l3.7-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+                  '</svg>' +
+                  '<span>Your data is secure and protected</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="signin-footer">&#169; 2024 ETG. All rights reserved.</div>' +
+        '</div>';
+
+      externalLogin.appendChild(wrapper);
+
+      var loginButton = wrapper.querySelector("#signin-login-button");
+      var emailInput = wrapper.querySelector("#signin-email");
+
+      try {
+        var storedEmail = window.sessionStorage ? window.sessionStorage.getItem("itopsSigninEmail") : "";
+        if (storedEmail && emailInput) {
+          emailInput.value = storedEmail;
+        }
+      } catch (error) {
+        /* ignore storage errors */
+      }
+
+      if (emailInput) {
+        emailInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (loginButton) {
+              loginButton.click();
+            }
+          }
+        });
+      }
+
+      if (loginButton) {
+        loginButton.addEventListener("click", function () {
+          try {
+            if (emailInput && emailInput.value && window.sessionStorage) {
+              window.sessionStorage.setItem("itopsSigninEmail", emailInput.value.trim());
+            }
+          } catch (error) {
+            /* ignore storage errors */
+          }
+
+          window.location.href = "{{ website.sign_in_url_substitution }}";
+        });
+      }
+    }
+    {% endif %}
+
+    enhanceCreateTicketPage();
+  };
+  function setHeight() {
+    var windowHeight = window.innerHeight - 140;
+    var navbar = document.getElementById("navbar");
+    if (navbar) {
+      navbar.style.maxHeight = windowHeight + "px";
+    }
+  }
+  window.addEventListener('resize', function(event) {
+    setHeight();
+  });
+</script>

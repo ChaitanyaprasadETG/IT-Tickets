@@ -1,0 +1,22 @@
+- adx_disablepagevalidation: false
+  adx_displayimageonly: false
+  adx_displayorder: 1
+  adx_displaypagechildlinks: false
+  adx_name: My profile
+  adx_openinnewwindow: false
+  adx_pageid: bd6c4623-855e-f111-a826-7c1e5251d90e
+  adx_publishingstateid: 4de14d1d-855e-f111-a826-7c1e5251d90e
+  adx_robotsfollowlink: true
+  adx_weblinkid: aee14d1d-855e-f111-a826-7c1e5251d90e
+  adx_weblinksetid: ab854829-855e-f111-a826-7c1e5251d90e
+- adx_disablepagevalidation: false
+  adx_displayimageonly: false
+  adx_displayorder: 2
+  adx_displaypagechildlinks: false
+  adx_name: My Attendees
+  adx_openinnewwindow: false
+  adx_pageid: 9ee04d1d-855e-f111-a826-7c1e5251d90e
+  adx_publishingstateid: 4de14d1d-855e-f111-a826-7c1e5251d90e
+  adx_robotsfollowlink: false
+  adx_weblinkid: c16c4623-855e-f111-a826-7c1e5251d90e
+  adx_weblinksetid: ab854829-855e-f111-a826-7c1e5251d90e
