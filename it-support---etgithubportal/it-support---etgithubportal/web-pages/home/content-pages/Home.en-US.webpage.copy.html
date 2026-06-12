@@ -12,7 +12,13 @@
     <order attribute="cr2b4_modified" descending="true" />
   </entity>
 </fetch>
-{% endfetchxml %} {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% if user %} {% assign hub_role = 'User' %} {% endif %} {% if user and user.roles contains 'Administrators' %} {% assign hub_role = 'Admin' %} {% endif %} {% if user and user.roles contains 'Admin' %} {% assign hub_role = 'Admin' %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% assign allowed_project_keys = '|' %} {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title %} {% assign security_text = row.cr2b4_defaultx0020assignee | append: '|' | append: row.cr2b4_businessx0020users | append: '|' | append: row.cr2b4_projectx0020owners | downcase %} {% assign can_view_project = false %} {% if hub_email_lc != blank and security_text contains hub_email_lc %} {% assign can_view_project = true %} {% endif %} {% if hub_role == 'Admin' %} {% assign can_view_project = true %} {% endif %} {% if project_name != blank and can_view_project %} {% assign allowed_project_keys = allowed_project_keys | append: project_name | downcase | append: '|' %} {% endif %} {% endfor %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = 'b6e089e9-fd5f-f111-a826-7c1e5251d90e' %}
+{% endfetchxml %} {% fetchxml ticketRows %}
+<fetch top="500">
+  <entity name="new_it_tickets">
+    <all-attributes />
+  </entity>
+</fetch>
+{% endfetchxml %} {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% if user %} {% assign hub_role = 'User' %} {% endif %} {% if user and user.roles contains 'Administrators' %} {% assign hub_role = 'Admin' %} {% endif %} {% if user and user.roles contains 'Admin' %} {% assign hub_role = 'Admin' %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% assign allowed_project_keys = '|' %} {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% assign assignee_email = row.cr2b4_defaultx0020assignee | default: '' | strip | downcase %} {% assign business_user_email = row.cr2b4_businessx0020users | default: '' | strip | downcase %} {% assign project_owner_email = row.cr2b4_projectx0020owners | default: '' | strip | downcase %} {% assign security_text = assignee_email | append: '|' | append: business_user_email | append: '|' | append: project_owner_email %} {% assign can_view_project = false %} {% if hub_email_lc != blank and security_text contains hub_email_lc %} {% assign can_view_project = true %} {% endif %} {% if hub_role == 'Admin' %} {% assign can_view_project = true %} {% endif %} {% if project_name != blank and can_view_project %} {% assign allowed_project_keys = allowed_project_keys | append: project_name | downcase | append: '|' %} {% endif %} {% endfor %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = 'b6e089e9-fd5f-f111-a826-7c1e5251d90e' %} {% assign get_tickets_flow_url = settings['ITSupport/GetTicketsFlowUrl'] | default: '' %}
 
 <style>
   header,
@@ -4197,7 +4203,7 @@ html {
       <div class="itops-project-label">Projects</div>
       <select id="project-filter">
         <option value="">Find items</option>
-        {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title %} {% assign security_text = row.cr2b4_defaultx0020assignee | append: '|' | append: row.cr2b4_businessx0020users | append: '|' | append: row.cr2b4_projectx0020owners | downcase %} {% assign can_view_project = false %} {% if hub_email_lc != blank and security_text contains hub_email_lc %} {% assign can_view_project = true %} {% endif %} {% if hub_role == 'Admin' %} {% assign can_view_project = true %} {% endif %} {% if project_name != blank and can_view_project %}
+        {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% assign project_key = project_name | downcase | prepend: '|' | append: '|' %} {% if project_name != blank and allowed_project_keys contains project_key %}
         <option value="{{ project_name | escape }}" data-assignee="{{ row.cr2b4_defaultx0020assignee | escape }}" data-bu="{{ row.cr2b4_businessx0020users | escape }}" data-po="{{ row.cr2b4_projectx0020owners | escape }}">{{ project_name }}</option>
         {% endif %} {% endfor %}
       </select>
@@ -4355,29 +4361,9 @@ html {
             </tr>
           </thead>
           <tbody id="ticket-table-body">
-            {% assign rendered_project_count = 0 %} {% if securityRows.results.entities.size > 0 %} {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title %} {% assign project_key = project_name | downcase | prepend: '|' | append: '|' %} {% if project_name != blank and allowed_project_keys contains project_key %} {% assign rendered_project_count = rendered_project_count | plus: 1 %} {% assign ticket_prefix = project_name | default: 'REQ' %}
-            <tr data-row="true" data-project="{{ project_name | escape }}" data-assignee="{{ row.cr2b4_defaultx0020assignee | escape }}" data-bu="{{ row.cr2b4_businessx0020users | escape }}" data-po="{{ row.cr2b4_projectx0020owners | escape }}" data-requestor="{{ hub_name | escape }}" data-requestor-email="{{ hub_email | escape }}" data-followup="" data-attachments="[]">
-              <td>{{ ticket_prefix | upcase }}-{{ forloop.rindex | prepend: '00' | slice: -3, 3 }}</td>
-              <td>{{ row.cr2b4_title | default: 'Ticket Record' | escape }}</td>
-              <td>Bug</td>
-              <td>{{ project_name | escape }}</td>
-              <td>NA</td>
-              <td>NA</td>
-              <td>{% cycle 'Working', 'Closed', 'Resolved', 'Reassigned' %}</td>
-              <td>{{ row.cr2b4_defaultx0020assignee | default: user.email | default: 'Not Assigned' | escape }}</td>
-              <td>{% cycle '', 'UAT Complete', '', '' %}</td>
-              <td class="itops-row-action">
-                <button class="itops-row-trigger" type="button" data-menu="row-menu-{{ forloop.index }}">&#8942;</button>
-                <div id="row-menu-{{ forloop.index }}" class="itops-col-menu">
-                  <button class="itops-col-menu-item" type="button" data-action="view-ticket">View</button>
-                </div>
-              </td>
-            </tr>
-            {% endif %} {% endfor %} {% endif %} {% if rendered_project_count == 0 %}
             <tr id="no-records-row">
               <td colspan="10" class="itops-empty">No records available</td>
             </tr>
-            {% endif %}
           </tbody>
         </table>
       </div>
@@ -4855,13 +4841,31 @@ html {
       var accordionToggles = Array.prototype.slice.call(document.querySelectorAll("[data-accordion-toggle]"));
       var rows = Array.prototype.slice.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"));
       var activeFilter = null;
-      var activeQuickView = "home-open";
+      var activeQuickView = "home-all";
       var activeDetailTicket = null;
       var mentionCandidates = [];
       var pendingFollowupAttachments = [];
       var createTicketCloudFlowId = "{{ create_ticket_cloud_flow_id | escape }}";
+      var getTicketsFlowUrl = "{{ get_tickets_flow_url | escape }}";
       var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: '' | escape }}";
       var followupCommentsAttribute = "cr2b4_followup_comments";
+      var serverTicketRows = [{% for row in ticketRows.results.entities %}{
+        new_it_ticketsid:"{{ row.new_it_ticketsid | default: row.new_it_ticketid | default: row.new_id | default: '' | escape }}",
+        new_ticket_id:"{{ row.new_ticket_id | default: row.new_ticketid | default: row.new_ticket_x0020_id | default: row.new_ticketno | default: row.new_id | default: '' | escape }}",
+        new_ticket_title:"{{ row.new_ticket_title | default: row.new_title | default: row.new_ticket_x0020_title | default: row.title | default: row.new_name | default: '' | escape }}",
+        new_issue_type:"{{ row.new_issue_type | default: row.new_type | default: row.new_issue_x0020_type | default: '' | escape }}",
+        new_applicationproject:"{{ row.new_applicationproject | default: row.new_application_project | default: row.new_project | default: row.new_projectname | default: '' | escape }}",
+        new_module:"{{ row.new_module | default: row.new_modulename | default: '' | escape }}",
+        new_sub_module:"{{ row.new_sub_module | default: row.new_sub_x0020_module | default: row.new_submodule | default: '' | escape }}",
+        new_status:"{{ row.new_status | default: row.new_current_status | default: '' | escape }}",
+        new_defaultassignee:"{{ row.new_defaultassignee | default: row.new_default_x0020_assignee | default: row.new_assignedto | default: row.new_assigned_to | default: '' | escape }}",
+        new_resolution_comments:"{{ row.new_resolution_comments | default: row.new_resolution | default: '' | escape }}",
+        new_businessusers:"{{ row.new_businessusers | default: row.new_business_users | default: '' | escape }}",
+        new_projectowners:"{{ row.new_projectowners | default: row.new_project_owners | default: '' | escape }}",
+        new_requestor:"{{ row.new_requestor | default: row.new_requested_by | default: '' | escape }}",
+        new_requestoremail:"{{ row.new_requestoremail | default: row.new_requestor_email | default: row.new_requestedbyemail | default: '' | escape }}",
+        new_followup_comments:"{{ row.new_followup_comments | default: row.new_followup | default: '' | escape }}"
+      }{% unless forloop.last %},{% endunless %}{% endfor %}];
       var editingUserRow = null;
 
       bindEvents();
@@ -4874,7 +4878,7 @@ html {
       filterRows();
       switchMainView(activeQuickView);
       updateRequestSummary();
-      loadTicketRowsFromDataverse();
+      loadTicketRows();
 
       function bindSigninLogin() {
         if (signinEmailInput) {
@@ -5488,10 +5492,33 @@ function switchMainView(viewName) {
       }
 
       function matchesQuickView(row) {
+        var statusCell = row && row.cells && row.cells[6] ? normalize(row.cells[6].textContent).toLowerCase() : "";
+
+        if (activeQuickView === "home-all" || !activeQuickView) {
+          return true;
+        }
+
+        if (activeQuickView === "home-open") {
+          return statusCell === "open";
+        }
+
+        if (activeQuickView === "home-inprogress") {
+          return statusCell === "working" ||
+            statusCell === "reassigned" ||
+            statusCell === "pending" ||
+            statusCell === "user-testing" ||
+            statusCell === "uat" ||
+            statusCell === "in progress" ||
+            statusCell === "inprogress";
+        }
+
+        if (activeQuickView === "home-closed") {
+          return statusCell === "closed" || statusCell === "resolved";
+        }
+
         return true;
       }
 
-      
       function itopsEmailToFullName(value) {
         var text = (value || "").toString().trim();
         if (!text) {
@@ -6165,22 +6192,29 @@ function bindEvents() {
         var openCount = 0;
         var pendingCount = 0;
         var closedCount = 0;
-        var totalCount = 0;
+        var selectedProject = normalize(projectFilter ? projectFilter.value : "");
 
         rows.forEach(function (row) {
-          if (!row || row.style.display === "none") {
+          if (!row) {
+            return;
+          }
+
+          var rowProject = normalize(row.getAttribute("data-project"));
+          var matchesProject = !selectedProject || rowProject === selectedProject;
+          var matchesColumn = matchesActiveFilter(row);
+
+          if (!matchesProject || !matchesColumn) {
             return;
           }
 
           var statusCell = row.cells && row.cells[6] ? normalize(row.cells[6].textContent).toLowerCase() : "";
-          totalCount += 1;
 
           if (statusCell === "closed" || statusCell === "resolved") {
             closedCount += 1;
             return;
           }
 
-          if (statusCell === "working" || statusCell === "reassigned" || statusCell === "pending") {
+          if (statusCell === "working" || statusCell === "reassigned" || statusCell === "pending" || statusCell === "user-testing" || statusCell === "uat" || statusCell === "in progress" || statusCell === "inprogress") {
             pendingCount += 1;
             return;
           }
@@ -6570,29 +6604,128 @@ function submitTicketForm() {
         rows = Array.prototype.slice.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"));
       }
 
-      function loadTicketRowsFromDataverse() {
-        var body = document.getElementById("ticket-table-body");
-        var allowedProjects = getAllowedProjects();
-        var entitySets = [
-          "cr2b4_it_ticketses",
-          "cr2b4_it_tickets",
-          "cr2b4_it_ticketss"
-        ];
+      function loadTicketRows() {
+        resetTicketRows();
+        if (serverTicketRows && serverTicketRows.length) {
+          var allowedProjects = getAllowedProjects();
+          var serverTickets = serverTicketRows
+            .map(function (record) {
+              return normalizeTicketRecord(record, "new_it_tickets");
+            })
+            .filter(function (ticket) {
+              return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
+            });
 
-        if (!body || !allowedProjects.length || !window.jQuery) {
+          if (serverTickets.length) {
+            renderTicketRows(serverTickets);
+            return;
+          }
+        }
+
+        if (getTicketsFlowUrl) {
+          loadTicketRowsFromFlow()
+            .catch(function () {
+              loadTicketRowsFromDataverse();
+            });
           return;
         }
 
-        tryEntitySet(0);
+        loadTicketRowsFromDataverse();
+      }
 
-        function tryEntitySet(index) {
-          if (index >= entitySets.length) {
+      function resetTicketRows() {
+        var body = document.getElementById("ticket-table-body");
+
+        if (!body) {
+          return;
+        }
+
+        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets...</td></tr>';
+        rows = [];
+      }
+
+      function loadTicketRowsFromDataverse() {
+        var body = document.getElementById("ticket-table-body");
+        var allowedProjects = getAllowedProjects();
+        if (!body || !allowedProjects.length || !window.jQuery) {
+          toggleEmptyState(true);
+          return;
+        }
+
+        getTicketEntitySets()
+          .then(function (entitySets) {
+            tryEntitySet(entitySets, 0);
+          })
+          .catch(function () {
+            tryEntitySet(getPreferredTicketEntitySets(), 0);
+          });
+
+        function getPreferredTicketEntitySets() {
+          return [
+            "new_it_tickets",
+            "new_it_ticketses",
+            "new_it_ticket",
+            "new_it_ticketset",
+            "cr2b4_it_ticketses",
+            "cr2b4_it_tickets",
+            "cr2b4_it_ticketss"
+          ];
+        }
+
+        function getTicketEntitySets() {
+          return new Promise(function (resolve, reject) {
+            window.jQuery.ajax({
+              type: "GET",
+              url: "/_api/",
+              headers: {
+                Accept: "application/json"
+              }
+            })
+              .done(function (data) {
+                var values = data && data.value ? data.value : [];
+                var discovered = values
+                  .map(function (item) {
+                    return item && (item.url || item.name || "");
+                  })
+                  .filter(function (name) {
+                    return /ticket/i.test(String(name || ""));
+                  });
+                var seen = {};
+                var ordered = getPreferredTicketEntitySets()
+                  .concat(discovered)
+                  .filter(function (name) {
+                    var key = String(name || "").toLowerCase();
+
+                    if (!key || seen[key]) {
+                      return false;
+                    }
+
+                    seen[key] = true;
+                    return true;
+                  });
+
+                if (ordered.length) {
+                  resolve(ordered);
+                  return;
+                }
+
+                reject(new Error("No ticket entity sets discovered."));
+              })
+              .fail(function () {
+                reject(new Error("Unable to read API service document."));
+              });
+          });
+        }
+
+        function tryEntitySet(entitySets, index) {
+          if (!entitySets || index >= entitySets.length) {
+            toggleEmptyState(true);
             return;
           }
 
           window.jQuery.ajax({
             type: "GET",
-            url: "/_api/" + entitySets[index] + "?$top=500",
+            url: "/_api/" + entitySets[index] + "?$top=500&$count=true",
             headers: {
               Accept: "application/json"
             }
@@ -6605,14 +6738,209 @@ function submitTicketForm() {
                 return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
               });
 
-              if (tickets.length) {
+              if (isLikelyTicketResult(tickets)) {
                 renderTicketRows(tickets);
+                return;
               }
+
+              tryEntitySet(entitySets, index + 1);
             })
             .fail(function () {
-              tryEntitySet(index + 1);
+              tryEntitySet(entitySets, index + 1);
             });
         }
+
+        function isLikelyTicketResult(tickets) {
+          if (!tickets || !tickets.length) {
+            return false;
+          }
+
+          return tickets.some(function (ticket) {
+            return Boolean(ticket.ticketId || ticket.title || ticket.status || ticket.type || ticket.module || ticket.subModule);
+          });
+        }
+      }
+
+      function loadTicketRowsFromFlow() {
+        var body = document.getElementById("ticket-table-body");
+        var allowedProjects = getAllowedProjects();
+
+        if (!body || !allowedProjects.length) {
+          toggleEmptyState(true);
+          return Promise.resolve();
+        }
+
+        var payload = {
+          Email: "{{ hub_email | escape }}",
+          FullName: "{{ hub_name | escape }}",
+          SelectedProject: normalize(projectFilter ? projectFilter.value : ""),
+          AllowedProjects: allowedProjects
+        };
+
+        var requestPromise = String(getTicketsFlowUrl || "").indexOf("/_api/") === 0
+          ? safePowerPagesPost({
+              type: "POST",
+              url: getTicketsFlowUrl,
+              contentType: "application/json",
+              data: JSON.stringify(payload)
+            })
+          : fetch(getTicketsFlowUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            }).then(function (response) {
+              if (!response.ok) {
+                throw new Error("Ticket flow returned status " + response.status + ".");
+              }
+
+              return response.text().then(function (text) {
+                if (!text) {
+                  return {};
+                }
+
+                try {
+                  return JSON.parse(text);
+                } catch (error) {
+                  return {};
+                }
+              });
+            });
+
+        return withTimeout(
+          requestPromise,
+          15000,
+          "Ticket flow request timed out."
+        )
+          .then(function (payload) {
+            if (typeof payload === "string") {
+              try {
+                payload = JSON.parse(payload);
+              } catch (error) {
+                payload = {};
+              }
+            }
+
+            var records = extractTicketRecords(payload);
+            var tickets = records
+              .map(function (record) {
+                return normalizeFlowTicketRecord(record);
+              })
+              .filter(function (ticket) {
+                return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
+              });
+
+            if (tickets.length) {
+              renderTicketRows(tickets);
+              return;
+            }
+
+            toggleEmptyState(true);
+          });
+      }
+
+      function withTimeout(promise, timeoutMs, message) {
+        return new Promise(function (resolve, reject) {
+          var settled = false;
+          var timer = window.setTimeout(function () {
+            if (settled) {
+              return;
+            }
+
+            settled = true;
+            reject(new Error(message || "Request timed out."));
+          }, timeoutMs);
+
+          promise
+            .then(function (result) {
+              if (settled) {
+                return;
+              }
+
+              settled = true;
+              window.clearTimeout(timer);
+              resolve(result);
+            })
+            .catch(function (error) {
+              if (settled) {
+                return;
+              }
+
+              settled = true;
+              window.clearTimeout(timer);
+              reject(error);
+            });
+        });
+      }
+
+      function extractTicketRecords(payload) {
+        if (!payload) {
+          return [];
+        }
+
+        if (Array.isArray(payload)) {
+          return payload;
+        }
+
+        if (Array.isArray(payload.value)) {
+          return payload.value;
+        }
+
+        if (Array.isArray(payload.tickets)) {
+          return payload.tickets;
+        }
+
+        if (payload.data && Array.isArray(payload.data)) {
+          return payload.data;
+        }
+
+        if (payload.body) {
+          if (Array.isArray(payload.body)) {
+            return payload.body;
+          }
+
+          if (Array.isArray(payload.body.value)) {
+            return payload.body.value;
+          }
+
+          if (Array.isArray(payload.body.tickets)) {
+            return payload.body.tickets;
+          }
+        }
+
+        return [];
+      }
+
+      function normalizeFlowTicketRecord(record) {
+        function pick(names) {
+          for (var i = 0; i < names.length; i += 1) {
+            if (record[names[i]] !== undefined && record[names[i]] !== null) {
+              return record[names[i]];
+            }
+          }
+
+          return "";
+        }
+
+        return {
+          entitySet: "flow",
+          recordId: normalize(pick(["ID", "Id", "id"])),
+          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId"])),
+          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle"])),
+          type: normalize(pick(["Issue_Type", "Type", "issue_type", "type"])),
+          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project"])),
+          module: normalize(pick(["Module", "module"])),
+          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule"])),
+          status: normalize(pick(["Status", "status"])),
+          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee"])),
+          businessUser: normalize(pick(["BusinessUsers", "businessUsers"])),
+          projectOwner: normalize(pick(["ProjectOwners", "projectOwners"])),
+          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments"])),
+          requestor: normalize(pick(["Requestor", "requestor"])),
+          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail"])),
+          followupComments: normalize(pick(["Followup_Comments", "followupComments"]))
+        };
       }
 
       function getAllowedProjects() {
@@ -6628,10 +6956,19 @@ function submitTicketForm() {
       }
 
       function normalizeTicketRecord(record, entitySetName) {
+        record = record || {};
+
         function pick(names) {
           for (var i = 0; i < names.length; i += 1) {
-            if (record[names[i]] !== undefined && record[names[i]] !== null) {
-              return record[names[i]];
+            var name = names[i];
+
+            if (record[name] !== undefined && record[name] !== null && record[name] !== "") {
+              return record[name];
+            }
+
+            var formattedName = name + "@OData.Community.Display.V1.FormattedValue";
+            if (record[formattedName] !== undefined && record[formattedName] !== null && record[formattedName] !== "") {
+              return record[formattedName];
             }
           }
 
@@ -6640,25 +6977,80 @@ function submitTicketForm() {
 
         return {
           entitySet: entitySetName || "",
-          recordId: normalize(pick(["cr2b4_it_ticketid", "cr2b4_it_ticketsid", "cr2b4_it_ticketsid", "cr2b4_it_ticket_id", "cr2b4_ticketid", "cr2b4_ticket_id"])),
-          ticketId: normalize(pick(["cr2b4_ticket_id", "cr2b4_ticketid", "cr2b4_ticket_x0020_id", "ticket_id", "Ticket_ID"])),
-          title: normalize(pick(["cr2b4_ticket_title", "cr2b4_title", "cr2b4_ticket_x0020_title", "ticket_title", "Ticket_Title"])),
-          type: normalize(pick(["cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type", "issue_type", "Issue_Type"])),
-          project: normalize(pick(["cr2b4_applicationproject", "cr2b4_application_project", "cr2b4_project", "applicationproject", "ApplicationProject"])),
-          module: normalize(pick(["cr2b4_module", "module", "Module"])),
-          subModule: normalize(pick(["cr2b4_sub_module", "cr2b4_sub_x0020_module", "sub_module", "Sub_Module"])),
-          status: normalize(pick(["cr2b4_status", "cr2b4_current_status", "status", "Status", "Current_Status"])),
-          assignee: normalize(pick(["cr2b4_defaultassignee", "cr2b4_default_assignee", "cr2b4_defaultx0020assignee", "defaultassignee", "DefaultAssignee"])),
-          businessUser: normalize(pick(["cr2b4_businessusers", "cr2b4_business_users", "businessusers", "BusinessUsers"])),
-          projectOwner: normalize(pick(["cr2b4_projectowners", "cr2b4_project_owners", "projectowners", "ProjectOwners"])),
-          resolution: normalize(pick(["cr2b4_resolution_comments", "cr2b4_resolution", "resolution_comments", "Resolution_Comments", "Resolution"])),
-          requestor: normalize(pick(["cr2b4_requestor", "requestor", "Requestor"])),
-          requestorEmail: normalize(pick(["cr2b4_requestoremail", "cr2b4_requestor_email", "requestoremail", "RequestorEmail"])),
-          followupComments: normalize(pick(["cr2b4_followup_comments", "followup_comments", "Followup_Comments"]))
+          recordId: normalize(pick([
+            "new_it_ticketsid", "new_it_ticketid", "new_id", "new_itemid", "ID", "Id", "id",
+            "cr2b4_it_ticketid", "cr2b4_it_ticketsid", "cr2b4_it_ticket_id"
+          ])),
+          ticketId: normalize(pick([
+            "new_ticket_id", "new_ticketid", "new_ticket_x0020_id", "new_ticketno", "new_ticket_number", "new_id",
+            "Ticket_ID", "Ticket ID", "ticket_id", "ticketid", "ID", "Id",
+            "cr2b4_ticket_id", "cr2b4_ticketid", "cr2b4_ticket_x0020_id"
+          ])),
+          title: normalize(pick([
+            "new_ticket_title", "new_title", "new_ticket_x0020_title", "new_name",
+            "Ticket_Title", "Ticket Title", "ticket_title", "tickettitle", "Title", "title",
+            "cr2b4_ticket_title", "cr2b4_title", "cr2b4_ticket_x0020_title"
+          ])),
+          type: normalize(pick([
+            "new_issue_type", "new_issue_x0020_type", "new_type",
+            "Issue_Type", "Issue Type", "Type", "type", "issue_type",
+            "cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type"
+          ])),
+          project: normalize(pick([
+            "new_applicationproject", "new_application_project", "new_project", "new_projectname", "new_project_x0020_name",
+            "ApplicationProject", "Application Project", "Project", "project", "applicationproject",
+            "cr2b4_applicationproject", "cr2b4_application_project", "cr2b4_project"
+          ])),
+          module: normalize(pick([
+            "new_module", "new_modulename", "Module", "module", "cr2b4_module"
+          ])),
+          subModule: normalize(pick([
+            "new_sub_module", "new_sub_x0020_module", "new_submodule",
+            "Sub_Module", "Sub Module", "sub_module", "submodule",
+            "cr2b4_sub_module", "cr2b4_sub_x0020_module"
+          ])),
+          status: normalize(pick([
+            "new_status", "new_current_status", "Status", "status", "Current_Status", "Current Status",
+            "cr2b4_status", "cr2b4_current_status"
+          ])) || "Open",
+          assignee: normalize(pick([
+            "new_defaultassignee", "new_default_assignee", "new_default_x0020_assignee", "new_assignedto", "new_assigned_to",
+            "DefaultAssignee", "Default Assignee", "Assigned_To", "Assigned To", "AssignedTo", "assignedto", "assignee",
+            "cr2b4_defaultassignee", "cr2b4_default_assignee", "cr2b4_defaultx0020assignee"
+          ])),
+          businessUser: normalize(pick([
+            "new_businessusers", "new_business_users", "new_business_x0020_users",
+            "BusinessUsers", "Business Users", "businessusers",
+            "cr2b4_businessusers", "cr2b4_business_users"
+          ])),
+          projectOwner: normalize(pick([
+            "new_projectowners", "new_project_owners", "new_project_x0020_owners",
+            "ProjectOwners", "Project Owners", "projectowners",
+            "cr2b4_projectowners", "cr2b4_project_owners"
+          ])),
+          resolution: normalize(pick([
+            "new_resolution_comments", "new_resolution", "new_resolution_x0020_comments",
+            "Resolution_Comments", "Resolution Comments", "Resolution", "resolution_comments",
+            "cr2b4_resolution_comments", "cr2b4_resolution"
+          ])),
+          requestor: normalize(pick([
+            "new_requestor", "new_requested_by", "new_requestedby", "Requestor", "Requested By", "RequestedBy", "requestor",
+            "cr2b4_requestor"
+          ])),
+          requestorEmail: normalize(pick([
+            "new_requestoremail", "new_requestor_email", "new_requestedbyemail", "new_requested_by_email",
+            "RequestorEmail", "Requestor Email", "RequestedByEmail", "Requested By Email", "requestoremail",
+            "cr2b4_requestoremail", "cr2b4_requestor_email"
+          ])),
+          followupComments: normalize(pick([
+            "new_followup_comments", "new_followup", "new_followup_x0020_comments",
+            "Followup_Comments", "Followup Comments", "followup_comments",
+            "cr2b4_followup_comments"
+          ]))
         };
       }
 
-      function renderTicketRows(tickets) {
+            function renderTicketRows(tickets) {
         var body = document.getElementById("ticket-table-body");
 
         if (!body) {
@@ -6761,6 +7153,22 @@ function submitTicketForm() {
         filterRows();
       }
 
+      function clearFilters() {
+        var value = document.getElementById("filter-value");
+        var column = document.getElementById("filter-column");
+        var operator = document.getElementById("filter-operator");
+
+        activeFilter = null;
+        activeQuickView = "home-all";
+
+        if (value) value.value = "";
+        if (column) column.value = "0";
+        if (operator) operator.value = "contains";
+
+        closeFilterPopover();
+        filterRows();
+      }
+
       function matchesActiveFilter(row) {
         if (!activeFilter) {
           return true;
@@ -6837,6 +7245,32 @@ function submitTicketForm() {
       }
 
       function normalize(value) {
+        if (value === undefined || value === null) {
+          return "";
+        }
+
+        if (Array.isArray(value)) {
+          return value.map(function (item) {
+            return normalize(item);
+          }).filter(Boolean).join(", ");
+        }
+
+        if (typeof value === "object") {
+          return String(
+            value.DisplayName ||
+            value.displayName ||
+            value.Email ||
+            value.email ||
+            value.Value ||
+            value.value ||
+            value.Name ||
+            value.name ||
+            value.Title ||
+            value.title ||
+            ""
+          ).trim();
+        }
+
         return String(value || "").trim();
       }
 
