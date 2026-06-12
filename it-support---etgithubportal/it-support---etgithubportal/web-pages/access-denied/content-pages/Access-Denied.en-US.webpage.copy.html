@@ -1,12 +1,821 @@
-<div data-component-theme="portalThemeColor2" class="row sectionBlockLayout" style="display: flex; flex-wrap: wrap; padding: 8px; margin: 0px; height: 15px; min-height: 15px;"></div>
-<div class="row sectionBlockLayout" style='display: flex; flex-wrap: wrap; text-align: left; min-height: 541px; padding: 8px; margin: 0px; background: url("/error-illustration.png");'>
-  <div class="container" style="display: flex; flex-wrap: wrap;"><div class="col-xl-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; margin-left: 0px; margin-right: 0px;">{% entityform name: 'Information' %}</div></div>
-</div>
-<div class="row sectionBlockLayout" style="display: flex; flex-wrap: wrap; text-align: center; min-height: 100px; padding: 8px; margin: 0px;">
-  <div class="container" style="flex-wrap: wrap;">
-    <div class="col-xl-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; margin-left: 0px; margin-right: 0px;">
-      <h2>You don’t have access to this</h2>
-      <h5>Check your credentials or ask your admin to request access</h5>
+<style>
+  :root {
+    --itops-bg: #f4f8ff;
+    --itops-card: #ffffff;
+    --itops-border: #dfe9fb;
+    --itops-shadow: 0 18px 40px rgba(29, 78, 216, 0.08);
+    --itops-text: #0f1e4a;
+    --itops-muted: #596987;
+    --itops-blue: #2563eb;
+    --itops-blue-soft: #edf4ff;
+    --itops-amber: #f59e0b;
+    --itops-amber-soft: #fff5df;
+    --itops-green: #16a34a;
+    --itops-green-soft: #e9f8ee;
+    --itops-red: #ef4444;
+    --itops-red-soft: #ffeceb;
+  }
+
+  html,
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #fafdff 0%, #f1f6ff 100%) !important;
+    overflow-x: hidden;
+  }
+
+  body > form,
+  body > form > div,
+  main,
+  .page-copy,
+  .xrm-editable-html,
+  .xrm-editable-html .container,
+  .xrm-editable-html .row,
+  .sectionBlockLayout,
+  .sectionBlockLayout .container {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .xrm-editable-html .container,
+  .sectionBlockLayout .container,
+  .sectionBlockLayout {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .xrm-editable-html .row,
+  .sectionBlockLayout .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .itops-access-page {
+    min-height: 100vh;
+    padding: 10px 12px;
+    box-sizing: border-box;
+  }
+
+  .itops-access-shell {
+    width: min(1880px, calc(100vw - 24px));
+    min-height: calc(100vh - 20px);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 292px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .itops-card {
+    background: var(--itops-card);
+    border: 1px solid var(--itops-border);
+    border-radius: 18px;
+    box-shadow: var(--itops-shadow);
+  }
+
+  .itops-status-card {
+    height: 100%;
+    padding: 28px 20px 22px;
+    box-sizing: border-box;
+  }
+
+  .itops-status-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0 8px 62px;
+    position: relative;
+  }
+
+  .itops-status-list::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 32px;
+    bottom: 34px;
+    width: 3px;
+    background: linear-gradient(180deg, #d6e3ff 0%, #dce8fb 100%);
+    border-radius: 999px;
+  }
+
+  .itops-status-item {
+    position: relative;
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    color: #9aa8bf;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .itops-status-item:last-child {
+    min-height: 72px;
+  }
+
+  .itops-status-item.is-active {
+    opacity: 1;
+    transform: translateX(1px);
+  }
+
+  .itops-status-node {
+    position: absolute;
+    left: -38px;
+    top: 50%;
+    width: 46px;
+    height: 46px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 800;
+    border: 2px solid #d6e3ff;
+    background: #ffffff;
+    color: #90a6d6;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08);
+  }
+
+  .itops-status-dot {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    margin-top: 28px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #d6e3ff;
+    box-shadow: 0 0 0 4px #ffffff;
+  }
+
+  .itops-status-title {
+    margin: 0 0 0 18px;
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #9aa8bf;
+    white-space: nowrap;
+  }
+
+  .itops-status-copy,
+  .itops-status-note {
+    display: none;
+  }
+
+  .itops-status-item.is-active.is-request {
+    color: var(--itops-blue);
+  }
+
+  .itops-status-item.is-active.is-pending {
+    color: var(--itops-amber);
+  }
+
+  .itops-status-item.is-active.is-approved {
+    color: var(--itops-green);
+  }
+
+  .itops-status-item.is-active.is-declined {
+    color: var(--itops-red);
+  }
+
+  .itops-status-item.is-active .itops-status-title {
+    color: var(--itops-text);
+  }
+
+  .itops-status-item.is-active.is-request .itops-status-node {
+    color: var(--itops-blue);
+    border-color: #bed0ff;
+    background: var(--itops-blue-soft);
+  }
+
+  .itops-status-item.is-active.is-pending .itops-status-node {
+    color: var(--itops-amber);
+    border-color: #ffd27f;
+    background: var(--itops-amber-soft);
+  }
+
+  .itops-status-item.is-active.is-approved .itops-status-node {
+    color: var(--itops-green);
+    border-color: #92ddb0;
+    background: var(--itops-green-soft);
+  }
+
+  .itops-status-item.is-active.is-declined .itops-status-node {
+    color: var(--itops-red);
+    border-color: #ffb7b3;
+    background: var(--itops-red-soft);
+  }
+
+  .itops-status-item.is-active .itops-status-dot {
+    background: currentColor;
+  }
+
+  .itops-main-card {
+    min-height: 100%;
+    padding: 28px 42px 24px;
+    box-sizing: border-box;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(37, 99, 235, 0.08), transparent 18%),
+      #ffffff;
+  }
+
+  .itops-hero {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 12px;
+  }
+
+  .itops-hero svg {
+    width: min(230px, 100%);
+    height: auto;
+    display: block;
+  }
+
+  .itops-main-title {
+    margin: 0 0 8px;
+    color: var(--itops-text);
+    text-align: center;
+    font-size: clamp(28px, 2.7vw, 44px);
+    line-height: 1.08;
+    font-weight: 800;
+  }
+
+  .itops-main-subtitle {
+    margin: 0 0 16px;
+    color: #2f4268;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .itops-form {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .itops-user-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 18px;
+  }
+
+  .itops-user-card {
+    background: #fff;
+    border: 1px solid var(--itops-border);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.035);
+    min-width: 0;
+  }
+
+  .itops-user-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #667085;
+    margin-bottom: 7px;
+  }
+
+  .itops-user-value {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--itops-text);
+    word-break: break-word;
+  }
+
+  .itops-access-label {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--itops-text);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .itops-access-textarea {
+    width: 100%;
+    min-height: 122px;
+    padding: 16px 18px;
+    border: 2px solid #93b6ff;
+    border-radius: 16px;
+    box-sizing: border-box;
+    resize: vertical;
+    color: #213457;
+    font-size: 16px;
+    line-height: 1.5;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #ffffff;
+  }
+
+  .itops-access-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  .itops-access-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 206px;
+    height: 44px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.26);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .itops-access-button:hover {
+    filter: brightness(1.03);
+  }
+
+  .itops-access-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.74;
+  }
+
+  .itops-access-notice {
+    display: none;
+    margin: 16px auto 0;
+    max-width: 980px;
+    padding: 14px 16px;
+    border: 1px solid #b9dfc1;
+    border-radius: 14px;
+    background: #eef9f1;
+    color: #206b31;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .itops-access-notice.is-visible {
+    display: block;
+  }
+
+  .itops-access-info {
+    max-width: 980px;
+    margin: 16px auto 0;
+    padding: 13px 16px;
+    border: 1px solid #e4ebfa;
+    border-radius: 14px;
+    background: #fbfdff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #3d4f70;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .itops-access-info-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #ffffff;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+  }
+
+  .itops-bottom-strip {
+    grid-column: 1 / -1;
+    padding: 16px 20px 14px;
+  }
+
+  .itops-bottom-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .itops-bottom-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 10px 18px;
+    border-right: 1px solid #e0e8f7;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .itops-bottom-item:last-child {
+    border-right: 0;
+  }
+
+  .itops-bottom-item.is-active {
+    opacity: 1;
+  }
+
+  .itops-bottom-node {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 800;
+    flex: 0 0 auto;
+    color: #90a6d6;
+    background: #ffffff;
+    border: 2px solid #d6e3ff;
+  }
+
+  .itops-bottom-title {
+    margin: 2px 0 4px;
+    color: #9aa8bf;
+    font-size: 16px;
+    line-height: 1.15;
+    font-weight: 800;
+  }
+
+  .itops-bottom-copy {
+    margin: 0;
+    color: var(--itops-muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .itops-bottom-item.is-active .itops-bottom-title {
+    color: var(--itops-text);
+  }
+
+  .itops-bottom-item.is-active.is-request .itops-bottom-node {
+    color: var(--itops-blue);
+    background: var(--itops-blue-soft);
+    border-color: #bed0ff;
+  }
+
+  .itops-bottom-item.is-active.is-pending .itops-bottom-node {
+    color: var(--itops-amber);
+    background: var(--itops-amber-soft);
+    border-color: #ffd27f;
+  }
+
+  .itops-bottom-item.is-active.is-approved .itops-bottom-node {
+    color: var(--itops-green);
+    background: var(--itops-green-soft);
+    border-color: #92ddb0;
+  }
+
+  .itops-bottom-item.is-active.is-declined .itops-bottom-node {
+    color: var(--itops-red);
+    background: var(--itops-red-soft);
+    border-color: #ffb7b3;
+  }
+
+  .itops-access-error {
+    display: none;
+    max-width: 980px;
+    margin: 12px auto 0;
+    color: #c62828;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .itops-access-error.is-visible {
+    display: block;
+  }
+
+  .itops-access-meta {
+    display: none;
+  }
+
+  @media (max-width: 1160px) {
+    .itops-access-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      min-height: auto;
+    }
+
+    .itops-bottom-list {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 14px;
+    }
+
+    .itops-bottom-item:nth-child(2n) {
+      border-right: 0;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .itops-access-page {
+      padding: 10px;
+    }
+
+    .itops-status-card,
+    .itops-main-card,
+    .itops-bottom-strip {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .itops-main-card {
+      padding: 22px 20px 20px;
+    }
+
+    .itops-user-info {
+      grid-template-columns: 1fr;
+    }
+
+    .itops-access-button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .itops-bottom-list {
+      grid-template-columns: 1fr;
+    }
+
+    .itops-bottom-item {
+      border-right: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+</style>
+
+<div class="itops-access-page">
+  <div class="itops-access-shell">
+    <aside class="itops-card itops-status-card" id="access-request-status" data-current-status="request" aria-live="polite">
+      <ol class="itops-status-list">
+        <li class="itops-status-item is-request is-active" data-status="request">
+          <span class="itops-status-node">&#128274;</span>
+          <span class="itops-status-dot"></span>
+          <p class="itops-status-title">Request Access</p>
+        </li>
+        <li class="itops-status-item is-pending" data-status="pending">
+          <span class="itops-status-node">!</span>
+          <span class="itops-status-dot"></span>
+          <p class="itops-status-title">Pending</p>
+        </li>
+        <li class="itops-status-item is-approved" data-status="approved">
+          <span class="itops-status-node">&#10003;</span>
+          <span class="itops-status-dot"></span>
+          <p class="itops-status-title">Approved</p>
+        </li>
+        <li class="itops-status-item is-declined" data-status="declined">
+          <span class="itops-status-node">&#10005;</span>
+          <p class="itops-status-title">Declined</p>
+        </li>
+      </ol>
+    </aside>
+
+    <section class="itops-card itops-main-card">
+      <div class="itops-hero" aria-hidden="true">
+        <svg viewBox="0 0 360 180" role="img">
+          <defs>
+            <linearGradient id="shieldBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4f8dff"></stop>
+              <stop offset="100%" stop-color="#1f5ef0"></stop>
+            </linearGradient>
+          </defs>
+          <circle cx="180" cy="82" r="76" fill="#eef4ff"></circle>
+          <circle cx="265" cy="48" r="20" fill="#f59e0b"></circle>
+          <text x="265" y="55" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">!</text>
+          <path d="M130 116H310" stroke="#90b7ff" stroke-width="4" stroke-linecap="round"></path>
+          <path d="M205 22c18 14 38 16 48 18v42c0 31-27 52-48 63-21-11-48-32-48-63V40c10-2 30-4 48-18z" fill="url(#shieldBlue)"></path>
+          <path d="M205 34c13 10 27 11 35 13v32c0 22-19 38-35 47-16-9-35-25-35-47V47c8-2 22-3 35-13z" fill="#ffffff" opacity="0.22"></path>
+          <rect x="187" y="70" width="36" height="30" rx="6" fill="#ffffff"></rect>
+          <path d="M196 70v-7c0-7 4-13 9-13s9 6 9 13v7" stroke="#1f5ef0" stroke-width="5" fill="none" stroke-linecap="round"></path>
+          <circle cx="205" cy="84" r="4" fill="#1f5ef0"></circle>
+          <rect x="202" y="85" width="6" height="8" rx="3" fill="#1f5ef0"></rect>
+          <path d="M150 112c-8-12-22-16-34-11 9-1 15 4 20 12-10 0-17 6-20 14 8-6 17-8 26-5-1 8 2 14 7 18-1-8 0-16 5-24-1-1-2-2-4-4z" fill="#b9ceff"></path>
+        </svg>
+      </div>
+
+      <h1 class="itops-main-title">You need permission to access this site.</h1>
+      <p class="itops-main-subtitle">You need access - request it</p>
+
+      <div class="itops-form">
+        <div class="itops-user-info">
+          <div class="itops-user-card">
+            <div class="itops-user-label">SIGNED-IN USER</div>
+            <div class="itops-user-value" id="displayUserName">
+              {{ user.fullname | default: user.firstname | append: ' ' | append: user.lastname | strip | escape }}
+            </div>
+          </div>
+
+          <div class="itops-user-card">
+            <div class="itops-user-label">EMAIL</div>
+            <div class="itops-user-value" id="displayUserEmail">
+              {{ user.email | default: user.emailaddress1 | escape }}
+            </div>
+          </div>
+        </div>
+
+        <label class="itops-access-label" for="access-request-message">You need access - request it</label>
+        <textarea class="itops-access-textarea" id="access-request-message" placeholder="I'd like access, please."></textarea>
+
+        <div class="itops-access-actions">
+          <button class="itops-access-button" id="access-request-submit" type="button">
+            <span>Request Access</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="itops-access-notice" id="access-request-notice"></div>
+
+      <div class="itops-access-info">
+        <span class="itops-access-info-icon">i</span>
+        <div>Your request will be reviewed by the administrator. You will be notified.</div>
+      </div>
+
+      <div class="itops-access-error" id="access-request-error"></div>
+    </section>
+
+    <section class="itops-card itops-bottom-strip" aria-label="Access request status overview">
+      <div class="itops-bottom-list">
+        <div class="itops-bottom-item is-request is-active" data-status="request">
+          <span class="itops-bottom-node">&#128274;</span>
+          <div>
+            <p class="itops-bottom-title">Request Access</p>
+            <p class="itops-bottom-copy">Submit your access request.</p>
+          </div>
+        </div>
+        <div class="itops-bottom-item is-pending" data-status="pending">
+          <span class="itops-bottom-node">!</span>
+          <div>
+            <p class="itops-bottom-title">Pending</p>
+            <p class="itops-bottom-copy">Awaiting review from administrator.</p>
+          </div>
+        </div>
+        <div class="itops-bottom-item is-approved" data-status="approved">
+          <span class="itops-bottom-node">&#10003;</span>
+          <div>
+            <p class="itops-bottom-title">Approved</p>
+            <p class="itops-bottom-copy">Request approved. You can access the site.</p>
+          </div>
+        </div>
+        <div class="itops-bottom-item is-declined" data-status="declined">
+          <span class="itops-bottom-node">&#10005;</span>
+          <div>
+            <p class="itops-bottom-title">Declined</p>
+            <p class="itops-bottom-copy">Request declined. You cannot access the site.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="itops-access-meta" aria-hidden="true">
+      <span id="access-request-name">{{ user.fullname | default: user.firstname | append: ' ' | append: user.lastname | strip | escape }}</span>
+      <span id="access-request-email">{{ user.email | default: user.emailaddress1 | escape }}</span>
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    var flowUrl = "https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/285ec30369b64391b2543b0a614a9126/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=IpO4xmW2wp4QhNzJ-NYYJTEQeaBYPIRPvgxUsNq-9lU";
+
+    var submitButton = document.getElementById("access-request-submit");
+    var messageField = document.getElementById("access-request-message");
+    var noticeBox = document.getElementById("access-request-notice");
+    var errorBox = document.getElementById("access-request-error");
+
+    var fullName = document.getElementById("access-request-name").textContent.trim();
+    var email = document.getElementById("access-request-email").textContent.trim();
+
+    var statusGroups = Array.prototype.slice.call(document.querySelectorAll("[data-status]"));
+
+    function setActiveStatus(status) {
+      statusGroups.forEach(function (item) {
+        item.classList.toggle("is-active", item.getAttribute("data-status") === status);
+      });
+
+      document.getElementById("access-request-status").setAttribute("data-current-status", status);
+
+      if (status === "pending") {
+        submitButton.disabled = true;
+        submitButton.querySelector("span").textContent = "Request Submitted";
+      } else if (status === "approved") {
+        submitButton.disabled = true;
+        submitButton.querySelector("span").textContent = "Approved";
+      } else if (status === "declined") {
+        submitButton.disabled = true;
+        submitButton.querySelector("span").textContent = "Declined";
+      } else {
+        submitButton.disabled = false;
+        submitButton.querySelector("span").textContent = "Request Access";
+      }
+    }
+
+    function hideNotice() {
+      noticeBox.classList.remove("is-visible");
+      noticeBox.textContent = "";
+    }
+
+    function showNotice(status) {
+      noticeBox.classList.add("is-visible");
+
+      if (status === "pending") {
+        noticeBox.textContent = "Request submitted. Your admin team has been notified.";
+        noticeBox.style.borderColor = "#b9dfc1";
+        noticeBox.style.background = "#eef9f1";
+        noticeBox.style.color = "#206b31";
+      }
+
+      if (status === "approved") {
+        noticeBox.textContent = "Approved. Your request has been approved.";
+        noticeBox.style.borderColor = "#b9dfc1";
+        noticeBox.style.background = "#eef9f1";
+        noticeBox.style.color = "#206b31";
+      }
+
+      if (status === "declined") {
+        noticeBox.textContent = "Declined. Your request has been declined.";
+        noticeBox.style.borderColor = "#f2c2c2";
+        noticeBox.style.background = "#fff1f1";
+        noticeBox.style.color = "#b42318";
+      }
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.add("is-visible");
+    }
+
+    function hideError() {
+      errorBox.textContent = "";
+      errorBox.classList.remove("is-visible");
+    }
+
+    /* Opening screen:
+       Only Request Access is active.
+       Notification is hidden.
+       Other statuses are disabled/greyed out.
+    */
+    setActiveStatus("request");
+    hideNotice();
+
+    submitButton.addEventListener("click", function () {
+      var comments = messageField.value.trim();
+
+      hideError();
+      hideNotice();
+
+      if (!fullName || !email) {
+        showError("Your signed-in profile is missing a name or email address.");
+        return;
+      }
+
+      if (!comments) {
+        showError("Please enter a short reason before submitting your access request.");
+        messageField.focus();
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.querySelector("span").textContent = "Submitting...";
+
+      fetch(flowUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          FullName: fullName,
+          Email: email,
+          Comments: comments,
+          RequestedAt: new Date().toISOString(),
+          PortalUrl: window.location.origin,
+          Status: "Pending"
+        })
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error(text || ("HTTP " + response.status));
+            });
+          }
+
+          setActiveStatus("pending");
+          showNotice("pending");
+          messageField.value = "";
+        })
+        .catch(function (error) {
+          setActiveStatus("request");
+          hideNotice();
+          showError("Request submission failed. Please try again. " + (error && error.message ? error.message : ""));
+        });
+    });
+
+    /*
+      Later, when your Power Automate / Dataverse status is available,
+      call one of these:
+        setActiveStatus("approved"); showNotice("approved");
+        setActiveStatus("declined"); showNotice("declined");
+        setActiveStatus("pending");  showNotice("pending");
+    */
+  })();
+</script>
