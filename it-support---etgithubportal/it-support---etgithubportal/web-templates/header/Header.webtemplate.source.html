@@ -1241,7 +1241,13 @@
 
   function bindCreateTicketCloudFlow(formRoot, cells, submitButtons) {
     var triggerUrl = {{ settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | json }};
-    if (!{{ is_create_ticket_page | json }}) {
+    var shouldBindCreateTicket = {{ is_create_ticket_page | json }};
+
+    if (!shouldBindCreateTicket && formRoot) {
+      shouldBindCreateTicket = !!formRoot.querySelector("#ticket-title, #ticket-project, #ticket-status, #ticket-type, #ticket-description");
+    }
+
+    if (!shouldBindCreateTicket) {
       return;
     }
 
