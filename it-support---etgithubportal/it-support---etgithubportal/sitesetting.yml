@@ -331,6 +331,10 @@
   adx_name: ITSupport/CreateTicketCloudFlowId
   adx_sitesettingid: f01dc1a9-f589-444a-8e3f-ce341a81cf25
   adx_value: ''
+- adx_description: Direct Power Automate HTTP endpoint that creates a SharePoint ticket item.
+  adx_name: ITSupport/CreateTicketFlowUrl
+  adx_sitesettingid: 3f1d09c2-5ec7-4cf2-95e9-11db5d3f4b8e
+  adx_value: https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg
 - adx_name: Authentication/OpenAuth/Microsoft/ClientSecret
   adx_sitesettingid: f1e04d1d-855e-f111-a826-7c1e5251d90e
 - adx_description: Used to group a set of entities under an entry in the record type facet view.

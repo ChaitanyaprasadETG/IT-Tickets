@@ -1198,47 +1198,29 @@
       button.disabled = true;
     }
 
-    waitForPowerPagesSubmitApi(20, 300, function () {
-      var ajaxSafePost = getPowerPagesSubmitInvoker();
-      var apiError = ajaxSafePost ? null : new Error("Power Pages submit API is not ready");
-      if (apiError) {
-        console.error("Cloud flow submit API unavailable", {
-          hasShell: !!window.shell,
-          ajaxSafePostType: window.shell ? typeof window.shell.ajaxSafePost : "missing",
-          hasTokenApi: !!(window.shell && typeof window.shell.getTokenDeferred === "function"),
-          hasJQuery: typeof window.jQuery !== "undefined"
-        });
-        if (button) {
-          button.disabled = false;
-        }
-        showTicketAlert("Power Pages submit API is not ready yet. Refresh the page once, then try Submit again. If it still fails, the page may still have an older script bound.");
-        return;
+    fetch(triggerUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8"
+      },
+      body: JSON.stringify(payload)
+    }).then(function (response) {
+      showTicketAlert("Ticket created successfully.", "success");
+      window.setTimeout(function () {
+        window.location.href = "/";
+      }, 700);
+    }).catch(function (error) {
+      console.error("Ticket submit request failed", error);
+      if (button) {
+        button.disabled = false;
       }
-
-      ajaxSafePost({
-        type: "POST",
-        url: triggerUrl,
-        contentType: "application/json",
-        data: JSON.stringify({
-          eventData: JSON.stringify(payload)
-        })
-      }).done(function () {
-          showTicketAlert("Ticket created successfully.", "success");
-          window.setTimeout(function () {
-            window.location.href = "/";
-          }, 700);
-        }).fail(function () {
-          console.error("Cloud flow trigger failed", arguments);
-          if (button) {
-            button.disabled = false;
-          }
-          showTicketAlert("Ticket creation failed. Check whether the cloud flow trigger is published and the flow input names match the payload fields.");
-        });
+      showTicketAlert("Ticket creation failed. Check whether the HTTP flow URL is correct and the input names match the payload fields.");
     });
   }
 
   function bindCreateTicketCloudFlow(formRoot, cells, submitButtons) {
-    var triggerUrl = "/_api/cloudflow/v1.0/trigger/b6e089e9-fd5f-f111-a826-7c1e5251d90e";
+    var triggerUrl = {{ settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | json }};
     if (!{{ is_create_ticket_page | json }}) {
       return;
     }
