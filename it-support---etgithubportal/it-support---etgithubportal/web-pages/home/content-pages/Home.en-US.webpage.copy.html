@@ -12,12 +12,6 @@
     <order attribute="cr2b4_modified" descending="true" />
   </entity>
 </fetch>
-{% endfetchxml %} {% fetchxml ticketRows %}
-<fetch top="500">
-  <entity name="new_it_tickets">
-    <all-attributes />
-  </entity>
-</fetch>
 {% endfetchxml %} {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% if user %} {% assign hub_role = 'User' %} {% endif %} {% if user and user.roles contains 'Administrators' %} {% assign hub_role = 'Admin' %} {% endif %} {% if user and user.roles contains 'Admin' %} {% assign hub_role = 'Admin' %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% assign allowed_project_keys = '|' %} {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% assign assignee_email = row.cr2b4_defaultx0020assignee | default: '' | strip | downcase %} {% assign business_user_email = row.cr2b4_businessx0020users | default: '' | strip | downcase %} {% assign project_owner_email = row.cr2b4_projectx0020owners | default: '' | strip | downcase %} {% assign security_text = assignee_email | append: '|' | append: business_user_email | append: '|' | append: project_owner_email %} {% assign can_view_project = false %} {% if hub_email_lc != blank and security_text contains hub_email_lc %} {% assign can_view_project = true %} {% endif %} {% if hub_role == 'Admin' %} {% assign can_view_project = true %} {% endif %} {% if project_name != blank and can_view_project %} {% assign allowed_project_keys = allowed_project_keys | append: project_name | downcase | append: '|' %} {% endif %} {% endfor %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_flow_url = settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' %} {% assign get_tickets_flow_url = settings['ITSupport/GetTicketsFlowUrl'] | default: '' %}
 
 <style>
@@ -4849,23 +4843,6 @@ html {
       var getTicketsFlowUrl = "{{ get_tickets_flow_url | escape }}";
       var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: '' | escape }}";
       var followupCommentsAttribute = "cr2b4_followup_comments";
-      var serverTicketRows = [{% for row in ticketRows.results.entities %}{
-        new_it_ticketsid:"{{ row.new_it_ticketsid | default: row.new_it_ticketid | default: row.new_id | default: '' | escape }}",
-        new_ticket_id:"{{ row.new_ticket_id | default: row.new_ticketid | default: row.new_ticket_x0020_id | default: row.new_ticketno | default: row.new_id | default: '' | escape }}",
-        new_ticket_title:"{{ row.new_ticket_title | default: row.new_title | default: row.new_ticket_x0020_title | default: row.title | default: row.new_name | default: '' | escape }}",
-        new_issue_type:"{{ row.new_issue_type | default: row.new_type | default: row.new_issue_x0020_type | default: '' | escape }}",
-        new_applicationproject:"{{ row.new_applicationproject | default: row.new_application_project | default: row.new_project | default: row.new_projectname | default: '' | escape }}",
-        new_module:"{{ row.new_module | default: row.new_modulename | default: '' | escape }}",
-        new_sub_module:"{{ row.new_sub_module | default: row.new_sub_x0020_module | default: row.new_submodule | default: '' | escape }}",
-        new_status:"{{ row.new_status | default: row.new_current_status | default: '' | escape }}",
-        new_defaultassignee:"{{ row.new_defaultassignee | default: row.new_default_x0020_assignee | default: row.new_assignedto | default: row.new_assigned_to | default: '' | escape }}",
-        new_resolution_comments:"{{ row.new_resolution_comments | default: row.new_resolution | default: '' | escape }}",
-        new_businessusers:"{{ row.new_businessusers | default: row.new_business_users | default: '' | escape }}",
-        new_projectowners:"{{ row.new_projectowners | default: row.new_project_owners | default: '' | escape }}",
-        new_requestor:"{{ row.new_requestor | default: row.new_requested_by | default: '' | escape }}",
-        new_requestoremail:"{{ row.new_requestoremail | default: row.new_requestor_email | default: row.new_requestedbyemail | default: '' | escape }}",
-        new_followup_comments:"{{ row.new_followup_comments | default: row.new_followup | default: '' | escape }}"
-      }{% unless forloop.last %},{% endunless %}{% endfor %}];
       var editingUserRow = null;
 
       bindEvents();
@@ -5390,131 +5367,16 @@ function switchMainView(viewName) {
         });
       }
 
-      function escapeODataLiteral(value) {
-        return normalize(value).replace(/'/g, "''");
-      }
-
-      function safePowerPagesRequest(options) {
-        return new Promise(function (resolve, reject) {
-          if (window.webapi && typeof window.webapi.safeAjax === "function") {
-            window.webapi.safeAjax(options)
-              .done(resolve)
-              .fail(function (xhr) {
-                reject(new Error(getAjaxErrorMessage(xhr)));
-              });
-            return;
-          }
-
-          if (window.shell && typeof window.shell.getTokenDeferred === "function" && window.jQuery) {
-            window.shell.getTokenDeferred().done(function (token) {
-              var ajaxOptions = Object.assign({}, options, {
-                headers: Object.assign({}, options.headers || {}, {
-                  __RequestVerificationToken: token
-                })
-              });
-
-              window.jQuery.ajax(ajaxOptions)
-                .done(resolve)
-                .fail(function (xhr) {
-                  reject(new Error(getAjaxErrorMessage(xhr)));
-                });
-            }).fail(function () {
-              reject(new Error("Power Pages token API is not ready."));
-            });
-            return;
-          }
-
-          if (window.jQuery) {
-            var tokenField = document.querySelector("input[name='__RequestVerificationToken']");
-            if (tokenField && tokenField.value) {
-              var ajaxOptions = Object.assign({}, options, {
-                headers: Object.assign({}, options.headers || {}, {
-                  __RequestVerificationToken: tokenField.value
-                })
-              });
-
-              window.jQuery.ajax(ajaxOptions)
-                .done(resolve)
-                .fail(function (xhr) {
-                  reject(new Error(getAjaxErrorMessage(xhr)));
-                });
-              return;
-            }
-          }
-
-          reject(new Error("Power Pages submit API is not available on this page."));
-        });
-      }
-
-      function getAdminUserPayload() {
+      function saveAdminUser() {
         var firstNameInput = document.getElementById("admin-first-name");
         var lastNameInput = document.getElementById("admin-last-name");
         var emailInput = document.getElementById("admin-email");
         var roleInput = document.getElementById("admin-role");
-
-        return {
-          firstName: normalize(firstNameInput ? firstNameInput.value : ""),
-          lastName: normalize(lastNameInput ? lastNameInput.value : ""),
-          email: normalize(emailInput ? emailInput.value : ""),
-          role: normalize(roleInput ? roleInput.value : "")
-        };
-      }
-
-      function findContactByEmail(email) {
-        return safePowerPagesRequest({
-          type: "GET",
-          url: "/_api/contacts?$select=contactid,firstname,lastname,emailaddress1,jobtitle&$filter=emailaddress1 eq '" + escapeODataLiteral(email) + "'&$top=1",
-          contentType: "application/json",
-          headers: {
-            Accept: "application/json"
-          }
-        });
-      }
-
-      function persistAdminUserToDataverse(firstName, lastName, email, role) {
-        var payload = {
-          firstname: firstName,
-          lastname: lastName,
-          emailaddress1: email,
-          jobtitle: role
-        };
-
-        return findContactByEmail(email).then(function (data) {
-          var existing = data && data.value && data.value.length ? data.value[0] : null;
-
-          if (existing && existing.contactid) {
-            return safePowerPagesRequest({
-              type: "PATCH",
-              url: "/_api/contacts(" + existing.contactid + ")",
-              contentType: "application/json",
-              data: JSON.stringify(payload)
-            }).then(function () {
-              return existing;
-            });
-          }
-
-          return safePowerPagesRequest({
-            type: "POST",
-            url: "/_api/contacts",
-            contentType: "application/json",
-            headers: {
-              Prefer: "return=representation"
-            },
-            data: JSON.stringify(payload)
-          }).then(function (created) {
-            return created || payload;
-          });
-        });
-      }
-
-      function saveAdminUser() {
-        var payload = getAdminUserPayload();
-        var firstName = payload.firstName;
-        var lastName = payload.lastName;
-        var email = payload.email;
-        var role = payload.role;
+        var firstName = normalize(firstNameInput ? firstNameInput.value : "");
+        var lastName = normalize(lastNameInput ? lastNameInput.value : "");
+        var email = normalize(emailInput ? emailInput.value : "");
+        var role = normalize(roleInput ? roleInput.value : "");
         var tbody = getAdminUserTableBody();
-        var saveButton = document.getElementById("admin-save-user");
         var isEditing = !!editingUserRow;
 
         if (!firstName || !email || !role) {
@@ -5532,56 +5394,37 @@ function switchMainView(viewName) {
           return;
         }
 
-        if (saveButton) {
-          saveButton.disabled = true;
-          saveButton.textContent = editingUserRow ? "Updating..." : "Saving...";
+        var row = editingUserRow;
+
+        if (!row) {
+          row = document.createElement("tr");
+          row.setAttribute("data-user-row", "true");
+          tbody.appendChild(row);
         }
 
-        persistAdminUserToDataverse(firstName, lastName, email, role)
-          .then(function (record) {
-            var row = editingUserRow;
-            var recordId = record && (record.contactid || record.contactId || record.id) ? (record.contactid || record.contactId || record.id) : "";
+        row.setAttribute("data-user-email", email);
+        row.innerHTML =
+          "<td>" + escapeHtml(email) + "</td>" +
+          "<td>" + escapeHtml(firstName) + "</td>" +
+          "<td>" + escapeHtml(lastName) + "</td>" +
+          "<td>" + escapeHtml(role) + "</td>" +
+          "<td>" +
+            '<button class="itops-inline-action" type="button" data-user-action="edit" title="Edit" aria-label="Edit">Edit</button>' +
+            '<button class="itops-inline-action is-delete" type="button" data-user-action="delete" title="Delete" aria-label="Delete">Delete</button>' +
+          "</td>";
 
-            if (!row) {
-              row = document.createElement("tr");
-              row.setAttribute("data-user-row", "true");
-              tbody.appendChild(row);
-            }
+        var createdMenuButton = row.querySelector(".itops-row-trigger");
+        var createdMenu = row.querySelector(".itops-col-menu");
+        if (createdMenuButton && createdMenu) {
+          var createdMenuId = "admin-user-menu-" + Date.now();
+          createdMenu.id = createdMenuId;
+          createdMenuButton.setAttribute("data-menu", createdMenuId);
+        }
 
-            row.setAttribute("data-record-id", recordId);
-            row.setAttribute("data-user-email", email);
-            row.innerHTML =
-              "<td>" + escapeHtml(email) + "</td>" +
-              "<td>" + escapeHtml(firstName) + "</td>" +
-              "<td>" + escapeHtml(lastName) + "</td>" +
-              "<td>" + escapeHtml(role) + "</td>" +
-              "<td>" +
-                '<button class="itops-inline-action" type="button" data-user-action="edit" title="Edit" aria-label="Edit">Edit</button>' +
-                '<button class="itops-inline-action is-delete" type="button" data-user-action="delete" title="Delete" aria-label="Delete">Delete</button>' +
-              "</td>";
-
-            var createdMenuButton = row.querySelector(".itops-row-trigger");
-            var createdMenu = row.querySelector(".itops-col-menu");
-            if (createdMenuButton && createdMenu) {
-              var createdMenuId = "admin-user-menu-" + Date.now();
-              createdMenu.id = createdMenuId;
-              createdMenuButton.setAttribute("data-menu", createdMenuId);
-            }
-
-            bindUserRowActions(row);
-            resetAdminUserForm();
-            switchMainView("admin-existing-user");
-            setMessage(isEditing ? "User updated in Dataverse successfully." : "User added to Dataverse successfully.", false, false);
-          })
-          .catch(function (error) {
-            setMessage(error && error.message ? error.message : "Unable to save user to Dataverse.", true, false);
-          })
-          .finally(function () {
-            if (saveButton) {
-              saveButton.disabled = false;
-              saveButton.textContent = editingUserRow ? "Update User" : "Add User";
-            }
-          });
+        bindUserRowActions(row);
+        resetAdminUserForm();
+        switchMainView("admin-existing-user");
+        setMessage(isEditing ? "User updated successfully." : "User added successfully.", false, false);
       }
 
       function handleExistingUserAction(actionName, row) {
@@ -6159,7 +6002,6 @@ function bindEvents() {
             var allAttachments = existingAttachments.concat(attachments);
             var payload = {
               Ticket_ID: activeDetailTicket.ticketId,
-              DataverseRecordId: activeDetailTicket.recordId,
               ApplicationProject: activeDetailTicket.project,
               Followup_Comments: followupValue,
               Requestor: activeDetailTicket.requestor,
@@ -6175,59 +6017,17 @@ function bindEvents() {
             };
             window.followupPayloadPreview = payload;
 
-            if (attachments.length) {
-              if (followupTicketFlowUrl) {
-                return invokeFollowupFlow(payload).then(function (response) {
-                  return {
-                    response: response,
-                    attachments: allAttachments,
-                    persistedToFlow: true
-                  };
-                });
-              }
+            if (!followupTicketFlowUrl) {
+              throw new Error("Follow-up flow URL is not configured.");
+            }
 
-              if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
-                return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function (response) {
-                  return {
-                    response: response,
-                    attachments: allAttachments,
-                    persistedToFlow: false
-                  };
-                });
-              }
-
+            return invokeFollowupFlow(payload).then(function (response) {
               return {
-                response: {},
+                response: response,
                 attachments: allAttachments,
-                persistedToFlow: false
+                persistedToFlow: true
               };
-            }
-
-            if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
-              return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function (response) {
-                return {
-                  response: response,
-                  attachments: allAttachments,
-                  persistedToFlow: false
-                };
-              });
-            }
-
-            if (followupTicketFlowUrl) {
-              return invokeFollowupFlow(payload).then(function (response) {
-                return {
-                  response: response,
-                  attachments: allAttachments,
-                  persistedToFlow: true
-                };
-              });
-            }
-
-            return {
-              response: {},
-              attachments: allAttachments,
-              persistedToFlow: false
-            };
+            });
           })
           .then(function (result) {
             var attachments = result && result.attachments ? result.attachments : [];
@@ -6242,11 +6042,7 @@ function bindEvents() {
               }
             }
 
-            if (persistedToFlow === false && attachments.length && !followupTicketFlowUrl) {
-              setMessage("Follow-up comments saved. Update the follow-up flow URL to persist attachments to backend.", false, true);
-            } else {
-              setMessage("Follow-up request submitted successfully.", false, true);
-            }
+            setMessage("Follow-up request submitted successfully.", false, true);
             resetFollowupAttachments();
           })
           .catch(function (error) {
@@ -6258,18 +6054,6 @@ function bindEvents() {
               submitButton.textContent = "Submit";
             }
           });
-      }
-
-      function updateFollowupInDataverse(entitySetName, recordId, followupValue) {
-        var payload = {};
-        payload[followupCommentsAttribute] = followupValue;
-
-        return safePowerPagesPost({
-          type: "PATCH",
-          url: "/_api/" + entitySetName + "(" + recordId + ")",
-          contentType: "application/json",
-          data: JSON.stringify(payload)
-        });
       }
 
       function openCreateView() {
@@ -6567,20 +6351,13 @@ function submitTicketForm() {
       function invokeFollowupFlow(followupPayload) {
         return fetch(followupTicketFlowUrl, {
           method: "POST",
+          mode: "no-cors",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain;charset=UTF-8"
           },
           body: JSON.stringify(followupPayload)
-        }).then(function (response) {
-          if (!response.ok) {
-            throw new Error("Follow-up flow request failed with status " + response.status);
-          }
-
-          return response.text().then(function (text) {
-            return text ? JSON.parse(text) : {};
-          }).catch(function () {
-            return {};
-          });
+        }).then(function () {
+          return {};
         });
       }
 
@@ -6716,31 +6493,12 @@ function submitTicketForm() {
 
       function loadTicketRows() {
         resetTicketRows();
-        if (serverTicketRows && serverTicketRows.length) {
-          var allowedProjects = getAllowedProjects();
-          var serverTickets = serverTicketRows
-            .map(function (record) {
-              return normalizeTicketRecord(record, "new_it_tickets");
-            })
-            .filter(function (ticket) {
-              return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
-            });
-
-          if (serverTickets.length) {
-            renderTicketRows(serverTickets);
-            return;
-          }
-        }
-
         if (getTicketsFlowUrl) {
-          loadTicketRowsFromFlow()
-            .catch(function () {
-              loadTicketRowsFromDataverse();
-            });
+          loadTicketRowsFromFlow();
           return;
         }
 
-        loadTicketRowsFromDataverse();
+        toggleEmptyState(true);
       }
 
       function resetTicketRows() {
@@ -6750,125 +6508,8 @@ function submitTicketForm() {
           return;
         }
 
-        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets...</td></tr>';
+        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets from the Get Tickets flow...</td></tr>';
         rows = [];
-      }
-
-      function loadTicketRowsFromDataverse() {
-        var body = document.getElementById("ticket-table-body");
-        var allowedProjects = getAllowedProjects();
-        if (!body || !allowedProjects.length || !window.jQuery) {
-          toggleEmptyState(true);
-          return;
-        }
-
-        getTicketEntitySets()
-          .then(function (entitySets) {
-            tryEntitySet(entitySets, 0);
-          })
-          .catch(function () {
-            tryEntitySet(getPreferredTicketEntitySets(), 0);
-          });
-
-        function getPreferredTicketEntitySets() {
-          return [
-            "new_it_tickets",
-            "new_it_ticketses",
-            "new_it_ticket",
-            "new_it_ticketset",
-            "cr2b4_it_ticketses",
-            "cr2b4_it_tickets",
-            "cr2b4_it_ticketss"
-          ];
-        }
-
-        function getTicketEntitySets() {
-          return new Promise(function (resolve, reject) {
-            window.jQuery.ajax({
-              type: "GET",
-              url: "/_api/",
-              headers: {
-                Accept: "application/json"
-              }
-            })
-              .done(function (data) {
-                var values = data && data.value ? data.value : [];
-                var discovered = values
-                  .map(function (item) {
-                    return item && (item.url || item.name || "");
-                  })
-                  .filter(function (name) {
-                    return /ticket/i.test(String(name || ""));
-                  });
-                var seen = {};
-                var ordered = getPreferredTicketEntitySets()
-                  .concat(discovered)
-                  .filter(function (name) {
-                    var key = String(name || "").toLowerCase();
-
-                    if (!key || seen[key]) {
-                      return false;
-                    }
-
-                    seen[key] = true;
-                    return true;
-                  });
-
-                if (ordered.length) {
-                  resolve(ordered);
-                  return;
-                }
-
-                reject(new Error("No ticket entity sets discovered."));
-              })
-              .fail(function () {
-                reject(new Error("Unable to read API service document."));
-              });
-          });
-        }
-
-        function tryEntitySet(entitySets, index) {
-          if (!entitySets || index >= entitySets.length) {
-            toggleEmptyState(true);
-            return;
-          }
-
-          window.jQuery.ajax({
-            type: "GET",
-            url: "/_api/" + entitySets[index] + "?$top=500&$count=true",
-            headers: {
-              Accept: "application/json"
-            }
-          })
-            .done(function (data) {
-              var records = data && data.value ? data.value : [];
-              var tickets = records.map(function (record) {
-                return normalizeTicketRecord(record, entitySets[index]);
-              }).filter(function (ticket) {
-                return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
-              });
-
-              if (isLikelyTicketResult(tickets)) {
-                renderTicketRows(tickets);
-                return;
-              }
-
-              tryEntitySet(entitySets, index + 1);
-            })
-            .fail(function () {
-              tryEntitySet(entitySets, index + 1);
-            });
-        }
-
-        function isLikelyTicketResult(tickets) {
-          if (!tickets || !tickets.length) {
-            return false;
-          }
-
-          return tickets.some(function (ticket) {
-            return Boolean(ticket.ticketId || ticket.title || ticket.status || ticket.type || ticket.module || ticket.subModule);
-          });
-        }
       }
 
       function loadTicketRowsFromFlow() {
@@ -7320,7 +6961,7 @@ function submitTicketForm() {
         if (showEmpty && !emptyRow) {
           emptyRow = document.createElement("tr");
           emptyRow.id = "no-records-row";
-          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No records available</td>';
+          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No tickets available until the Get Tickets flow is configured or returns rows.</td>';
           body.appendChild(emptyRow);
         }
 
