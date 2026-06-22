@@ -1,18 +1,17 @@
-{% include 'Portal Web API Wrapper' %} {% fetchxml securityRows %}
-<fetch top="100">
-  <entity name="cr2b4_it_security_list">
-    <attribute name="cr2b4_it_security_listid" />
-    <attribute name="cr2b4_title" />
-    <attribute name="cr2b4_applicationproject" />
-    <attribute name="cr2b4_defaultx0020assignee" />
-    <attribute name="cr2b4_businessx0020users" />
-    <attribute name="cr2b4_projectx0020owners" />
-    <attribute name="cr2b4_created" />
-    <attribute name="cr2b4_modified" />
-    <order attribute="cr2b4_modified" descending="true" />
-  </entity>
-</fetch>
-{% endfetchxml %} {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% if user %} {% assign hub_role = 'User' %} {% endif %} {% if user and user.roles contains 'Administrators' %} {% assign hub_role = 'Admin' %} {% endif %} {% if user and user.roles contains 'Admin' %} {% assign hub_role = 'Admin' %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% assign allowed_project_keys = '|' %} {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% assign assignee_email = row.cr2b4_defaultx0020assignee | default: '' | strip | downcase %} {% assign business_user_email = row.cr2b4_businessx0020users | default: '' | strip | downcase %} {% assign project_owner_email = row.cr2b4_projectx0020owners | default: '' | strip | downcase %} {% assign security_text = assignee_email | append: '|' | append: business_user_email | append: '|' | append: project_owner_email %} {% assign can_view_project = false %} {% if hub_email_lc != blank and security_text contains hub_email_lc %} {% assign can_view_project = true %} {% endif %} {% if hub_role == 'Admin' %} {% assign can_view_project = true %} {% endif %} {% if project_name != blank and can_view_project %} {% assign allowed_project_keys = allowed_project_keys | append: project_name | downcase | append: '|' %} {% endif %} {% endfor %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_flow_url = settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' %} {% assign get_tickets_flow_url = settings['ITSupport/GetTicketsFlowUrl'] | default: '' %}
+{% include 'Portal Web API Wrapper' %}
+{%- comment -%}
+Required Power Pages setup for direct Dataverse write:
+1) Site Settings:
+   Webapi/cr2b4_it_ticketses/enabled = true
+   Webapi/cr2b4_it_ticketses/fields = *
+   Webapi/cr2b4_it_security_lists/enabled = true
+   Webapi/cr2b4_it_security_lists/fields = *
+2) Table Permissions:
+   IT_Tickets: Read, Create, Write assigned to the portal Web Role.
+   IT_Security_List: Read, Create, Write, Delete assigned to the portal Web Role.
+3) Clear portal cache after publishing.
+{%- endcomment -%}
+ {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% assign has_it_support_admin_role = false %} {% assign has_it_support_user_role = false %} {% if user %} {% assign hub_role = 'User' %} {% assign has_it_support_user_role = true %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% if hub_email_lc == 'chaitanya.prasad@etgworld.com' %} {% assign has_it_support_admin_role = true %} {% assign has_it_support_user_role = false %} {% endif %} {% if has_it_support_admin_role %} {% assign hub_role = 'Admin' %} {% elsif has_it_support_user_role %} {% assign hub_role = 'User' %} {% endif %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = '' %} {% assign get_tickets_flow_url = '' %}
 
 <style>
   header,
@@ -1084,17 +1083,18 @@
   .itops-project-block {
     gap: 14px;
     min-width: 0;
+    align-items: center;
   }
 
   .itops-project-label {
-    font-size: 18px;
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    margin: 0;
+    color: #ffffff;
+    font-size: 13px;
     font-weight: 700;
-  }
-
-  .itops-project-hint {
-    font-size: 12px;
-    color: #6c7f8d;
-    white-space: nowrap;
+    line-height: 1;
   }
 
   .itops-topbar select,
@@ -1111,8 +1111,8 @@
     min-height: 38px;
     padding: 0 12px;
     background: #ffffff;
-    color: #355066;
-    font-size: 14px;
+    color: #29465a;
+    font-size: 13px;
   }
 
   .itops-center-actions {
@@ -1165,12 +1165,13 @@
   }
 
   .itops-user-name {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
   }
 
   .itops-user-role {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 700;
     opacity: 0.92;
   }
 
@@ -1227,14 +1228,14 @@
     justify-content: space-between;
     gap: 12px;
     width: 100% !important;
-    min-height: 42px;
-    padding: 0 14px;
+    min-height: 44px;
+    padding: 0 16px;
     border: 0;
     border-radius: 8px;
     background: #31586f;
     color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 800;
     text-align: left;
     box-sizing: border-box;
 }
@@ -1252,7 +1253,7 @@
   .itops-accordion-panel {
     display: grid;
     gap: 4px;
-    padding: 8px 4px 2px;
+    padding: 10px 6px 4px;
   }
 
   .itops-accordion.is-collapsed .itops-accordion-panel {
@@ -1265,13 +1266,13 @@
     justify-content: space-between;
     gap: 12px;
     width: 100%;
-    min-height: 32px;
-    padding: 0 10px;
+    min-height: 34px;
+    padding: 0 12px;
     border: 0;
     background: transparent;
     color: #29465a;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     text-align: left;
     border-radius: 4px;
   }
@@ -1295,6 +1296,10 @@
     color: #0f3f67;
   }
 
+  .itops-submenu-count.is-hidden {
+    display: none;
+  }
+
   .itops-accordion-header-row {
     display: grid;
     gap: 8px;
@@ -1303,6 +1308,60 @@
   .itops-submenu-btn:hover .itops-submenu-count,
   .itops-submenu-btn.is-active .itops-submenu-count {
     color: inherit;
+  }
+
+  .itops-submenu-group {
+    display: grid;
+    gap: 4px;
+    padding: 4px 6px 8px;
+  }
+
+  .itops-submenu-group + .itops-submenu-group {
+    border-top: 1px solid #edf2f7;
+    margin-top: 6px;
+    padding-top: 10px;
+  }
+
+  .itops-submenu-group-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 28px;
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: #29465a;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+  }
+
+  .itops-submenu-group-toggle svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+  }
+
+  .itops-submenu-group.is-collapsed .itops-submenu-group-toggle svg:last-child {
+    transform: rotate(-90deg);
+  }
+
+  .itops-submenu-group-panel {
+    display: grid;
+    gap: 4px;
+  }
+
+  .itops-submenu-group.is-collapsed .itops-submenu-group-panel {
+    display: none;
+  }
+
+  .itops-submenu-btn.is-compact {
+    min-height: 32px;
+    padding-left: 10px;
   }
 
 .itops-sidebar-section {
@@ -1327,6 +1386,93 @@
   .itops-sidebar-actions {
     display: grid;
     gap: 8px;
+  }
+
+  .itops-role-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .itops-role-select {
+    display: grid;
+    gap: 8px;
+    min-width: 220px;
+  }
+
+  .itops-role-table {
+    table-layout: fixed;
+  }
+
+  .itops-role-table th,
+  .itops-role-table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .itops-role-table th:first-child,
+  .itops-role-table td:first-child,
+  .itops-role-table th:nth-child(2),
+  .itops-role-table td:nth-child(2) {
+    text-align: left;
+  }
+
+  .itops-role-table th:nth-child(3),
+  .itops-role-table td:nth-child(3),
+  .itops-role-table th:nth-child(4),
+  .itops-role-table td:nth-child(4),
+  .itops-role-table th:nth-child(5),
+  .itops-role-table td:nth-child(5),
+  .itops-role-table th:nth-child(6),
+  .itops-role-table td:nth-child(6) {
+    width: 88px;
+  }
+
+  .itops-role-table .itops-th-wrap {
+    justify-content: center;
+    padding: 0 10px;
+  }
+
+  .itops-role-table th:first-child .itops-th-wrap,
+  .itops-role-table th:nth-child(2) .itops-th-wrap {
+    justify-content: flex-start;
+  }
+
+  .itops-role-table td {
+    padding: 10px 12px;
+  }
+
+  .itops-role-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2271bc;
+  }
+
+  .itops-technician-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .itops-technician-grid textarea {
+    min-height: 116px;
+    resize: vertical;
+  }
+
+  .itops-technician-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .itops-panel-note {
+    color: #688398;
+    font-size: 13px;
+    font-weight: 700;
   }
 
   .itops-sidebar-header {
@@ -1772,14 +1918,17 @@
   }
 
   .itops-detail-label {
-    color: #445b70;
-    font-weight: 650;
+    color: #29465a;
+    font-size: 13px;
+    font-weight: 700;
   }
 
   .itops-detail-value {
+    color: #29465a;
+    font-size: 13px;
     min-width: 0;
     overflow-wrap: anywhere;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .itops-attachment-box {
@@ -2159,9 +2308,9 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #0f2740;
-    font-size: 14px;
-    font-weight: 800;
+    color: #29465a;
+    font-size: 13px;
+    font-weight: 700;
   }
 
   .itops-form-field input,
@@ -2169,8 +2318,8 @@
     min-height: 40px;
     padding: 0 14px;
     background: #ffffff;
-    color: #102a4b;
-    font-size: 14px;
+    color: #29465a;
+    font-size: 13px;
     border: 1px solid #cfd9e5;
     border-radius: 4px;
     box-shadow: 0 1px 4px rgba(15, 39, 64, 0.06);
@@ -2180,8 +2329,8 @@
     min-height: 220px;
     padding: 14px;
     background: #ffffff;
-    color: #102a4b;
-    font-size: 14px;
+    color: #29465a;
+    font-size: 13px;
     resize: vertical;
     border: 1px solid #cfd9e5;
     border-radius: 0 0 4px 4px;
@@ -2731,6 +2880,121 @@
   color: #b83b3b !important;
 }
 
+#admin-project-access-view .itops-form-grid-top {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#admin-project-access-view .itops-form-section {
+  padding: 18px 20px 20px !important;
+}
+
+#admin-project-access-view .itops-table-wrap {
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+#admin-project-access-view .itops-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(1),
+#admin-project-access-view .itops-table td:nth-child(1) {
+  width: 18% !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(2),
+#admin-project-access-view .itops-table td:nth-child(2) {
+  width: 24% !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(3),
+#admin-project-access-view .itops-table td:nth-child(3) {
+  width: 24% !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(4),
+#admin-project-access-view .itops-table td:nth-child(4) {
+  width: 24% !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(5),
+#admin-project-access-view .itops-table td:nth-child(5) {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  text-align: center !important;
+}
+
+#admin-project-access-view .itops-row-action {
+  position: relative !important;
+  overflow: visible !important;
+  text-align: center !important;
+}
+
+#admin-project-access-view .itops-row-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #294e63 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+#admin-project-access-view .itops-col-menu {
+  position: absolute !important;
+  top: 30px !important;
+  bottom: auto !important;
+  right: 6px !important;
+  z-index: 999 !important;
+  display: none;
+  min-width: 126px !important;
+  border: 1px solid #d6dee6 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.14) !important;
+}
+
+#admin-project-access-view .itops-col-menu.is-open {
+  display: block !important;
+}
+
+#admin-project-access-view .itops-inline-action {
+  display: block !important;
+  width: 100% !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #333333 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+#admin-project-access-view .itops-inline-action:hover {
+  background: #f7f7f7 !important;
+}
+
+#admin-project-access-view .itops-inline-action.is-delete {
+  color: #b83b3b !important;
+}
+
+@media (max-width: 1280px) {
+  #admin-project-access-view .itops-form-grid-top {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
 /* =========================================================
    TICKET DETAILS PANEL FIX
@@ -2895,7 +3159,20 @@ body::-webkit-scrollbar,
   overflow-y: auto !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
-  padding-bottom: 24px !important;
+  padding-bottom: 44px !important;
+}
+
+#technician-update-section .itops-technician-actions {
+  position: sticky !important;
+  bottom: 0 !important;
+  padding-top: 14px !important;
+  padding-bottom: 4px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 26px) !important;
+}
+
+#detail-tech-resolution,
+#detail-followup {
+  min-height: 132px !important;
 }
 
 /* Better follow-up attachment box */
@@ -3020,6 +3297,71 @@ body::-webkit-scrollbar,
   width: 0 !important;
   height: 0 !important;
   display: none !important;
+}
+
+/* Compact the service-request detail drawer so key fields fit in one view. */
+.itops-detail-panel.is-service-mode .itops-detail-body {
+  padding: 14px 14px 24px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-detail-section {
+  margin-bottom: 16px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-detail-section h3 {
+  margin-bottom: 8px !important;
+  padding-bottom: 6px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-detail-row {
+  margin-bottom: 6px !important;
+  grid-template-columns: 114px 10px 1fr !important;
+  gap: 5px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-attachment-box {
+  min-height: 72px !important;
+  padding: 10px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-attachment-empty {
+  padding: 10px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-technician-grid {
+  gap: 12px !important;
+}
+
+.itops-detail-panel.is-service-mode #detail-tech-resolution,
+.itops-detail-panel.is-service-mode #detail-followup {
+  min-height: 88px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-followup-upload {
+  padding: 10px 12px !important;
+}
+
+.itops-detail-panel.is-service-mode .itops-followup-upload-help {
+  margin-top: 6px !important;
+}
+
+.itops-detail-panel.is-service-mode #technician-update-section .itops-technician-actions {
+  padding-top: 10px !important;
+}
+
+@media (max-height: 820px) {
+  .itops-detail-panel.is-service-mode .itops-detail-body {
+    padding: 12px 12px 18px !important;
+  }
+
+  .itops-detail-panel.is-service-mode .itops-detail-section {
+    margin-bottom: 12px !important;
+  }
+
+  .itops-detail-panel.is-service-mode #detail-tech-resolution,
+  .itops-detail-panel.is-service-mode #detail-followup {
+    min-height: 72px !important;
+  }
 }
 
 </style>
@@ -4203,13 +4545,7 @@ html {
       <div class="itops-project-label">Projects</div>
       <select id="project-filter">
         <option value="">Find items</option>
-        {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% if project_name != blank %}
-        <option value="{{ project_name | escape }}" data-assignee="{{ row.cr2b4_defaultx0020assignee | escape }}" data-bu="{{ row.cr2b4_businessx0020users | escape }}" data-po="{{ row.cr2b4_projectx0020owners | escape }}">{{ project_name }}</option>
-        {% endif %} {% endfor %}
       </select>
-      {% if securityRows.results.entities.size == 0 %}
-      <div class="itops-project-hint">No projects are configured in the security list yet.</div>
-      {% endif %}
       <button id="show-create-ticket" class="itops-primary-btn" type="button">Create Ticket</button>
     </div>
 
@@ -4232,7 +4568,7 @@ html {
       <aside class="itops-sidebar" aria-label="Portal navigation">
         <div class="itops-sidebar-card is-panel">
           <section class="itops-sidebar-section">
-            <div class="itops-accordion" data-accordion="home">
+            <div id="home-sidebar-accordion" class="itops-accordion" data-accordion="home">
               <button class="itops-accordion-toggle" type="button" data-accordion-toggle="home">
                 <span style="display:inline-flex;align-items:center;gap:8px;">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -4241,9 +4577,25 @@ html {
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div class="itops-accordion-panel">
-                <button class="itops-submenu-btn" type="button" data-nav-view="home-open"><span>Open</span><span id="home-open-count" class="itops-submenu-count">0</span></button>
-                <button class="itops-submenu-btn" type="button" data-nav-view="home-inprogress"><span>In Progress</span><span id="home-inprogress-count" class="itops-submenu-count">0</span></button>
-                <button class="itops-submenu-btn" type="button" data-nav-view="home-closed"><span>Closed</span><span id="home-closed-count" class="itops-submenu-count">0</span></button>
+                <button class="itops-submenu-btn" type="button" data-nav-view="home-open"><span>Open</span><span id="home-open-count" class="itops-submenu-count is-hidden">0</span></button>
+                <button class="itops-submenu-btn" type="button" data-nav-view="home-inprogress"><span>In Progress</span><span id="home-inprogress-count" class="itops-submenu-count is-hidden">0</span></button>
+                <button class="itops-submenu-btn" type="button" data-nav-view="home-closed"><span>Closed</span><span id="home-closed-count" class="itops-submenu-count is-hidden">0</span></button>
+              </div>
+            </div>
+          </section>
+          <section class="itops-sidebar-section">
+            <div id="service-sidebar-accordion" class="itops-accordion itops-panel-hidden" data-accordion="service">
+              <button class="itops-accordion-toggle" type="button" data-accordion-toggle="service">
+                <span style="display:inline-flex;align-items:center;gap:8px;">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v10H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11h8M8 15h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <span>Service Requests</span>
+                </span>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="itops-accordion-panel">
+                <button class="itops-submenu-btn" type="button" data-nav-view="service-all"><span>All Requests</span><span id="service-all-count" class="itops-submenu-count is-hidden">0</span></button>
+                <button class="itops-submenu-btn" type="button" data-nav-view="service-open"><span>Open Requests</span><span id="service-open-count" class="itops-submenu-count is-hidden">0</span></button>
+                <button class="itops-submenu-btn" type="button" data-nav-view="service-closed"><span>Closed Requests</span><span id="service-closed-count" class="itops-submenu-count is-hidden">0</span></button>
               </div>
             </div>
           </section>
@@ -4257,8 +4609,26 @@ html {
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div class="itops-accordion-panel">
-                <button class="itops-submenu-btn" type="button" data-nav-view="admin-new-user">New User</button>
-                <button class="itops-submenu-btn" type="button" data-nav-view="admin-existing-user">Existing User</button>
+                <div class="itops-submenu-group" data-submenu-group="profile">
+                  <button class="itops-submenu-group-toggle" type="button" data-submenu-toggle="profile">
+                    <span>Profile</span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <div class="itops-submenu-group-panel">
+                    <button class="itops-submenu-btn is-compact" type="button" data-nav-view="admin-new-user">New User</button>
+                    <button class="itops-submenu-btn is-compact" type="button" data-nav-view="admin-existing-user">Existing User</button>
+                  </div>
+                </div>
+                <div class="itops-submenu-group" data-submenu-group="access">
+                  <button class="itops-submenu-group-toggle" type="button" data-submenu-toggle="access">
+                    <span>Access</span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <div class="itops-submenu-group-panel">
+                    <button class="itops-submenu-btn is-compact" type="button" data-nav-view="admin-project-access">Project Access</button>
+                    <button class="itops-submenu-btn is-compact" type="button" data-nav-view="admin-user-roles">User Roles</button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -4456,22 +4826,142 @@ html {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr data-user-row="true">
-                      <td>{{ hub_email | escape }}</td>
-                      <td>{{ user.firstname | default: hub_name | escape }}</td>
-                      <td>{{ user.lastname | default: '' | escape }}</td>
-                      <td>{{ hub_role }}</td>
-                      <td class="itops-row-action">
-                        <button class="itops-row-trigger" type="button" data-menu="admin-user-menu-1" aria-label="User actions">&#8942;</button>
-                        <div id="admin-user-menu-1" class="itops-col-menu">
-                          <button class="itops-inline-action" type="button" data-user-action="edit">Edit</button>
-                          <button class="itops-inline-action is-delete" type="button" data-user-action="delete">Delete</button>
-                        </div>
-                      </td>
+                    <tr>
+                      <td colspan="5" class="itops-empty">No users available</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-project-access-view" class="itops-panel-hidden">
+      <div class="itops-admin-shell">
+        <div class="itops-admin-card">
+          <div class="itops-admin-header">
+            <div class="itops-admin-title">
+              <span class="itops-admin-title-badge">
+                <svg class="itops-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M7 4v16M17 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span>Admin</span>
+            </div>
+          </div>
+          <div class="itops-admin-card-body">
+            <div id="project-access-editor" class="itops-form-section itops-panel-hidden" style="margin-bottom:18px;">
+              <div class="itops-section-heading">
+                <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M7 4v16M17 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <div>
+                  <div class="itops-section-title">Project Access</div>
+                  <div class="itops-section-subtitle">Manage project level access mapped from the IT Security List</div>
+                </div>
+              </div>
+              <div class="itops-form-grid itops-form-grid-top">
+                <div class="itops-form-field">
+                  <label for="project-access-name">Application Project</label>
+                  <input id="project-access-name" type="text" placeholder="Enter application project" />
+                </div>
+                <div class="itops-form-field">
+                  <label for="project-access-assignee">Default Assignee</label>
+                  <input id="project-access-assignee" type="text" placeholder="Enter default assignee email" />
+                </div>
+                <div class="itops-form-field">
+                  <label for="project-access-business-users">Business Users</label>
+                  <input id="project-access-business-users" type="text" placeholder="Enter business users" />
+                </div>
+                <div class="itops-form-field">
+                  <label for="project-access-project-owners">Project Owners</label>
+                  <input id="project-access-project-owners" type="text" placeholder="Enter project owners" />
+                </div>
+              </div>
+            </div>
+
+            <div id="project-access-editor-actions" class="itops-bottom-actions itops-panel-hidden" style="justify-content:flex-end;margin-bottom:18px;">
+              <button id="project-access-reset" class="itops-flat-btn" type="button">Reset</button>
+              <button id="project-access-save" class="itops-primary-btn" type="button">Update Project Access</button>
+            </div>
+
+            <div class="itops-form-section">
+              <div class="itops-section-heading">
+                <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12M6 10h12M6 16h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <div>
+                  <div class="itops-section-title">Project Access List</div>
+                  <div class="itops-section-subtitle">Projects synced from the IT Security List</div>
+                </div>
+              </div>
+              <div class="itops-table-wrap">
+                <table class="itops-table">
+                  <thead>
+                    <tr>
+                      <th><div class="itops-th-wrap"><span>Application Project</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Default Assignee</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Business Users</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Project Owners</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Action</span></div></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="5" class="itops-empty">No project access available</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-user-roles-view" class="itops-panel-hidden">
+      <div class="itops-admin-shell">
+        <div class="itops-admin-card">
+          <div class="itops-admin-header">
+            <div class="itops-admin-title">
+              <span class="itops-admin-title-badge">
+                <svg class="itops-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 6h14v12H5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10h6M9 14h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span>Admin</span>
+            </div>
+          </div>
+          <div class="itops-admin-card-body">
+            <div class="itops-form-section">
+              <div class="itops-section-heading">
+                <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 6h14v12H5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10h6M9 14h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <div>
+                  <div class="itops-section-title">User Role Access</div>
+                  <div class="itops-section-subtitle">Manage page access for each portal role</div>
+                </div>
+              </div>
+              <div class="itops-role-toolbar">
+                <div class="itops-form-field itops-role-select">
+                  <label for="user-role-select">Select Role</label>
+                  <select id="user-role-select">
+                    <option value="Admin">Admin</option>
+                    <option value="Technician">Technician</option>
+                    <option value="User">User</option>
+                  </select>
+                </div>
+                <button id="user-role-submit" class="itops-primary-btn" type="button">Submit</button>
+              </div>
+              <div class="itops-table-wrap">
+                <table class="itops-table itops-role-table">
+                  <thead>
+                    <tr>
+                      <th><div class="itops-th-wrap"><span>Module Name</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Sub Module Name</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Add</span></div></th>
+                      <th><div class="itops-th-wrap"><span>View</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Edit</span></div></th>
+                      <th><div class="itops-th-wrap"><span>Delete</span></div></th>
+                    </tr>
+                  </thead>
+                  <tbody id="user-role-table-body"></tbody>
+                </table>
+              </div>
+              <div class="itops-panel-note" style="margin-top:14px;">Access changes in this page update the portal UI configuration for the selected role and save in this browser after submit.</div>
             </div>
           </div>
         </div>
@@ -4548,8 +5038,39 @@ html {
           </div>
         </section>
 
-        <section class="itops-detail-section">
-          <h3>Follow-up Request</h3>
+        <section id="technician-update-section" class="itops-detail-section itops-panel-hidden">
+          <h3>Technician Update</h3>
+          <div class="itops-technician-grid">
+            <div class="itops-form-field">
+              <label for="detail-tech-status">Status</label>
+              <select id="detail-tech-status">
+                <option value="Open">Open</option>
+                <option value="Working">Working</option>
+                <option value="Reassigned">Reassigned</option>
+                <option value="Pending">Pending</option>
+                <option value="User-Testing">User-Testing</option>
+                <option value="UAT">UAT</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div class="itops-form-field">
+              <label for="detail-tech-assignee">Default Assignee</label>
+              <input id="detail-tech-assignee" type="text" placeholder="Enter default assignee email" />
+            </div>
+            <div class="itops-form-field" style="grid-column: 1 / -1;">
+              <label for="detail-tech-resolution">Resolution Comments</label>
+              <textarea id="detail-tech-resolution" placeholder="Enter technician resolution comments"></textarea>
+            </div>
+          </div>
+          <div class="itops-technician-actions">
+            <button id="detail-tech-reset" class="itops-flat-btn" type="button">Reset</button>
+            <button id="detail-tech-submit" class="itops-primary-btn" type="button">Submit</button>
+          </div>
+        </section>
+
+        <section id="followup-request-section" class="itops-detail-section">
+          <h3 id="detail-followup-heading">Follow-up Request</h3>
           <textarea id="detail-followup" class="itops-followup-input" maxlength="1000" placeholder="Type your follow-up request here..."></textarea>
           <div id="detail-followup-mentions" class="itops-mention-menu"></div>
           <div class="itops-followup-upload">
@@ -4557,10 +5078,10 @@ html {
               <label class="itops-primary-btn" for="detail-followup-attachment">+ Add Attachment</label>
               <input id="detail-followup-attachment" type="file" multiple hidden />
             </div>
-            <div class="itops-followup-upload-help">Optional. Attach files with your follow-up request.</div>
+            <div id="detail-followup-help" class="itops-followup-upload-help">Optional. Attach files with your follow-up request.</div>
             <div id="detail-followup-file-list" class="itops-followup-file-list"></div>
           </div>
-          <div class="itops-followup-footer">
+          <div id="detail-followup-actions" class="itops-followup-footer">
             <span id="detail-followup-count" class="itops-followup-count">0 / 1000</span>
             <div class="itops-followup-actions">
               <button id="detail-followup-reset" class="itops-flat-btn" type="button">Reset</button>
@@ -4827,6 +5348,57 @@ html {
       }
     }
 
+    function ensurePowerPagesWebApiWrapper() {
+      if (window.webapi && typeof window.webapi.safeAjax === "function") {
+        return true;
+      }
+
+      if (!window.jQuery) {
+        return false;
+      }
+
+      window.webapi = window.webapi || {};
+      window.webapi.safeAjax = function (ajaxOptions) {
+        var deferredAjax = window.jQuery.Deferred();
+
+        function runAjax(token) {
+          var options = window.jQuery.extend(true, {}, ajaxOptions || {});
+          options.headers = options.headers || {};
+          if (token) {
+            options.headers.__RequestVerificationToken = token;
+          }
+
+          window.jQuery.ajax(options)
+            .done(function (data, textStatus, jqXHR) {
+              if (typeof window.validateLoginSession === "function") {
+                window.validateLoginSession(data, textStatus, jqXHR, deferredAjax.resolve);
+              } else {
+                deferredAjax.resolve(data, textStatus, jqXHR);
+              }
+            })
+            .fail(function () {
+              deferredAjax.rejectWith(this, arguments);
+            });
+        }
+
+        if (window.shell && typeof window.shell.getTokenDeferred === "function") {
+          window.shell.getTokenDeferred()
+            .done(function (token) {
+              runAjax(token);
+            })
+            .fail(function () {
+              deferredAjax.rejectWith(this, arguments);
+            });
+        } else {
+          runAjax("");
+        }
+
+        return deferredAjax.promise();
+      };
+
+      return true;
+    }
+
     onReady(function () {
       var signinLoginButton = document.getElementById("signin-login-button");
       var signinEmailInput = document.getElementById("signin-email");
@@ -4836,24 +5408,104 @@ html {
       var createView = document.getElementById("ticket-create-view");
       var adminNewUserView = document.getElementById("admin-new-user-view");
       var adminExistingUserView = document.getElementById("admin-existing-user-view");
+      var adminProjectAccessView = document.getElementById("admin-project-access-view");
+      var adminUserRolesView = document.getElementById("admin-user-roles-view");
+      var homeSidebarAccordion = document.getElementById("home-sidebar-accordion");
+      var serviceSidebarAccordion = document.getElementById("service-sidebar-accordion");
       var adminSidebarAccordion = document.getElementById("admin-sidebar-accordion");
       var detailPanel = document.getElementById("ticket-detail-panel");
       var detailOverlay = document.getElementById("ticket-detail-overlay");
       var navButtons = Array.prototype.slice.call(document.querySelectorAll("[data-nav-view]"));
       var adminTabButtons = Array.prototype.slice.call(document.querySelectorAll("[data-admin-view]"));
       var accordionToggles = Array.prototype.slice.call(document.querySelectorAll("[data-accordion-toggle]"));
+      var submenuGroupToggles = Array.prototype.slice.call(document.querySelectorAll("[data-submenu-toggle]"));
       var rows = Array.prototype.slice.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"));
       var activeFilter = null;
-      var activeQuickView = "home-all";
+      var isAdminUser = {% if has_it_support_admin_role %}true{% else %}false{% endif %};
+      var isTechnicianUser = {% if has_it_support_user_role %}true{% else %}false{% endif %} || isAdminUser;
+      var canManageServiceRequests = isTechnicianUser || isAdminUser;
+      var activeQuickView = canManageServiceRequests ? "service-all" : "home-all";
       var activeDetailTicket = null;
       var mentionCandidates = [];
       var pendingFollowupAttachments = [];
-      var createTicketFlowUrl = {{ create_ticket_flow_url | json }};
+      var roleAccessRows = [
+        { module: "Profile", subModule: "New User" },
+        { module: "Profile", subModule: "Existing User" },
+        { module: "Access", subModule: "Project Access" },
+        { module: "Access", subModule: "User Roles" },
+        { module: "Service Requests", subModule: "All Requests" },
+        { module: "Service Requests", subModule: "Open Requests" },
+        { module: "Service Requests", subModule: "Closed Requests" },
+        { module: "Home", subModule: "Open" },
+        { module: "Home", subModule: "In Progress" },
+        { module: "Home", subModule: "Closed" }
+      ];
+      var roleAccessState = {
+        Admin: roleAccessRows.map(function (row) {
+          return { module: row.module, subModule: row.subModule, add: row.module !== "Home", view: true, edit: row.module !== "Home", delete: row.module !== "Home" };
+        }),
+        Technician: roleAccessRows.map(function (row) {
+          return {
+            module: row.module,
+            subModule: row.subModule,
+            add: row.module === "Service Requests",
+            view: row.module === "Service Requests" || row.module === "Home",
+            edit: row.module === "Service Requests",
+            delete: false
+          };
+        }),
+        User: roleAccessRows.map(function (row) {
+          return {
+            module: row.module,
+            subModule: row.subModule,
+            add: false,
+            view: row.module === "Home",
+            edit: false,
+            delete: false
+          };
+        })
+      };
+      var roleAccessStorageKey = "itopsRoleAccessStateV2";
+      var roleAccessViewMap = {
+        "Profile|New User": "admin-new-user",
+        "Profile|Existing User": "admin-existing-user",
+        "Access|Project Access": "admin-project-access",
+        "Access|User Roles": "admin-user-roles",
+        "Service Requests|All Requests": "service-all",
+        "Service Requests|Open Requests": "service-open",
+        "Service Requests|Closed Requests": "service-closed",
+        "Home|Open": "home-open",
+        "Home|In Progress": "home-inprogress",
+        "Home|Closed": "home-closed"
+      };
+      var createTicketCloudFlowId = "{{ create_ticket_cloud_flow_id | escape }}";
       var getTicketsFlowUrl = "{{ get_tickets_flow_url | escape }}";
       var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: '' | escape }}";
+      var accessRequestFlowUrl = "";
+      var currentHubEmail = "{{ hub_email | escape }}";
+      var projectAccessSharePointUrl = "{{ settings['ITSupport/ProjectAccessSharePointUrl'] | default: '' | escape }}";
       var followupCommentsAttribute = "cr2b4_followup_comments";
+      var messageTimer = null;
+      var accessRequestEntitySetCandidates = [
+        "cr2b4_it_access_requestses",
+        "cr2b4_it_access_requests",
+        "cr2b4_it_access_requestss"
+      ];
+      /* Dataverse IT_Security_List table
+         Logical name: cr2b4_it_security_list
+         Primary key:  cr2b4_it_security_listid
+         Web API entity set used by Power Pages: cr2b4_it_security_lists
+      */
+      var projectAccessEntitySetCandidates = [
+        "cr2b4_it_security_lists",
+        "cr2b4_it_security_list"
+      ];
+      var accessRequestApprovedValue = "Approved";
+      var serverTicketRows = [];
       var editingUserRow = null;
+      var editingProjectAccessRow = null;
 
+      loadRoleAccessState();
       bindEvents();
       bindAttachmentDisplay();
       bindFollowupAttachmentDisplay();
@@ -4862,9 +5514,18 @@ html {
       bindNavigation();
       resolveAdminAccess();
       filterRows();
+      applyRoleAccessConfig(getCurrentPortalRoleName());
       switchMainView(activeQuickView);
       updateRequestSummary();
-      loadTicketRows();
+      loadAdminUsersFromDataverse();
+      loadProjectAccessRowsFromDataverse()
+        .catch(function (error) {
+          setMessage(error && error.message ? error.message : "Unable to load projects from the IT Security List.", true, false);
+          populateProjectFilter([]);
+        })
+        .finally(function () {
+          loadTicketRows();
+        });
 
       function bindSigninLogin() {
         if (signinEmailInput) {
@@ -4985,12 +5646,20 @@ html {
       }
 
       function resolveAdminAccess() {
-        showAdminAccess(!!"{{ hub_email | escape }}");
+        showAdminAccess(isAdminUser);
       }
 
       function showAdminAccess(canShow) {
+        if (homeSidebarAccordion) {
+          homeSidebarAccordion.classList.remove("itops-panel-hidden");
+        }
+
         if (adminSidebarAccordion) {
           adminSidebarAccordion.classList.toggle("itops-panel-hidden", !canShow);
+        }
+
+        if (serviceSidebarAccordion) {
+          serviceSidebarAccordion.classList.toggle("itops-panel-hidden", !canManageServiceRequests);
         }
 
         if (!canShow) {
@@ -5001,6 +5670,289 @@ html {
           if (adminExistingUserView) {
             adminExistingUserView.classList.add("itops-panel-hidden");
           }
+
+          if (adminProjectAccessView) {
+            adminProjectAccessView.classList.add("itops-panel-hidden");
+          }
+
+          if (adminUserRolesView) {
+            adminUserRolesView.classList.add("itops-panel-hidden");
+          }
+        }
+      }
+
+      function cloneRoleAccessRows(sourceRows) {
+        return (sourceRows || []).map(function (row) {
+          return {
+            module: normalize(row.module),
+            subModule: normalize(row.subModule),
+            add: !!row.add,
+            view: !!row.view,
+            edit: !!row.edit,
+            delete: !!row.delete
+          };
+        });
+      }
+
+      function loadRoleAccessState() {
+        try {
+          var rawValue = window.localStorage ? window.localStorage.getItem(roleAccessStorageKey) : "";
+          var parsedValue = rawValue ? JSON.parse(rawValue) : null;
+
+          if (!parsedValue || typeof parsedValue !== "object") {
+            return;
+          }
+
+          ["Admin", "Technician", "User"].forEach(function (roleName) {
+            if (Array.isArray(parsedValue[roleName]) && parsedValue[roleName].length === roleAccessRows.length) {
+              roleAccessState[roleName] = cloneRoleAccessRows(parsedValue[roleName]);
+            }
+          });
+        } catch (error) {
+          /* ignore storage errors */
+        }
+
+        ["Admin", "Technician", "User"].forEach(function (roleName) {
+          (roleAccessState[roleName] || []).forEach(function (entry) {
+            if (normalize(entry.module) === "Access" && normalize(entry.subModule) === "User Roles") {
+              entry.view = true;
+            }
+          });
+        });
+      }
+
+      function saveRoleAccessState() {
+        try {
+          /*
+            Access > User Roles is intentionally excluded from permission hiding.
+            Keep its view access true so saved localStorage cannot hide the Roles screen.
+          */
+          ["Admin", "Technician", "User"].forEach(function (roleName) {
+            (roleAccessState[roleName] || []).forEach(function (entry) {
+              if (normalize(entry.module) === "Access" && normalize(entry.subModule) === "User Roles") {
+                entry.view = true;
+              }
+            });
+          });
+
+          if (window.localStorage) {
+            window.localStorage.setItem(roleAccessStorageKey, JSON.stringify(roleAccessState));
+          }
+        } catch (error) {
+          /* ignore storage errors */
+        }
+      }
+
+      function getCurrentPortalRoleName() {
+        if (isAdminUser) {
+          return "Admin";
+        }
+
+        if (isTechnicianUser) {
+          return "Technician";
+        }
+
+        return "User";
+      }
+
+      function getRoleAccessEntry(roleName, moduleName, subModuleName) {
+        var entries = roleAccessState[roleName] || [];
+
+        return entries.find(function (entry) {
+          return normalize(entry.module) === normalize(moduleName) && normalize(entry.subModule) === normalize(subModuleName);
+        }) || null;
+      }
+
+      function roleHasAccess(roleName, moduleName, subModuleName, permissionName) {
+        var entry = getRoleAccessEntry(roleName, moduleName, subModuleName);
+        return !!(entry && entry[permissionName]);
+      }
+
+      function getAllowedFallbackView(roleName, preferredArea) {
+        var actualRoleName = roleName || getCurrentPortalRoleName();
+        var adminViews = [
+          "admin-user-roles",
+          "admin-project-access",
+          "admin-new-user",
+          "admin-existing-user"
+        ];
+        var serviceViews = [
+          "service-all",
+          "service-open",
+          "service-closed"
+        ];
+        var homeViews = [
+          "home-open",
+          "home-inprogress",
+          "home-closed"
+        ];
+        var fallbackViews = [];
+
+        /*
+          Important:
+          If one Admin sub-module is disabled, only that sub-module should hide.
+          Example: If Profile is disabled, Access > Project Access/User Roles must still open.
+          So when the user is already inside Admin, prefer remaining Admin pages first.
+        */
+        if (preferredArea === "admin") {
+          fallbackViews = adminViews.concat(serviceViews).concat(homeViews);
+        } else if (preferredArea === "service") {
+          fallbackViews = serviceViews.concat(homeViews).concat(adminViews);
+        } else {
+          fallbackViews = serviceViews.concat(homeViews).concat(adminViews);
+        }
+
+        for (var index = 0; index < fallbackViews.length; index += 1) {
+          if (isViewAllowedForRole(actualRoleName, fallbackViews[index])) {
+            return fallbackViews[index];
+          }
+        }
+
+        return "home-open";
+      }
+
+      function isViewAllowedForRole(roleName, viewName) {
+        var actualRoleName = roleName || getCurrentPortalRoleName();
+        var resolvedView = normalize(viewName);
+
+        if (!resolvedView) {
+          return false;
+        }
+
+        if (resolvedView === "home-all") {
+          return isViewAllowedForRole(actualRoleName, "home-open") ||
+            isViewAllowedForRole(actualRoleName, "home-inprogress") ||
+            isViewAllowedForRole(actualRoleName, "home-closed");
+        }
+
+        if (resolvedView === "service-all") {
+          return canManageServiceRequests && roleHasAccess(actualRoleName, "Service Requests", "All Requests", "view");
+        }
+
+        if (resolvedView === "service-open") {
+          return canManageServiceRequests && roleHasAccess(actualRoleName, "Service Requests", "Open Requests", "view");
+        }
+
+        if (resolvedView === "service-closed") {
+          return canManageServiceRequests && roleHasAccess(actualRoleName, "Service Requests", "Closed Requests", "view");
+        }
+
+        if (resolvedView === "home-open") {
+          return roleHasAccess(actualRoleName, "Home", "Open", "view");
+        }
+
+        if (resolvedView === "home-inprogress") {
+          return roleHasAccess(actualRoleName, "Home", "In Progress", "view");
+        }
+
+        if (resolvedView === "home-closed") {
+          return roleHasAccess(actualRoleName, "Home", "Closed", "view");
+        }
+
+        if (resolvedView === "admin-new-user") {
+          return isAdminUser && roleHasAccess(actualRoleName, "Profile", "New User", "view");
+        }
+
+        if (resolvedView === "admin-existing-user") {
+          return isAdminUser && roleHasAccess(actualRoleName, "Profile", "Existing User", "view");
+        }
+
+        if (resolvedView === "admin-project-access") {
+          return isAdminUser && roleHasAccess(actualRoleName, "Access", "Project Access", "view");
+        }
+
+        if (resolvedView === "admin-user-roles") {
+          /*
+            Roles screen should NOT be controlled by the role-access matrix.
+            Otherwise an admin can accidentally hide/lock the Roles screen itself.
+            Keep Admin > Roles available for Admin users only.
+          */
+          return isAdminUser;
+        }
+
+        return false;
+      }
+
+      function updateServiceRequestActions(roleName) {
+        var actualRoleName = roleName || getCurrentPortalRoleName();
+        var canEditServiceRequests = canManageServiceRequests && (
+          roleHasAccess(actualRoleName, "Service Requests", "All Requests", "edit") ||
+          roleHasAccess(actualRoleName, "Service Requests", "Open Requests", "edit") ||
+          roleHasAccess(actualRoleName, "Service Requests", "Closed Requests", "edit")
+        );
+
+        Array.prototype.forEach.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"), function (row) {
+          var editButton = row.querySelector("[data-action='edit-ticket']");
+          if (editButton) {
+            editButton.classList.toggle("itops-panel-hidden", !canEditServiceRequests);
+          }
+        });
+
+        toggleTechnicianSection();
+      }
+
+      function applyRoleAccessConfig(roleName) {
+        var actualRoleName = roleName || getCurrentPortalRoleName();
+        var visibleHomeViews = 0;
+        var visibleServiceViews = 0;
+        var visibleAdminViews = 0;
+
+        navButtons.forEach(function (button) {
+          var viewName = button.getAttribute("data-nav-view") || "";
+          var canView = isViewAllowedForRole(actualRoleName, viewName);
+
+          /*
+            Hide only the exact sub-module button.
+            Do not hide the whole Admin accordion just because Profile is disabled.
+          */
+          button.classList.toggle("itops-panel-hidden", !canView);
+
+          if (viewName.indexOf("home-") === 0 && canView) {
+            visibleHomeViews += 1;
+          }
+
+          if (viewName.indexOf("service-") === 0 && canView) {
+            visibleServiceViews += 1;
+          }
+
+          if (viewName.indexOf("admin-") === 0 && canView) {
+            visibleAdminViews += 1;
+          }
+        });
+
+        if (homeSidebarAccordion) {
+          homeSidebarAccordion.classList.toggle("itops-panel-hidden", visibleHomeViews === 0);
+        }
+
+        if (serviceSidebarAccordion) {
+          serviceSidebarAccordion.classList.toggle("itops-panel-hidden", visibleServiceViews === 0);
+        }
+
+        if (adminSidebarAccordion) {
+          adminSidebarAccordion.classList.toggle("itops-panel-hidden", visibleAdminViews === 0);
+        }
+
+        /*
+          Profile and Access are separate sub-menu groups.
+          If Profile has no visible child, hide only Profile.
+          If Access still has visible child, keep Admin and Access available.
+        */
+        Array.prototype.forEach.call(document.querySelectorAll("[data-submenu-group]"), function (group) {
+          var visibleChildren = group.querySelectorAll(".itops-submenu-btn:not(.itops-panel-hidden)").length;
+          group.classList.toggle("itops-panel-hidden", visibleChildren === 0);
+
+          if (visibleChildren === 0) {
+            group.classList.add("is-collapsed");
+          } else {
+            group.classList.remove("is-collapsed");
+          }
+        });
+
+        updateServiceRequestActions(actualRoleName);
+
+        if (!isViewAllowedForRole(actualRoleName, activeQuickView)) {
+          var preferredArea = activeQuickView && activeQuickView.indexOf("admin-") === 0 ? "admin" : "";
+          activeQuickView = getAllowedFallbackView(actualRoleName, preferredArea);
         }
       }
 
@@ -5093,6 +6045,17 @@ html {
       }
 
       function bindNavigation() {
+        Array.prototype.forEach.call(document.querySelectorAll("#admin-existing-user-view tr[data-user-row='true']"), function (row) {
+          assignAdminUserMenuIds(row);
+          bindUserRowActions(row);
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("#admin-project-access-view tr[data-project-access-row='true']"), function (row) {
+          assignProjectAccessMenuIds(row);
+          bindProjectAccessRowActions(row);
+        });
+        syncAdminEmptyUserState();
+        syncProjectAccessEmptyState();
+
         navButtons.forEach(function (button) {
           button.addEventListener("click", function () {
             var viewName = button.getAttribute("data-nav-view") || "home-open";
@@ -5112,8 +6075,12 @@ html {
             var accordionName = button.getAttribute("data-accordion-toggle");
             var container = accordionName ? document.querySelector('[data-accordion="' + accordionName + '"]') : null;
 
+            Array.prototype.forEach.call(document.querySelectorAll(".itops-sidebar [data-accordion]"), function (accordion) {
+              accordion.classList.toggle("is-collapsed", accordion.getAttribute("data-accordion") !== accordionName);
+            });
+
             if (container) {
-              container.classList.toggle("is-collapsed");
+              container.classList.remove("is-collapsed");
             }
 
             if (accordionName === "home") {
@@ -5121,8 +6088,25 @@ html {
               setActiveNavButton("");
             }
 
+            if (accordionName === "service") {
+              switchMainView("service-all");
+            }
+
             if (accordionName === "admin") {
               switchMainView("admin-new-user");
+            }
+          });
+        });
+
+        submenuGroupToggles.forEach(function (button) {
+          button.addEventListener("click", function (event) {
+            var groupName = button.getAttribute("data-submenu-toggle");
+            var group = groupName ? document.querySelector('[data-submenu-group="' + groupName + '"]') : null;
+
+            event.preventDefault();
+
+            if (group) {
+              group.classList.toggle("is-collapsed");
             }
           });
         });
@@ -5143,8 +6127,15 @@ html {
         });
       }
 
+      function closeProjectAccessMenus() {
+        Array.prototype.forEach.call(document.querySelectorAll("#admin-project-access-view .itops-col-menu.is-open"), function (menu) {
+          menu.classList.remove("is-open");
+        });
+      }
+
       document.addEventListener("click", function (event) {
         var adminMenuButton = event.target.closest("#admin-existing-user-view .itops-row-trigger");
+        var projectAccessMenuButton = event.target.closest("#admin-project-access-view .itops-row-trigger");
         if (adminMenuButton) {
           event.preventDefault();
           event.stopPropagation();
@@ -5162,7 +6153,25 @@ html {
           return;
         }
 
+        if (projectAccessMenuButton) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          var projectAccessCell = projectAccessMenuButton.closest("td");
+          var projectAccessMenu = projectAccessCell ? projectAccessCell.querySelector(".itops-col-menu") : null;
+          var isProjectAccessMenuOpen = projectAccessMenu && projectAccessMenu.classList.contains("is-open");
+
+          closeProjectAccessMenus();
+
+          if (projectAccessMenu && !isProjectAccessMenuOpen) {
+            projectAccessMenu.classList.add("is-open");
+          }
+
+          return;
+        }
+
         var adminActionButton = event.target.closest("#admin-existing-user-view [data-user-action]");
+        var projectAccessActionButton = event.target.closest("#admin-project-access-view [data-project-access-action]");
         if (adminActionButton) {
           event.preventDefault();
           event.stopPropagation();
@@ -5174,7 +6183,19 @@ html {
           return;
         }
 
+        if (projectAccessActionButton) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          var projectAccessActionName = projectAccessActionButton.getAttribute("data-project-access-action");
+          var projectAccessRow = projectAccessActionButton.closest("tr");
+          closeProjectAccessMenus();
+          handleProjectAccessAction(projectAccessActionName, projectAccessRow);
+          return;
+        }
+
         closeAdminUserMenus();
+        closeProjectAccessMenus();
       });
 
 
@@ -5261,8 +6282,39 @@ html {
         });
       }
 
+      function itopsFixNonAdminEmails(scope) {
+        var root = scope || document;
+
+        Array.prototype.forEach.call(root.querySelectorAll("#ticket-list-view tbody td, #ticket-detail-panel .itops-detail-value, #ticket-create-view input[readonly], #ticket-create-view option"), function (node) {
+          if (!node) {
+            return;
+          }
+
+          if (node.tagName === "INPUT") {
+            if (String(node.value || "").indexOf("@") !== -1) {
+              node.value = itopsDisplayName(node.value);
+            }
+            return;
+          }
+
+          if (node.tagName === "OPTION") {
+            if (String(node.textContent || "").indexOf("@") !== -1) {
+              node.textContent = itopsDisplayName(node.textContent);
+            }
+            return;
+          }
+
+          if (String(node.textContent || "").indexOf("@") !== -1) {
+            node.textContent = node.textContent.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/ig, function (email) {
+              return itopsDisplayName(email);
+            });
+          }
+        });
+      }
+
       function itopsApplyFinalUiFixes() {
         itopsFixAssignedAndAttachmentNames(document);
+        itopsFixNonAdminEmails(document);
 
         Array.prototype.forEach.call(document.querySelectorAll(".itops-followup-upload-top button, .itops-followup-upload-top label"), function (btn) {
           var t = (btn.textContent || "").replace(/\s+/g, " ").trim();
@@ -5274,11 +6326,21 @@ html {
 
 function switchMainView(viewName) {
         var shell = document.querySelector(".itops-shell");
-        var resolvedView = viewName || "home-open";
+        var resolvedView = viewName || (canManageServiceRequests ? "service-all" : "home-open");
+        var currentRoleName = getCurrentPortalRoleName();
+
+        if (!isViewAllowedForRole(currentRoleName, resolvedView)) {
+          var preferredArea = resolvedView && resolvedView.indexOf("admin-") === 0 ? "admin" : "";
+          resolvedView = getAllowedFallbackView(currentRoleName, preferredArea);
+        }
+
         var isHomeView = resolvedView.indexOf("home-") === 0 || resolvedView === "home-all";
+        var isServiceView = resolvedView.indexOf("service-") === 0 || resolvedView === "service-all";
         var isAdminView = resolvedView.indexOf("admin-") === 0;
 
-        if (resolvedView.indexOf("home-") === 0 && resolvedView !== "home-all") {
+        if ((resolvedView.indexOf("home-") === 0 || resolvedView.indexOf("service-") === 0) && resolvedView !== "home-all" && resolvedView !== "service-all") {
+          activeQuickView = resolvedView;
+        } else if (resolvedView === "home-all" || resolvedView === "service-all") {
           activeQuickView = resolvedView;
         }
 
@@ -5298,7 +6360,7 @@ function switchMainView(viewName) {
 
         /* HOME selected: only ticket list should show on the right */
         if (listView) {
-          listView.classList.toggle("itops-panel-hidden", !isHomeView);
+          listView.classList.toggle("itops-panel-hidden", !(isHomeView || isServiceView));
         }
 
         /* ADMIN selected: only admin screen should show on the right */
@@ -5310,17 +6372,46 @@ function switchMainView(viewName) {
           adminExistingUserView.classList.toggle("itops-panel-hidden", resolvedView !== "admin-existing-user");
         }
 
-        if (isHomeView) {
-          if (resolvedView === "home-all") {
+        if (adminProjectAccessView) {
+          adminProjectAccessView.classList.toggle("itops-panel-hidden", resolvedView !== "admin-project-access");
+        }
+
+        if (adminUserRolesView) {
+          adminUserRolesView.classList.toggle("itops-panel-hidden", resolvedView !== "admin-user-roles");
+        }
+
+        if (isHomeView || isServiceView) {
+          if (resolvedView === "home-all" || resolvedView === "service-all") {
             clearFilters();
           } else {
             filterRows();
           }
         }
 
+        if (isServiceView && serviceSidebarAccordion) {
+          serviceSidebarAccordion.classList.remove("itops-panel-hidden");
+        }
+
         if (isAdminView && adminSidebarAccordion) {
           adminSidebarAccordion.classList.remove("itops-panel-hidden");
         }
+
+        if (homeSidebarAccordion) {
+          homeSidebarAccordion.classList.toggle("is-collapsed", !isHomeView);
+        }
+
+        if (serviceSidebarAccordion) {
+          serviceSidebarAccordion.classList.toggle("is-collapsed", !isServiceView);
+        }
+
+        if (adminSidebarAccordion) {
+          adminSidebarAccordion.classList.toggle("is-collapsed", !isAdminView);
+        }
+
+        Array.prototype.forEach.call(document.querySelectorAll("[data-submenu-group]"), function (group) {
+          var hasActiveItem = !!group.querySelector(".itops-submenu-btn.is-active");
+          group.classList.toggle("is-collapsed", !hasActiveItem);
+        });
 
         updateAdminTabs(resolvedView);
       }
@@ -5360,6 +6451,427 @@ function switchMainView(viewName) {
         if (saveButton) saveButton.textContent = "Add User";
       }
 
+      function buildAccessRequestPayload(userValues, existingRow) {
+        var firstName = normalize(userValues.firstName);
+        var lastName = normalize(userValues.lastName);
+        var fullName = normalize((firstName + " " + lastName).replace(/\s+/g, " "));
+        var payload = {
+          cr2b4_email: normalize(userValues.email).toLowerCase(),
+          cr2b4_firstname: firstName,
+          cr2b4_lastname: lastName,
+          cr2b4_fullname: fullName,
+          cr2b4_role: normalize(userValues.role) || "User",
+          cr2b4_access_status: accessRequestApprovedValue,
+          cr2b4_comments: normalize(userValues.comments || (existingRow ? existingRow.getAttribute("data-comments") : "") || "Approved from admin portal")
+        };
+
+        return payload;
+      }
+
+      function buildAccessRequestFlowPayload(userValues, existingRow, operation) {
+        var firstName = normalize(userValues.firstName);
+        var lastName = normalize(userValues.lastName);
+        var fullName = normalize((firstName + " " + lastName).replace(/\s+/g, " "));
+
+        return {
+          Operation: normalize(operation || "Upsert"),
+          FullName: fullName,
+          FirstName: firstName,
+          LastName: lastName,
+          Email: normalize(userValues.email).toLowerCase(),
+          Role: normalize(userValues.role) || "User",
+          Comments: normalize(userValues.comments || (existingRow ? existingRow.getAttribute("data-comments") : "") || "Approved from admin portal"),
+          Status: accessRequestApprovedValue,
+          Access_Status: accessRequestApprovedValue,
+          RecordId: normalize(existingRow ? existingRow.getAttribute("data-record-id") : ""),
+          RequestedAt: new Date().toISOString(),
+          PortalUrl: window.location.origin
+        };
+      }
+
+      function invokeAccessRequestAdminFlow(payload) {
+        if (!accessRequestFlowUrl) {
+          return Promise.reject(new Error("Access request flow URL is not configured."));
+        }
+
+        return fetch(accessRequestFlowUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }).then(function (response) {
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error(text || ("HTTP " + response.status));
+            });
+          }
+
+          return response.text().then(function (text) {
+            if (!text) {
+              return {};
+            }
+
+            try {
+              return JSON.parse(text);
+            } catch (error) {
+              return {};
+            }
+          });
+        });
+      }
+
+      function isRetryableEntitySetError(error) {
+        var message = normalize(error && error.message).toLowerCase();
+        return message.indexOf("resource not found") !== -1 ||
+          message.indexOf("no http resource was found") !== -1 ||
+          message.indexOf("does not exist") !== -1 ||
+          message.indexOf("not found") !== -1;
+      }
+
+      function loadEntitySetRecords(entitySetCandidates) {
+        var index = 0;
+
+        function tryEntitySet() {
+          var entitySetName = entitySetCandidates[index];
+
+          if (!entitySetName) {
+            return Promise.reject(new Error("Unable to find the requested Dataverse Web API endpoint."));
+          }
+
+          return safePowerPagesGet("/_api/" + entitySetName + "?$top=500").then(function (response) {
+            return response && response.value ? response.value : [];
+          }).catch(function (error) {
+            if (isRetryableEntitySetError(error) && index < entitySetCandidates.length - 1) {
+              index += 1;
+              return tryEntitySet();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryEntitySet();
+      }
+
+      function normalizeAccessRequestRow(record) {
+        function pick(names) {
+          for (var i = 0; i < names.length; i += 1) {
+            var value = record[names[i]];
+            if (value !== undefined && value !== null && value !== "") {
+              return value;
+            }
+          }
+
+          return "";
+        }
+
+        var fullName = normalize(pick(["cr2b4_fullname", "cr2b4_full_name", "fullname", "name"]));
+        var nameParts = fullName ? fullName.split(/\s+/) : [];
+
+        return {
+          recordId: normalize(pick(["cr2b4_it_access_requestsid", "cr2b4_it_access_requestid", "id"])),
+          email: normalize(pick(["cr2b4_email", "email"])).toLowerCase(),
+          firstName: normalize(pick(["cr2b4_firstname", "firstname"])) || normalize(nameParts[0]),
+          lastName: normalize(pick(["cr2b4_lastname", "lastname"])) || normalize(nameParts.slice(1).join(" ")),
+          fullName: fullName,
+          role: normalize(pick(["cr2b4_role", "role"])) || "User",
+          status: normalize(pick(["cr2b4_access_status", "cr2b4_accessstatus", "access_status", "statuscode"])) || accessRequestApprovedValue,
+          comments: normalize(pick(["cr2b4_comments", "comments"]))
+        };
+      }
+
+      function loadAdminUsersFromDataverse() {
+        var tbody = getAdminUserTableBody();
+
+        if (!tbody) {
+          return Promise.resolve([]);
+        }
+
+        return loadEntitySetRecords(accessRequestEntitySetCandidates)
+          .then(function (records) {
+            tbody.innerHTML = "";
+
+            records
+              .map(normalizeAccessRequestRow)
+              .filter(function (entry) {
+                return entry.email;
+              })
+              .forEach(function (entry) {
+                var row = document.createElement("tr");
+                row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+                row.setAttribute("data-record-id", entry.recordId);
+                row.setAttribute("data-comments", entry.comments);
+                tbody.appendChild(row);
+                syncAdminUserRow(row, entry);
+              });
+
+            syncAdminEmptyUserState();
+            return records;
+          })
+          .catch(function () {
+            syncAdminEmptyUserState();
+            return [];
+          });
+      }
+
+      function normalizeProjectAccessRow(record) {
+        function pick(names) {
+          for (var i = 0; i < names.length; i += 1) {
+            var value = record[names[i]];
+            if (value !== undefined && value !== null && value !== "") {
+              return value;
+            }
+          }
+
+          return "";
+        }
+
+        return {
+          recordId: normalize(pick(["cr2b4_it_security_listid", "id"])),
+          projectName: normalize(pick([
+            "cr2b4_applicationproject",
+            "cr2b4_application_project",
+            "ApplicationProject",
+            "applicationproject",
+            "project",
+            "Project",
+            "cr2b4_title",
+            "title",
+            "Title"
+          ])),
+          defaultAssignee: normalize(pick([
+            "cr2b4_defaultassignee",
+            "cr2b4_defaultx0020assignee",
+            "cr2b4_default_x0020_assignee",
+            "cr2b4_default_assignee",
+            "DefaultAssignee",
+            "defaultAssignee",
+            "defaultassignee",
+            "Default Assignee"
+          ])),
+          businessUsers: normalize(pick([
+            "cr2b4_businessusers",
+            "cr2b4_businessx0020users",
+            "cr2b4_business_x0020_users",
+            "cr2b4_business_users",
+            "BusinessUsers",
+            "businessUsers",
+            "businessusers",
+            "Business Users"
+          ])),
+          projectOwners: normalize(pick([
+            "cr2b4_projectowners",
+            "cr2b4_projectx0020owners",
+            "cr2b4_project_x0020_owners",
+            "cr2b4_project_owners",
+            "ProjectOwners",
+            "projectOwners",
+            "projectowners",
+            "Project Owners"
+          ]))
+        };
+      }
+
+      function userCanAccessProject(values) {
+        var email = normalize(currentHubEmail).toLowerCase();
+        var combined = [
+          values.defaultAssignee,
+          values.businessUsers,
+          values.projectOwners
+        ].join("|").toLowerCase();
+
+        if (isAdminUser) {
+          return true;
+        }
+
+        if (!email) {
+          return false;
+        }
+
+        return combined.indexOf(email) !== -1;
+      }
+
+      function populateProjectFilter(records) {
+        var optionsMarkup = ['<option value="">Find items</option>'];
+        var normalizedRecords = (records || [])
+          .map(normalizeProjectAccessRow)
+          .filter(function (entry) {
+            return entry.projectName;
+          });
+        var visibleRecords = normalizedRecords.filter(function (entry) {
+          return userCanAccessProject(entry);
+        });
+        var recordsToRender = visibleRecords.length ? visibleRecords : normalizedRecords;
+
+        if (!projectFilter) {
+          return;
+        }
+
+        recordsToRender
+          .forEach(function (entry) {
+            optionsMarkup.push(
+              '<option value="' + escapeHtml(entry.projectName) + '" data-assignee="' + escapeHtml(entry.defaultAssignee) + '" data-bu="' + escapeHtml(entry.businessUsers) + '" data-po="' + escapeHtml(entry.projectOwners) + '">' +
+                escapeHtml(entry.projectName) +
+              "</option>"
+            );
+          });
+
+        projectFilter.innerHTML = optionsMarkup.join("");
+
+        if (normalizedRecords.length && !visibleRecords.length && !isAdminUser) {
+          setMessage("No project mapping matched your email, so all available projects are shown as a fallback.", true, false);
+        }
+      }
+
+      function loadProjectAccessRowsFromDataverse() {
+        var tbody = getProjectAccessTableBody();
+
+        if (!tbody) {
+          return Promise.resolve([]);
+        }
+
+        return loadEntitySetRecords(projectAccessEntitySetCandidates)
+          .then(function (records) {
+            tbody.innerHTML = "";
+
+            records
+              .map(normalizeProjectAccessRow)
+              .filter(function (entry) {
+                return entry.projectName;
+              })
+              .forEach(function (entry) {
+                var row = document.createElement("tr");
+                row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+                row.setAttribute("data-record-id", entry.recordId);
+                tbody.appendChild(row);
+                syncProjectAccessRow(row, entry);
+              });
+
+            syncProjectAccessEmptyState();
+            populateProjectFilter(records);
+            return records;
+          })
+          .catch(function (error) {
+            syncProjectAccessEmptyState();
+            setMessage(error && error.message ? error.message : "Unable to load project access records.", true, false);
+            throw error;
+          });
+      }
+
+      function callAccessRequestApi(method, recordId, payload) {
+        var index = 0;
+
+        function tryEntitySet() {
+          var entitySetName = accessRequestEntitySetCandidates[index];
+          var url;
+
+          if (!entitySetName) {
+            return Promise.reject(new Error("Unable to find the IT Access Requests Web API endpoint."));
+          }
+
+          url = "/_api/" + entitySetName + (recordId ? "(" + recordId + ")" : "");
+
+          return safePowerPagesPost({
+            type: method,
+            url: url,
+            contentType: "application/json",
+            headers: method === "POST" ? { Prefer: "return=representation" } : {},
+            data: payload ? JSON.stringify(payload) : null
+          }).catch(function (error) {
+            if (isRetryableEntitySetError(error) && index < accessRequestEntitySetCandidates.length - 1) {
+              index += 1;
+              return tryEntitySet();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryEntitySet();
+      }
+
+      function extractAccessRequestRecordId(response) {
+        return normalize(
+          response && (
+            response.cr2b4_it_access_requestsid ||
+            response.cr2b4_it_access_requestid ||
+            response.id
+          )
+        );
+      }
+
+      function syncAdminUserRow(row, userValues) {
+        var fullName = normalize((normalize(userValues.firstName) + " " + normalize(userValues.lastName)).replace(/\s+/g, " "));
+        var menu = row ? row.querySelector(".itops-col-menu") : null;
+        var menuButton = row ? row.querySelector(".itops-row-trigger") : null;
+
+        if (!row || !row.cells || row.cells.length < 5) {
+          return row;
+        }
+
+        row.setAttribute("data-user-row", "true");
+        row.setAttribute("data-status", accessRequestApprovedValue);
+        row.setAttribute("data-comments", normalize(userValues.comments || row.getAttribute("data-comments")));
+        row.setAttribute("data-fullname", fullName);
+        row.cells[0].textContent = normalize(userValues.email).toLowerCase();
+        row.cells[1].textContent = normalize(userValues.firstName);
+        row.cells[2].textContent = normalize(userValues.lastName);
+        row.cells[3].textContent = normalize(userValues.role);
+
+        if (!menuButton || !menu) {
+          row.cells[4].className = "itops-row-action";
+          row.cells[4].innerHTML =
+            '<button class="itops-row-trigger" type="button" aria-label="User actions">&#8942;</button>' +
+            '<div class="itops-col-menu">' +
+              '<button class="itops-inline-action" type="button" data-user-action="edit">Edit</button>' +
+              '<button class="itops-inline-action is-delete" type="button" data-user-action="delete">Delete</button>' +
+            "</div>";
+        }
+
+        assignAdminUserMenuIds(row);
+        bindUserRowActions(row);
+        return row;
+      }
+
+      function assignAdminUserMenuIds(row) {
+        var menuButton = row ? row.querySelector(".itops-row-trigger") : null;
+        var menu = row ? row.querySelector(".itops-col-menu") : null;
+        var recordId = row ? normalize(row.getAttribute("data-record-id")) : "";
+        var suffix;
+
+        if (!menuButton || !menu) {
+          return;
+        }
+
+        suffix = recordId || String(Date.now()) + "-" + Math.floor(Math.random() * 100000);
+        menu.id = "admin-user-menu-" + suffix.replace(/[^a-zA-Z0-9_-]/g, "");
+        menuButton.setAttribute("data-menu", menu.id);
+      }
+
+      function syncAdminEmptyUserState() {
+        var tbody = getAdminUserTableBody();
+        var userRows;
+        var emptyRow;
+
+        if (!tbody) {
+          return;
+        }
+
+        userRows = tbody.querySelectorAll("tr[data-user-row='true']");
+        emptyRow = tbody.querySelector("tr:not([data-user-row='true'])");
+
+        if (userRows.length && emptyRow) {
+          emptyRow.parentNode.removeChild(emptyRow);
+        }
+
+        if (!userRows.length && !emptyRow) {
+          emptyRow = document.createElement("tr");
+          emptyRow.innerHTML = '<td colspan="5" class="itops-empty">No users available</td>';
+          tbody.appendChild(emptyRow);
+        }
+      }
+
       function getAdminUserTableBody() {
         return document.querySelector("#admin-existing-user-view tbody");
       }
@@ -5376,6 +6888,10 @@ function switchMainView(viewName) {
         });
       }
 
+      function hideAdminMessage() {
+        setMessage("", false, true);
+      }
+
       function saveAdminUser() {
         var firstNameInput = document.getElementById("admin-first-name");
         var lastNameInput = document.getElementById("admin-last-name");
@@ -5386,54 +6902,108 @@ function switchMainView(viewName) {
         var email = normalize(emailInput ? emailInput.value : "");
         var role = normalize(roleInput ? roleInput.value : "");
         var tbody = getAdminUserTableBody();
-        var isEditing = !!editingUserRow;
+        var userValues = {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          role: role
+        };
+        var payload;
 
         if (!firstName || !email || !role) {
-          setMessage("Please enter First Name, Email and Role.", true, false);
+          hideAdminMessage();
           return;
         }
 
         if (!isEmailLike(email)) {
-          setMessage("Please enter a valid Email address.", true, false);
+          hideAdminMessage();
           return;
         }
 
         if (!tbody) {
-          setMessage("Users List table was not found.", true, false);
+          hideAdminMessage();
           return;
         }
 
-        var row = editingUserRow;
-
-        if (!row) {
-          row = document.createElement("tr");
-          row.setAttribute("data-user-row", "true");
-          tbody.appendChild(row);
+        if (!editingUserRow) {
+          editingUserRow = Array.prototype.slice.call(tbody.querySelectorAll("tr[data-user-row='true']")).find(function (row) {
+            return normalize(row.cells[0] ? row.cells[0].textContent : "").toLowerCase() === email.toLowerCase();
+          }) || null;
         }
 
-        row.setAttribute("data-user-email", email);
-        row.innerHTML =
-          "<td>" + escapeHtml(email) + "</td>" +
-          "<td>" + escapeHtml(firstName) + "</td>" +
-          "<td>" + escapeHtml(lastName) + "</td>" +
-          "<td>" + escapeHtml(role) + "</td>" +
-          "<td>" +
-            '<button class="itops-inline-action" type="button" data-user-action="edit" title="Edit" aria-label="Edit">Edit</button>' +
-            '<button class="itops-inline-action is-delete" type="button" data-user-action="delete" title="Delete" aria-label="Delete">Delete</button>' +
-          "</td>";
+        payload = accessRequestFlowUrl
+          ? buildAccessRequestFlowPayload(userValues, editingUserRow, "Upsert")
+          : buildAccessRequestPayload(userValues, editingUserRow);
+        hideAdminMessage();
 
-        var createdMenuButton = row.querySelector(".itops-row-trigger");
-        var createdMenu = row.querySelector(".itops-col-menu");
-        if (createdMenuButton && createdMenu) {
-          var createdMenuId = "admin-user-menu-" + Date.now();
-          createdMenu.id = createdMenuId;
-          createdMenuButton.setAttribute("data-menu", createdMenuId);
+        if (editingUserRow) {
+          if (accessRequestFlowUrl) {
+            invokeAccessRequestAdminFlow(payload)
+              .then(function () {
+                syncAdminUserRow(editingUserRow, userValues);
+                setMessage("User updated successfully", false, false);
+                resetAdminUserForm();
+                switchMainView("admin-existing-user");
+              })
+              .catch(function (error) {
+                hideAdminMessage();
+              });
+            return;
+          }
+
+          if (!normalize(editingUserRow.getAttribute("data-record-id"))) {
+            hideAdminMessage();
+            return;
+          }
+
+          callAccessRequestApi("PATCH", editingUserRow.getAttribute("data-record-id"), payload)
+            .then(function () {
+              syncAdminUserRow(editingUserRow, userValues);
+              setMessage("User updated successfully", false, false);
+              resetAdminUserForm();
+              switchMainView("admin-existing-user");
+            })
+            .catch(function (error) {
+              hideAdminMessage();
+            });
+          return;
         }
 
-        bindUserRowActions(row);
-        resetAdminUserForm();
-        switchMainView("admin-existing-user");
-        setMessage(isEditing ? "User updated successfully." : "User added successfully.", false, false);
+        if (accessRequestFlowUrl) {
+          invokeAccessRequestAdminFlow(payload)
+            .then(function () {
+              var row = document.createElement("tr");
+              row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+              tbody.insertBefore(row, tbody.firstChild);
+              syncAdminUserRow(row, userValues);
+              syncAdminEmptyUserState();
+              setMessage("User added successfully", false, false);
+              resetAdminUserForm();
+              switchMainView("admin-existing-user");
+            })
+            .catch(function (error) {
+              hideAdminMessage();
+            });
+          return;
+        }
+
+        callAccessRequestApi("POST", "", payload)
+          .then(function (response) {
+            var recordId = extractAccessRequestRecordId(response);
+            var row = document.createElement("tr");
+
+            row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+            row.setAttribute("data-record-id", recordId);
+            tbody.insertBefore(row, tbody.firstChild);
+            syncAdminUserRow(row, userValues);
+            syncAdminEmptyUserState();
+            setMessage("User added successfully", false, false);
+            resetAdminUserForm();
+            switchMainView("admin-existing-user");
+          })
+          .catch(function (error) {
+            hideAdminMessage();
+          });
       }
 
       function handleExistingUserAction(actionName, row) {
@@ -5461,105 +7031,424 @@ function switchMainView(viewName) {
           if (saveButton) saveButton.textContent = "Update User";
 
           switchMainView("admin-new-user");
-          setMessage("Selected user loaded. Update details and click Update User.", false, false);
+          hideAdminMessage();
           return;
         }
 
         if (actionName === "delete") {
-          if (editingUserRow === row) {
-            resetAdminUserForm();
+          if (accessRequestFlowUrl) {
+            invokeAccessRequestAdminFlow({
+              Operation: "Delete",
+              Email: normalize(cells[0] ? cells[0].textContent : ""),
+              RecordId: normalize(row.getAttribute("data-record-id")),
+              RequestedAt: new Date().toISOString(),
+              PortalUrl: window.location.origin
+            })
+              .then(function () {
+                if (editingUserRow === row) {
+                  resetAdminUserForm();
+                }
+                row.parentNode.removeChild(row);
+                syncAdminEmptyUserState();
+                switchMainView("admin-existing-user");
+                setMessage("User deleted successfully", false, false);
+              })
+              .catch(function (error) {
+                hideAdminMessage();
+              });
+            return;
           }
-          row.parentNode.removeChild(row);
-          switchMainView("admin-existing-user");
-          setMessage("User deleted successfully.", false, false);
+
+          if (!normalize(row.getAttribute("data-record-id"))) {
+            hideAdminMessage();
+            return;
+          }
+
+          callAccessRequestApi("DELETE", row.getAttribute("data-record-id"))
+            .then(function () {
+              if (editingUserRow === row) {
+                resetAdminUserForm();
+              }
+              row.parentNode.removeChild(row);
+              syncAdminEmptyUserState();
+              switchMainView("admin-existing-user");
+              setMessage("User deleted successfully", false, false);
+            })
+            .catch(function (error) {
+              hideAdminMessage();
+            });
         }
       }
 
-      function matchesQuickView(row) {
+      function resetProjectAccessForm() {
+        editingProjectAccessRow = null;
+        setInputValue("project-access-name", "");
+        setInputValue("project-access-assignee", "");
+        setInputValue("project-access-business-users", "");
+        setInputValue("project-access-project-owners", "");
+        toggleProjectAccessEditor(false);
+
+        var saveButton = document.getElementById("project-access-save");
+        if (saveButton) {
+          saveButton.textContent = "Update Project Access";
+        }
+      }
+
+      function toggleProjectAccessEditor(shouldShow) {
+        var editor = document.getElementById("project-access-editor");
+        var actions = document.getElementById("project-access-editor-actions");
+
+        if (editor) {
+          editor.classList.toggle("itops-panel-hidden", !shouldShow);
+        }
+
+        if (actions) {
+          actions.classList.toggle("itops-panel-hidden", !shouldShow);
+        }
+      }
+
+      function setInputValue(id, value) {
+        var element = document.getElementById(id);
+        if (element) {
+          element.value = normalize(value);
+        }
+      }
+
+      function getProjectAccessValues() {
+        return {
+          projectName: normalize(document.getElementById("project-access-name") ? document.getElementById("project-access-name").value : ""),
+          defaultAssignee: normalize(document.getElementById("project-access-assignee") ? document.getElementById("project-access-assignee").value : ""),
+          businessUsers: normalize(document.getElementById("project-access-business-users") ? document.getElementById("project-access-business-users").value : ""),
+          projectOwners: normalize(document.getElementById("project-access-project-owners") ? document.getElementById("project-access-project-owners").value : "")
+        };
+      }
+
+      function buildProjectAccessPayload(values) {
+        return {
+          cr2b4_applicationproject: values.projectName,
+          cr2b4_defaultassignee: values.defaultAssignee,
+          cr2b4_businessusers: values.businessUsers,
+          cr2b4_projectowners: values.projectOwners
+        };
+      }
+
+      function callProjectAccessApi(method, recordId, payload) {
+        var index = 0;
+
+        function tryEntitySet() {
+          var entitySetName = projectAccessEntitySetCandidates[index];
+          var url;
+          var headers = {};
+
+          if (!entitySetName) {
+            return Promise.reject(new Error("Unable to find the IT Security List Web API endpoint."));
+          }
+
+          url = "/_api/" + entitySetName + (recordId ? "(" + recordId + ")" : "");
+
+          if (method === "POST") {
+            headers.Prefer = "return=representation";
+          }
+
+          if (method === "PATCH") {
+            headers["If-Match"] = "*";
+            headers.Prefer = "return=representation";
+          }
+
+          if (method === "DELETE") {
+            headers["If-Match"] = "*";
+          }
+
+          return safePowerPagesPost({
+            type: method,
+            url: url,
+            contentType: "application/json",
+            headers: headers,
+            data: payload ? JSON.stringify(payload) : null
+          }).catch(function (error) {
+            if (isRetryableEntitySetError(error) && index < projectAccessEntitySetCandidates.length - 1) {
+              index += 1;
+              return tryEntitySet();
+            }
+
+            throw error;
+          });
+        }
+
+        return tryEntitySet();
+      }
+
+      function extractProjectAccessRecordId(response) {
+        return normalize(
+          response && (
+            response.cr2b4_it_security_listid ||
+            response.id
+          )
+        );
+      }
+
+      function getProjectAccessTableBody() {
+        return document.querySelector("#admin-project-access-view tbody");
+      }
+
+      function syncProjectAccessEmptyState() {
+        var tbody = getProjectAccessTableBody();
+        var rows;
+        var emptyRow;
+
+        if (!tbody) {
+          return;
+        }
+
+        rows = tbody.querySelectorAll("tr[data-project-access-row='true']");
+        emptyRow = tbody.querySelector("tr:not([data-project-access-row='true'])");
+
+        if (rows.length && emptyRow) {
+          emptyRow.parentNode.removeChild(emptyRow);
+        }
+
+        if (!rows.length && !emptyRow) {
+          emptyRow = document.createElement("tr");
+          emptyRow.innerHTML = '<td colspan="5" class="itops-empty">No project access available</td>';
+          tbody.appendChild(emptyRow);
+        }
+      }
+
+      function assignProjectAccessMenuIds(row) {
+        var menuButton = row ? row.querySelector(".itops-row-trigger") : null;
+        var menu = row ? row.querySelector(".itops-col-menu") : null;
+        var recordId = row ? normalize(row.getAttribute("data-record-id")) : "";
+        var suffix;
+
+        if (!menuButton || !menu) {
+          return;
+        }
+
+        suffix = recordId || String(Date.now()) + "-" + Math.floor(Math.random() * 100000);
+        menu.id = "project-access-menu-" + suffix.replace(/[^a-zA-Z0-9_-]/g, "");
+        menuButton.setAttribute("data-menu", menu.id);
+      }
+
+      function bindProjectAccessRowActions(row) {
+        if (!row) {
+          return;
+        }
+
+        Array.prototype.forEach.call(row.querySelectorAll("[data-project-access-action]"), function (button) {
+          if (button.getAttribute("data-bound") === "true") {
+            return;
+          }
+
+          button.setAttribute("data-bound", "true");
+          button.addEventListener("click", function () {
+            handleProjectAccessAction(button.getAttribute("data-project-access-action"), button.closest("tr"));
+          });
+        });
+      }
+
+      function syncProjectAccessRow(row, values) {
+        var menuButton = row ? row.querySelector(".itops-row-trigger") : null;
+        var menu = row ? row.querySelector(".itops-col-menu") : null;
+
+        if (!row || !row.cells || row.cells.length < 5) {
+          return row;
+        }
+
+        row.setAttribute("data-project-access-row", "true");
+        row.setAttribute("data-project-name", values.projectName);
+        row.setAttribute("data-default-assignee", values.defaultAssignee);
+        row.setAttribute("data-business-users", values.businessUsers);
+        row.setAttribute("data-project-owners", values.projectOwners);
+        row.cells[0].textContent = values.projectName;
+        row.cells[1].textContent = values.defaultAssignee;
+        row.cells[2].textContent = values.businessUsers;
+        row.cells[3].textContent = values.projectOwners;
+
+        if (!menuButton || !menu) {
+          row.cells[4].className = "itops-row-action";
+          row.cells[4].innerHTML =
+            '<button class="itops-row-trigger" type="button" aria-label="Project access actions">&#8942;</button>' +
+            '<div class="itops-col-menu">' +
+              '<button class="itops-inline-action" type="button" data-project-access-action="edit">Edit</button>' +
+              '<button class="itops-inline-action is-delete" type="button" data-project-access-action="delete">Delete</button>' +
+            "</div>";
+        }
+
+        assignProjectAccessMenuIds(row);
+        bindProjectAccessRowActions(row);
+        return row;
+      }
+
+      function saveProjectAccess() {
+        var values = getProjectAccessValues();
+        var tbody = getProjectAccessTableBody();
+        var saveButton = document.getElementById("project-access-save");
+        var payload;
+        var isEditing = !!editingProjectAccessRow;
+
+        if (!values.projectName || !values.defaultAssignee || !tbody) {
+          hideAdminMessage();
+          return;
+        }
+
+        payload = buildProjectAccessPayload(values);
+        hideAdminMessage();
+
+        if (saveButton) {
+          saveButton.disabled = true;
+          saveButton.textContent = isEditing ? "Updating..." : "Saving...";
+        }
+
+        function finishSaving() {
+          if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "Update Project Access";
+          }
+        }
+
+        if (editingProjectAccessRow) {
+          if (!normalize(editingProjectAccessRow.getAttribute("data-record-id"))) {
+            finishSaving();
+            hideAdminMessage();
+            return;
+          }
+
+          callProjectAccessApi("PATCH", editingProjectAccessRow.getAttribute("data-record-id"), payload)
+            .then(function () {
+              syncProjectAccessRow(editingProjectAccessRow, values);
+              syncProjectAccessEmptyState();
+              setMessage("Project access updated successfully", false, false);
+              resetProjectAccessForm();
+              switchMainView("admin-project-access");
+            })
+            .catch(function (error) {
+              setMessage(error && error.message ? error.message : "Unable to update project access in Dataverse.", true, false);
+            })
+            .finally(finishSaving);
+          return;
+        }
+
+        callProjectAccessApi("POST", "", payload)
+          .then(function (response) {
+            var recordId = extractProjectAccessRecordId(response);
+            var row = document.createElement("tr");
+
+            row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+            row.setAttribute("data-record-id", recordId);
+            tbody.insertBefore(row, tbody.firstChild);
+            syncProjectAccessRow(row, values);
+            syncProjectAccessEmptyState();
+            setMessage("Project access added successfully", false, false);
+            resetProjectAccessForm();
+            switchMainView("admin-project-access");
+          })
+          .catch(function (error) {
+            setMessage(error && error.message ? error.message : "Unable to save project access in Dataverse.", true, false);
+          })
+          .finally(finishSaving);
+      }
+
+      function handleProjectAccessAction(actionName, row) {
+        if (!row) {
+          return;
+        }
+
+        if (actionName === "edit") {
+          editingProjectAccessRow = row;
+          toggleProjectAccessEditor(true);
+          setInputValue("project-access-name", row.getAttribute("data-project-name") || (row.cells[0] ? row.cells[0].textContent : ""));
+          setInputValue("project-access-assignee", row.getAttribute("data-default-assignee") || (row.cells[1] ? row.cells[1].textContent : ""));
+          setInputValue("project-access-business-users", row.getAttribute("data-business-users") || (row.cells[2] ? row.cells[2].textContent : ""));
+          setInputValue("project-access-project-owners", row.getAttribute("data-project-owners") || (row.cells[3] ? row.cells[3].textContent : ""));
+
+          var saveButton = document.getElementById("project-access-save");
+          if (saveButton) {
+            saveButton.textContent = "Update Project Access";
+          }
+
+          switchMainView("admin-project-access");
+          hideAdminMessage();
+          return;
+        }
+
+        if (actionName === "delete") {
+          if (!normalize(row.getAttribute("data-record-id"))) {
+            hideAdminMessage();
+            return;
+          }
+
+          callProjectAccessApi("DELETE", row.getAttribute("data-record-id"))
+            .then(function () {
+              if (editingProjectAccessRow === row) {
+                resetProjectAccessForm();
+              }
+
+              row.parentNode.removeChild(row);
+              syncProjectAccessEmptyState();
+              switchMainView("admin-project-access");
+              setMessage("Project access deleted successfully", false, false);
+            })
+            .catch(function (error) {
+              setMessage(error && error.message ? error.message : "Unable to delete project access from Dataverse.", true, false);
+            });
+        }
+      }
+
+      function matchesViewName(row, viewName) {
         var statusCell = row && row.cells && row.cells[6] ? normalize(row.cells[6].textContent).toLowerCase() : "";
+        var typeCell = row && row.cells && row.cells[2] ? normalize(row.cells[2].textContent).toLowerCase() : "";
+        var isServiceRequest = isServiceRequestType(typeCell);
+        var resolvedView = normalize(viewName);
 
-        if (activeQuickView === "home-all" || !activeQuickView) {
-          return true;
+        if (resolvedView === "home-all" || !resolvedView) {
+          return !isServiceRequest;
         }
 
-        if (activeQuickView === "home-open") {
-          return statusCell === "open";
+        if (resolvedView === "service-all") {
+          return isServiceRequest;
         }
 
-        if (activeQuickView === "home-inprogress") {
-          return statusCell === "working" ||
+        if (resolvedView === "home-open") {
+          return !isServiceRequest && statusCell === "open";
+        }
+
+        if (resolvedView === "home-inprogress") {
+          return !isServiceRequest && (
+            statusCell === "working" ||
             statusCell === "reassigned" ||
             statusCell === "pending" ||
             statusCell === "user-testing" ||
             statusCell === "uat" ||
             statusCell === "in progress" ||
-            statusCell === "inprogress";
+            statusCell === "inprogress"
+          );
         }
 
-        if (activeQuickView === "home-closed") {
-          return statusCell === "closed" || statusCell === "resolved";
+        if (resolvedView === "home-closed") {
+          return !isServiceRequest && (statusCell === "closed" || statusCell === "resolved");
+        }
+
+        if (resolvedView === "service-open") {
+          return isServiceRequest && statusCell !== "closed" && statusCell !== "resolved";
+        }
+
+        if (resolvedView === "service-closed") {
+          return isServiceRequest && (statusCell === "closed" || statusCell === "resolved");
         }
 
         return true;
       }
 
+      function matchesQuickView(row) {
+        return matchesViewName(row, activeQuickView);
+      }
+
       function itopsEmailToFullName(value) {
-        var text = (value || "").toString().trim();
-        if (!text) {
-          return "";
-        }
-
-        if (text.indexOf("@") === -1) {
-          return text;
-        }
-
-        var localPart = text.split("@")[0] || "";
-        localPart = localPart.replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim();
-
-        if (!localPart) {
-          return text;
-        }
-
-        return localPart.replace(/\b\w/g, function (char) {
-          return char.toUpperCase();
-        });
+        return itopsDisplayName(value);
       }
 
       function itopsApplyAssignedNameDisplay(scope) {
-        var root = scope || document;
-
-        Array.prototype.forEach.call(root.querySelectorAll('[data-field="assigned"], [data-field="assignedTo"], [data-detail-field="assigned"], [data-detail-field="assignedTo"]'), function (node) {
-          node.textContent = itopsEmailToFullName(node.textContent);
-        });
-
-        Array.prototype.forEach.call(root.querySelectorAll("#ticket-list-view tbody tr"), function (row) {
-          var assignedCell = row.cells && row.cells.length > 7 ? row.cells[7] : null;
-          if (assignedCell) {
-            assignedCell.textContent = itopsEmailToFullName(assignedCell.textContent);
-          }
-        });
-
-        Array.prototype.forEach.call(root.querySelectorAll(".itops-detail-row"), function (row) {
-          var label = row.querySelector(".itops-detail-label");
-          var value = row.querySelector(".itops-detail-value");
-          if (label && value && label.textContent.trim().toLowerCase() === "assigned to") {
-            value.textContent = itopsEmailToFullName(value.textContent);
-          }
-        });
-
-        Array.prototype.forEach.call(root.querySelectorAll("select option"), function (option) {
-          var labelText = option.textContent || "";
-          if (labelText.indexOf("@") !== -1) {
-            option.textContent = itopsEmailToFullName(labelText);
-          }
-        });
-
-        Array.prototype.forEach.call(root.querySelectorAll("input[readonly], input[disabled]"), function (input) {
-          var inputName = ((input.id || "") + " " + (input.name || "") + " " + (input.getAttribute("aria-label") || "")).toLowerCase();
-          if (inputName.indexOf("assigned") !== -1 && input.value && input.value.indexOf("@") !== -1) {
-            input.value = itopsEmailToFullName(input.value);
-          }
-        });
+        itopsFixAssignedAndAttachmentNames(scope || document);
       }
 
 function bindEvents() {
@@ -5574,10 +7463,15 @@ function bindEvents() {
         var detailClose = document.getElementById("ticket-detail-close");
         var followupInput = document.getElementById("detail-followup");
         var followupSubmit = document.getElementById("detail-followup-submit");
+        var technicianSubmit = document.getElementById("detail-tech-submit");
+        var technicianReset = document.getElementById("detail-tech-reset");
         var ticketTableBody = document.getElementById("ticket-table-body");
         var adminSaveUser = document.getElementById("admin-save-user");
         var adminResetUser = document.getElementById("admin-reset-user");
-
+        var projectAccessSave = document.getElementById("project-access-save");
+        var projectAccessReset = document.getElementById("project-access-reset");
+        var userRoleSelect = document.getElementById("user-role-select");
+        var userRoleSubmit = document.getElementById("user-role-submit");
         if (showCreate) {
           showCreate.addEventListener("click", openCreateView);
         }
@@ -5588,6 +7482,22 @@ function bindEvents() {
 
         if (adminResetUser) {
           adminResetUser.addEventListener("click", resetAdminUserForm);
+        }
+
+        if (projectAccessSave) {
+          projectAccessSave.addEventListener("click", saveProjectAccess);
+        }
+
+        if (projectAccessReset) {
+          projectAccessReset.addEventListener("click", resetProjectAccessForm);
+        }
+
+        if (userRoleSelect) {
+          userRoleSelect.addEventListener("change", renderRoleAccessTable);
+        }
+
+        if (userRoleSubmit) {
+          userRoleSubmit.addEventListener("click", submitRoleAccessConfig);
         }
 
         if (backCreate) {
@@ -5617,9 +7527,9 @@ function bindEvents() {
           });
         }
 
-        Array.prototype.forEach.call(document.querySelectorAll(".itops-col-trigger, .itops-row-trigger"), function (button) {
+        Array.prototype.forEach.call(document.querySelectorAll(".itops-col-trigger"), function (button) {
           button.addEventListener("click", function (event) {
-            if (button.classList.contains("itops-col-trigger") && button.closest("thead")) {
+            if (button.closest("thead")) {
               var filterButton = button.parentElement ? button.parentElement.querySelector(".itops-col-menu-item[data-filter-column]") : null;
               if (filterButton) {
                 button.setAttribute("data-filter-column", filterButton.getAttribute("data-filter-column") || "0");
@@ -5628,27 +7538,12 @@ function bindEvents() {
                 return;
               }
             }
-
-            var menuId = button.getAttribute("data-menu");
-            var menu = document.getElementById(menuId);
-            event.stopPropagation();
-            closeMenus();
-            if (menu) {
-              menu.classList.toggle("is-open");
-            }
           });
         });
 
-        Array.prototype.forEach.call(document.querySelectorAll(".itops-col-menu-item"), function (button) {
+        Array.prototype.forEach.call(document.querySelectorAll(".itops-col-menu-item[data-filter-column]"), function (button) {
           button.addEventListener("click", function (event) {
             event.stopPropagation();
-            if (button.getAttribute("data-action") === "view-ticket") {
-              var row = button.closest("tr[data-row='true']");
-              closeMenus();
-              openTicketDetails(row);
-              return;
-            }
-
             if (button.textContent.trim() === "Filter") {
               openFilterPopover(button, event);
               closeMenus();
@@ -5663,6 +7558,7 @@ function bindEvents() {
           ticketTableBody.addEventListener("click", function (event) {
             var trigger = event.target.closest(".itops-row-trigger");
             var viewButton = event.target.closest("[data-action='view-ticket']");
+            var editButton = event.target.closest("[data-action='edit-ticket']");
 
             if (trigger) {
               var menu = trigger.parentElement ? trigger.parentElement.querySelector(".itops-col-menu") : null;
@@ -5678,6 +7574,19 @@ function bindEvents() {
               event.stopPropagation();
               closeMenus();
               openTicketDetails(viewButton.closest("tr[data-row='true']"));
+              return;
+            }
+
+            if (editButton) {
+              event.stopPropagation();
+              closeMenus();
+              openTicketDetails(editButton.closest("tr[data-row='true']"));
+              window.setTimeout(function () {
+                var statusField = document.getElementById("detail-tech-status");
+                if (statusField) {
+                  statusField.focus();
+                }
+              }, 40);
             }
           });
         }
@@ -5690,15 +7599,16 @@ function bindEvents() {
           detailOverlay.addEventListener("click", closeTicketDetails);
         }
 
-        if (followupInput) {
-          followupInput.addEventListener("input", function () {
-            updateFollowupCount();
-            renderMentionMenu();
-          });
-        }
-
         if (followupSubmit) {
           followupSubmit.addEventListener("click", submitFollowupRequest);
+        }
+
+        if (technicianSubmit) {
+          technicianSubmit.addEventListener("click", submitTechnicianUpdate);
+        }
+
+        if (technicianReset) {
+          technicianReset.addEventListener("click", resetTechnicianUpdateForm);
         }
 
         if (filterClose) {
@@ -5722,6 +7632,9 @@ function bindEvents() {
 
           closeMenus();
         });
+
+        renderRoleAccessTable();
+        toggleTechnicianSection();
       }
 
       function openTicketDetails(row) {
@@ -5740,6 +7653,7 @@ function bindEvents() {
           recordId: row.getAttribute("data-record-id") || "",
           entitySet: row.getAttribute("data-entity-set") || "",
           ticketId: cells[0] || "",
+          type: cells[2] || "",
           project: cells[3] || "",
           requestor: row.getAttribute("data-requestor") || "{{ hub_name | escape }}",
           requestorEmail: row.getAttribute("data-requestor-email") || "{{ hub_email | escape }}",
@@ -5759,10 +7673,12 @@ function bindEvents() {
         setDetailValue("detail-business-user", formatPersonLabel(row.getAttribute("data-bu") || "-"));
         setDetailValue("detail-requestor", formatPersonLabel(activeDetailTicket.requestor));
         renderDetailAttachments(storedAttachments);
+        syncDetailPanelMode();
+        syncTechnicianSection(row);
 
         var followupInput = document.getElementById("detail-followup");
         if (followupInput) {
-          followupInput.value = storedFollowup;
+          followupInput.value = getActiveDetailMode() === "service" ? "" : storedFollowup;
         }
         resetFollowupAttachments();
         updateFollowupCount();
@@ -5798,6 +7714,303 @@ function bindEvents() {
         if (element) {
           element.textContent = normalize(value) || "-";
         }
+      }
+
+      function setFieldValue(id, value) {
+        var element = document.getElementById(id);
+        if (element) {
+          element.value = normalize(value);
+        }
+      }
+
+      function setAssigneeFieldValue(value) {
+        var element = document.getElementById("detail-tech-assignee");
+        var rawValue = normalize(value);
+
+        if (!element) {
+          return;
+        }
+
+        element.value = rawValue ? formatPersonLabel(rawValue) : "";
+        element.setAttribute("data-raw-email", rawValue);
+      }
+
+      function getAssigneeFieldSubmitValue() {
+        var element = document.getElementById("detail-tech-assignee");
+        var typedValue;
+        var rawValue;
+        var displayValue;
+
+        if (!element) {
+          return "";
+        }
+
+        typedValue = normalize(element.value);
+        rawValue = normalize(element.getAttribute("data-raw-email"));
+        displayValue = rawValue ? formatPersonLabel(rawValue) : "";
+
+        if (!typedValue) {
+          return "";
+        }
+
+        if (rawValue && typedValue === displayValue) {
+          return rawValue;
+        }
+
+        return typedValue;
+      }
+
+      function isServiceRequestType(value) {
+        var normalizedValue = normalize(value).toLowerCase();
+        return normalizedValue === "service request" || normalizedValue === "servicerequest";
+      }
+
+      function getActiveDetailMode() {
+        if (activeQuickView === "service-all" || activeQuickView === "service-open" || activeQuickView === "service-closed") {
+          return "service";
+        }
+
+        return "home";
+      }
+
+      function syncDetailPanelMode() {
+        var followupSection = document.getElementById("followup-request-section");
+        var technicianSection = document.getElementById("technician-update-section");
+        var followupHeading = document.getElementById("detail-followup-heading");
+        var followupHelp = document.getElementById("detail-followup-help");
+        var followupInput = document.getElementById("detail-followup");
+        var followupActions = document.getElementById("detail-followup-actions");
+        var isServiceMode = getActiveDetailMode() === "service";
+
+        if (detailPanel) {
+          detailPanel.classList.toggle("is-service-mode", isServiceMode);
+          detailPanel.classList.toggle("is-home-mode", !isServiceMode);
+        }
+
+        if (followupSection) {
+          followupSection.classList.remove("itops-panel-hidden");
+        }
+
+        if (followupHeading) {
+          followupHeading.textContent = isServiceMode ? "Technician Notes & Attachments" : "Follow-up Request";
+        }
+
+        if (followupHelp) {
+          followupHelp.textContent = isServiceMode
+            ? "Optional. Tag users with @name and attach files for the technician update."
+            : "Optional. Attach files with your follow-up request.";
+        }
+
+        if (followupInput) {
+          followupInput.placeholder = isServiceMode
+            ? "Add technician notes, tag users with @name, and include attachment context..."
+            : "Type your follow-up request here...";
+        }
+
+        if (followupActions) {
+          followupActions.classList.toggle("itops-panel-hidden", isServiceMode);
+        }
+
+        if (technicianSection && !isServiceMode) {
+          technicianSection.classList.add("itops-panel-hidden");
+        }
+      }
+
+      function toggleTechnicianSection() {
+        var section = document.getElementById("technician-update-section");
+        var roleName = getCurrentPortalRoleName();
+        var isServiceMode = getActiveDetailMode() === "service";
+        var canEditServiceRequests = canManageServiceRequests && (
+          roleHasAccess(roleName, "Service Requests", "All Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Open Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Closed Requests", "edit")
+        );
+        if (section) {
+          section.classList.toggle("itops-panel-hidden", !(isServiceMode && canEditServiceRequests));
+        }
+      }
+
+      function resetTechnicianUpdateForm() {
+        if (!activeDetailTicket || !activeDetailTicket.row) {
+          setFieldValue("detail-tech-status", "");
+          setAssigneeFieldValue("");
+          setFieldValue("detail-tech-resolution", "");
+          return;
+        }
+
+        var cells = Array.prototype.slice.call(activeDetailTicket.row.cells).map(function (cell) {
+          return normalize(cell.textContent);
+        });
+
+        setFieldValue("detail-tech-status", cells[6] || "Open");
+        setAssigneeFieldValue(cells[7] || "");
+        setFieldValue("detail-tech-resolution", cells[8] || "");
+      }
+
+      function syncTechnicianSection(row) {
+        toggleTechnicianSection();
+        if (!canManageServiceRequests || !row) {
+          return;
+        }
+
+        var cells = Array.prototype.slice.call(row.cells).map(function (cell) {
+          return normalize(cell.textContent);
+        });
+
+        setFieldValue("detail-tech-status", cells[6] || "Open");
+        setAssigneeFieldValue(cells[7] || "");
+        setFieldValue("detail-tech-resolution", cells[8] || "");
+      }
+
+      function updateTicketRecordInDataverse(entitySetName, recordId, payload) {
+        return safePowerPagesPost({
+          type: "PATCH",
+          url: "/_api/" + entitySetName + "(" + recordId + ")",
+          contentType: "application/json",
+          data: JSON.stringify(payload)
+        });
+      }
+
+      function submitTechnicianUpdate() {
+        var submitButton = document.getElementById("detail-tech-submit");
+        var roleName = getCurrentPortalRoleName();
+        var status = normalize(document.getElementById("detail-tech-status") ? document.getElementById("detail-tech-status").value : "");
+        var assignee = normalize(getAssigneeFieldSubmitValue());
+        var resolution = normalize(document.getElementById("detail-tech-resolution") ? document.getElementById("detail-tech-resolution").value : "");
+        var payload;
+        var canEditServiceRequests = canManageServiceRequests && (
+          roleHasAccess(roleName, "Service Requests", "All Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Open Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Closed Requests", "edit")
+        );
+
+        if (!canEditServiceRequests) {
+          setMessage("You do not have permission to update service requests.", true, true);
+          return;
+        }
+
+        if (!activeDetailTicket || !activeDetailTicket.row || !activeDetailTicket.recordId || !activeDetailTicket.entitySet || activeDetailTicket.entitySet === "flow") {
+          setMessage("This request cannot be updated from the current source.", true, true);
+          return;
+        }
+
+        if (!status || !assignee) {
+          setMessage("Status and assignee are required to update the request.", true, true);
+          return;
+        }
+
+        payload = {
+          new_status: status,
+          new_defaultassignee: assignee,
+          new_resolution_comments: resolution
+        };
+
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = "Submitting...";
+        }
+
+        updateTicketRecordInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, payload)
+          .then(function () {
+            var row = activeDetailTicket.row;
+            row.cells[6].textContent = status;
+            row.cells[7].textContent = assignee;
+            row.cells[8].textContent = resolution;
+            row.setAttribute("data-assignee", assignee);
+            setDetailValue("detail-ticket-status", status);
+            setDetailValue("detail-ticket-assigned", formatPersonLabel(assignee));
+            setDetailValue("detail-ticket-resolution", resolution || "-");
+            return persistDetailNotesAndAttachments()
+              .then(function () {
+                updateRequestSummary();
+                filterRows();
+                setMessage("Service request updated successfully.", false, true);
+                itopsApplyAssignedNameDisplay(detailPanel || document);
+              })
+              .catch(function (error) {
+                updateRequestSummary();
+                filterRows();
+                itopsApplyAssignedNameDisplay(detailPanel || document);
+                setMessage(error && error.message ? error.message : "Service request updated, but notes or attachments could not be saved.", true, true);
+              });
+          })
+          .catch(function (error) {
+            setMessage(error && error.message ? error.message : "Unable to update the service request.", true, true);
+          })
+          .finally(function () {
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = "Submit";
+            }
+          });
+      }
+
+      function renderRoleAccessTable() {
+        var select = document.getElementById("user-role-select");
+        var tbody = document.getElementById("user-role-table-body");
+        var selectedRole = select ? normalize(select.value) : "Admin";
+        var rowsForRole = roleAccessState[selectedRole] || [];
+
+        if (!tbody) {
+          return;
+        }
+
+        tbody.innerHTML = rowsForRole.map(function (row, index) {
+          var isRolesRow = normalize(row.module) === "Access" && normalize(row.subModule) === "User Roles";
+          var disabledAttr = isRolesRow ? " disabled" : "";
+          var titleAttr = isRolesRow ? ' title="Roles screen is always available for Admin users and is not controlled by this matrix."' : "";
+
+          return "<tr>" +
+            "<td>" + escapeHtml(row.module) + "</td>" +
+            "<td>" + escapeHtml(row.subModule) + (isRolesRow ? " <span style='color:#6b7280;font-size:11px;'>(Always Admin)</span>" : "") + "</td>" +
+            '<td><input type="checkbox" data-role-access="' + selectedRole + '" data-index="' + index + '" data-permission="add"' + (row.add ? " checked" : "") + disabledAttr + titleAttr + " /></td>" +
+            '<td><input type="checkbox" data-role-access="' + selectedRole + '" data-index="' + index + '" data-permission="view" checked' + disabledAttr + titleAttr + " /></td>" +
+            '<td><input type="checkbox" data-role-access="' + selectedRole + '" data-index="' + index + '" data-permission="edit"' + (row.edit ? " checked" : "") + disabledAttr + titleAttr + " /></td>" +
+            '<td><input type="checkbox" data-role-access="' + selectedRole + '" data-index="' + index + '" data-permission="delete"' + (row.delete ? " checked" : "") + disabledAttr + titleAttr + " /></td>" +
+          "</tr>";
+        }).join("");
+
+        Array.prototype.forEach.call(tbody.querySelectorAll("[data-role-access]"), function (input) {
+          input.addEventListener("change", function () {
+            var roleName = input.getAttribute("data-role-access");
+            var rowIndex = parseInt(input.getAttribute("data-index"), 10);
+            var permission = input.getAttribute("data-permission");
+
+            if (roleAccessState[roleName] && roleAccessState[roleName][rowIndex]) {
+              var targetRow = roleAccessState[roleName][rowIndex];
+
+              if (normalize(targetRow.module) === "Access" && normalize(targetRow.subModule) === "User Roles") {
+                input.checked = permission === "view" ? true : !!targetRow[permission];
+                return;
+              }
+
+              roleAccessState[roleName][rowIndex][permission] = !!input.checked;
+            }
+          });
+        });
+      }
+
+      function submitRoleAccessConfig() {
+        var select = document.getElementById("user-role-select");
+        var roleName = select ? normalize(select.value) : "Admin";
+        var activeRoleName = getCurrentPortalRoleName();
+        var wasAdminArea = activeQuickView && activeQuickView.indexOf("admin-") === 0;
+
+        saveRoleAccessState();
+        applyRoleAccessConfig(activeRoleName);
+        updateRequestSummary();
+        filterRows();
+
+        /*
+          If the currently opened Admin sub-module was disabled, open the next
+          available Admin sub-module instead of closing the entire Admin section.
+        */
+        if (!isViewAllowedForRole(activeRoleName, activeQuickView)) {
+          activeQuickView = getAllowedFallbackView(activeRoleName, wasAdminArea ? "admin" : "");
+        }
+
+        switchMainView(activeQuickView);
+        setMessage(roleName + " access configuration updated. Disabled sub-modules are hidden only from their own group.", false, false);
       }
 
       function updateFollowupCount() {
@@ -5976,6 +8189,78 @@ function bindEvents() {
         }));
       }
 
+      function persistDetailNotesAndAttachments() {
+        var followupInput = document.getElementById("detail-followup");
+        var attachmentInput = document.getElementById("detail-followup-attachment");
+        var followupValue = followupInput ? String(followupInput.value || "").trim() : "";
+
+        if (!activeDetailTicket || !activeDetailTicket.ticketId) {
+          return Promise.resolve();
+        }
+
+        if (!followupValue && (!attachmentInput || !attachmentInput.files || !attachmentInput.files.length) && !(pendingFollowupAttachments && pendingFollowupAttachments.length)) {
+          return Promise.resolve();
+        }
+
+        return Promise.resolve(pendingFollowupAttachments && pendingFollowupAttachments.length ? pendingFollowupAttachments.slice() : null)
+          .then(function (cachedAttachments) {
+            if (cachedAttachments) {
+              return cachedAttachments;
+            }
+            return readAttachments(attachmentInput);
+          })
+          .then(function (attachments) {
+            var existingAttachments = activeDetailTicket && activeDetailTicket.attachments
+              ? activeDetailTicket.attachments
+              : [];
+            var allAttachments = existingAttachments.concat(attachments);
+            var payload = {
+              Ticket_ID: activeDetailTicket.ticketId,
+              DataverseRecordId: activeDetailTicket.recordId,
+              ApplicationProject: activeDetailTicket.project,
+              Followup_Comments: followupValue,
+              Requestor: activeDetailTicket.requestor,
+              RequestorEmail: activeDetailTicket.requestorEmail,
+              Ticket_Title: normalize(document.getElementById("detail-ticket-title") ? document.getElementById("detail-ticket-title").textContent : ""),
+              Module: normalize(document.getElementById("detail-ticket-module") ? document.getElementById("detail-ticket-module").textContent : ""),
+              Sub_Module: normalize(document.getElementById("detail-ticket-submodule") ? document.getElementById("detail-ticket-submodule").textContent : ""),
+              Attachments: allAttachments,
+              AttachmentCount: allAttachments.length,
+              AttachmentNames: allAttachments.map(function (attachment) { return attachment.AttachmentName; }).join(", "),
+              AttachmentName: allAttachments.length ? allAttachments[0].AttachmentName : "",
+              AttachmentContentBytes: allAttachments.length ? allAttachments[0].AttachmentContentBytes : ""
+            };
+
+            function storeLocally() {
+              if (activeDetailTicket && activeDetailTicket.row) {
+                activeDetailTicket.row.setAttribute("data-followup", followupValue);
+                activeDetailTicket.followupComments = followupValue;
+                if (allAttachments.length) {
+                  activeDetailTicket.attachments = allAttachments;
+                  activeDetailTicket.row.setAttribute("data-attachments", JSON.stringify(allAttachments));
+                  renderDetailAttachments(allAttachments);
+                }
+              }
+              resetFollowupAttachments();
+            }
+
+            if (attachments.length && followupTicketFlowUrl) {
+              return invokeFollowupFlow(payload).then(function () {
+                storeLocally();
+              });
+            }
+
+            if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
+              return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function () {
+                storeLocally();
+              });
+            }
+
+            storeLocally();
+            return null;
+          });
+      }
+
       function submitFollowupRequest() {
         var followupInput = document.getElementById("detail-followup");
         var attachmentInput = document.getElementById("detail-followup-attachment");
@@ -6011,6 +8296,7 @@ function bindEvents() {
             var allAttachments = existingAttachments.concat(attachments);
             var payload = {
               Ticket_ID: activeDetailTicket.ticketId,
+              DataverseRecordId: activeDetailTicket.recordId,
               ApplicationProject: activeDetailTicket.project,
               Followup_Comments: followupValue,
               Requestor: activeDetailTicket.requestor,
@@ -6026,17 +8312,59 @@ function bindEvents() {
             };
             window.followupPayloadPreview = payload;
 
-            if (!followupTicketFlowUrl) {
-              throw new Error("Follow-up flow URL is not configured.");
+            if (attachments.length) {
+              if (followupTicketFlowUrl) {
+                return invokeFollowupFlow(payload).then(function (response) {
+                  return {
+                    response: response,
+                    attachments: allAttachments,
+                    persistedToFlow: true
+                  };
+                });
+              }
+
+              if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
+                return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function (response) {
+                  return {
+                    response: response,
+                    attachments: allAttachments,
+                    persistedToFlow: false
+                  };
+                });
+              }
+
+              return {
+                response: {},
+                attachments: allAttachments,
+                persistedToFlow: false
+              };
             }
 
-            return invokeFollowupFlow(payload).then(function (response) {
-              return {
-                response: response,
-                attachments: allAttachments,
-                persistedToFlow: true
-              };
-            });
+            if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
+              return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function (response) {
+                return {
+                  response: response,
+                  attachments: allAttachments,
+                  persistedToFlow: false
+                };
+              });
+            }
+
+            if (followupTicketFlowUrl) {
+              return invokeFollowupFlow(payload).then(function (response) {
+                return {
+                  response: response,
+                  attachments: allAttachments,
+                  persistedToFlow: true
+                };
+              });
+            }
+
+            return {
+              response: {},
+              attachments: allAttachments,
+              persistedToFlow: false
+            };
           })
           .then(function (result) {
             var attachments = result && result.attachments ? result.attachments : [];
@@ -6051,7 +8379,11 @@ function bindEvents() {
               }
             }
 
-            setMessage("Follow-up request submitted successfully.", false, true);
+            if (persistedToFlow === false && attachments.length && !followupTicketFlowUrl) {
+              setMessage("Follow-up comments saved. Update the follow-up flow URL to persist attachments to backend.", false, true);
+            } else {
+              setMessage("Follow-up request submitted successfully.", false, true);
+            }
             resetFollowupAttachments();
           })
           .catch(function (error) {
@@ -6063,6 +8395,18 @@ function bindEvents() {
               submitButton.textContent = "Submit";
             }
           });
+      }
+
+      function updateFollowupInDataverse(entitySetName, recordId, followupValue) {
+        var payload = {};
+        payload[followupCommentsAttribute] = followupValue;
+
+        return safePowerPagesPost({
+          type: "PATCH",
+          url: "/_api/" + entitySetName + "(" + recordId + ")",
+          contentType: "application/json",
+          data: JSON.stringify(payload)
+        });
       }
 
       function openCreateView() {
@@ -6080,6 +8424,8 @@ function bindEvents() {
         if (listView) listView.classList.add("itops-panel-hidden");
         if (adminNewUserView) adminNewUserView.classList.add("itops-panel-hidden");
         if (adminExistingUserView) adminExistingUserView.classList.add("itops-panel-hidden");
+        if (adminProjectAccessView) adminProjectAccessView.classList.add("itops-panel-hidden");
+        if (adminUserRolesView) adminUserRolesView.classList.add("itops-panel-hidden");
         if (createView) createView.classList.remove("itops-panel-hidden");
         var shell = document.querySelector(".itops-shell");
         if (shell) shell.classList.add("itops-create-mode");
@@ -6117,6 +8463,9 @@ function bindEvents() {
         var openCount = 0;
         var pendingCount = 0;
         var closedCount = 0;
+        var serviceAllCount = 0;
+        var serviceOpenCount = 0;
+        var serviceClosedCount = 0;
         var selectedProject = normalize(projectFilter ? projectFilter.value : "");
 
         rows.forEach(function (row) {
@@ -6132,31 +8481,55 @@ function bindEvents() {
             return;
           }
 
-          var statusCell = row.cells && row.cells[6] ? normalize(row.cells[6].textContent).toLowerCase() : "";
-
-          if (statusCell === "closed" || statusCell === "resolved") {
-            closedCount += 1;
-            return;
+          if (matchesViewName(row, "home-open")) {
+            openCount += 1;
           }
 
-          if (statusCell === "working" || statusCell === "reassigned" || statusCell === "pending" || statusCell === "user-testing" || statusCell === "uat" || statusCell === "in progress" || statusCell === "inprogress") {
+          if (matchesViewName(row, "home-inprogress")) {
             pendingCount += 1;
-            return;
           }
 
-          openCount += 1;
+          if (matchesViewName(row, "home-closed")) {
+            closedCount += 1;
+          }
+
+          if (matchesViewName(row, "service-all")) {
+            serviceAllCount += 1;
+          }
+
+          if (matchesViewName(row, "service-open")) {
+            serviceOpenCount += 1;
+          }
+
+          if (matchesViewName(row, "service-closed")) {
+            serviceClosedCount += 1;
+          }
         });
 
         setSummaryValue("home-open-count", openCount);
         setSummaryValue("home-inprogress-count", pendingCount);
         setSummaryValue("home-closed-count", closedCount);
+        setSummaryValue("service-all-count", serviceAllCount);
+        setSummaryValue("service-open-count", serviceOpenCount);
+        setSummaryValue("service-closed-count", serviceClosedCount);
       }
 
       function setSummaryValue(id, value) {
         var element = document.getElementById(id);
         if (element) {
           element.textContent = String(value);
+          element.classList.toggle("is-hidden", Number(value || 0) <= 0);
         }
+      }
+
+      function buildTicketActionMenuMarkup(ticketType, canEditServiceTicket) {
+        var isServiceTicket = isServiceRequestType(ticketType);
+        var actionMarkup = isServiceTicket
+          ? (canEditServiceTicket ? '<button class="itops-col-menu-item" type="button" data-action="edit-ticket">Edit</button>' : "")
+          : '<button class="itops-col-menu-item" type="button" data-action="view-ticket">View</button>';
+
+        return '<td class="itops-row-action"><button class="itops-row-trigger" type="button">&#8942;</button><div class="itops-col-menu">' +
+          actionMarkup + "</div></td>";
       }
 
       function setSummaryWidth(id, value) {
@@ -6310,6 +8683,7 @@ function submitTicketForm() {
           RequestorEmail: "{{ hub_email | escape }}",
           Ticket_Description: ticket.description,
           Resolution_Comments: "",
+          Followup_Comments: "",
           PlannerTaskID: "",
           AttachmentName: ticket.attachment ? ticket.attachment.name : "",
           AttachmentContentBytes: ticket.attachment ? ticket.attachment.contentBytes : ""
@@ -6317,7 +8691,111 @@ function submitTicketForm() {
       }
 
       function submitTicketPayload(ticketPayload) {
-        return invokeCreateTicketFlow(ticketPayload);
+        return createDataverseTicket(ticketPayload);
+      }
+
+      function createDataverseTicket(ticketPayload) {
+        /*
+          Dataverse target: IT_Tickets table.
+          IMPORTANT: the URL must be the IT_Tickets ENTITY SET NAME, not the logical table name.
+          Keep all candidates below; the code will try each one until the Dataverse Web API accepts it.
+        */
+        var entitySetCandidates = [
+          "cr2b4_it_ticketses",
+          "cr2b4_it_tickets",
+          "cr2b4_it_ticketss",
+          "cr2b4_itticketses",
+          "cr2b4_ittickets"
+        ];
+
+        var attachmentUrls = ticketPayload.AttachmentUrl || ticketPayload.AttachmentUrls || "";
+
+        var fullPayload = {
+          cr2b4_ticket_id: ticketPayload.Ticket_ID,
+          cr2b4_ticket_title: ticketPayload.Ticket_Title,
+          cr2b4_ticket_description: ticketPayload.Ticket_Description,
+          cr2b4_applicationproject: ticketPayload.ApplicationProject,
+          cr2b4_issue_type: ticketPayload.Issue_Type,
+          cr2b4_module: ticketPayload.Module,
+          cr2b4_sub_module: ticketPayload.Sub_Module,
+          cr2b4_status: ticketPayload.Status,
+          cr2b4_current_status: ticketPayload.Current_Status,
+          cr2b4_defaultassignee: ticketPayload.DefaultAssignee,
+          cr2b4_businessusers: ticketPayload.BusinessUsers,
+          cr2b4_projectowners: ticketPayload.ProjectOwners,
+          cr2b4_projectusers: ticketPayload.ProjectUsers,
+          cr2b4_requestor: ticketPayload.Requestor,
+          cr2b4_requestoremail: ticketPayload.RequestorEmail,
+          cr2b4_plannertaskid: ticketPayload.PlannerTaskID,
+          cr2b4_resolution_comments: ticketPayload.Resolution_Comments,
+          cr2b4_followup_comments: ticketPayload.Followup_Comments || "",
+          cr2b4_attachmenturls: attachmentUrls
+        };
+
+        /*
+          Fallback payloads are intentionally smaller.
+          They let the save continue even if one or two optional columns were not created yet.
+        */
+        var payloadVariants = [
+          fullPayload,
+          {
+            cr2b4_ticket_id: ticketPayload.Ticket_ID,
+            cr2b4_ticket_title: ticketPayload.Ticket_Title,
+            cr2b4_applicationproject: ticketPayload.ApplicationProject,
+            cr2b4_issue_type: ticketPayload.Issue_Type,
+            cr2b4_module: ticketPayload.Module,
+            cr2b4_sub_module: ticketPayload.Sub_Module,
+            cr2b4_status: ticketPayload.Status,
+            cr2b4_current_status: ticketPayload.Current_Status,
+            cr2b4_defaultassignee: ticketPayload.DefaultAssignee,
+            cr2b4_requestor: ticketPayload.Requestor,
+            cr2b4_requestoremail: ticketPayload.RequestorEmail,
+            cr2b4_ticket_description: ticketPayload.Ticket_Description,
+            cr2b4_resolution_comments: ticketPayload.Resolution_Comments
+          },
+          {
+            cr2b4_ticket_id: ticketPayload.Ticket_ID,
+            cr2b4_ticket_title: ticketPayload.Ticket_Title,
+            cr2b4_applicationproject: ticketPayload.ApplicationProject,
+            cr2b4_defaultassignee: ticketPayload.DefaultAssignee,
+            cr2b4_status: ticketPayload.Status
+          },
+          {
+            cr2b4_ticket_title: ticketPayload.Ticket_Title,
+            cr2b4_applicationproject: ticketPayload.ApplicationProject
+          }
+        ];
+        var attemptErrors = [];
+
+        function tryEntitySet(entityIndex, payloadIndex) {
+          if (entityIndex >= entitySetCandidates.length) {
+            return Promise.reject(new Error(
+              "Unable to save the ticket in Dataverse IT_Tickets. " +
+              "Check that Webapi/<entityset>/enabled is true, Webapi/<entityset>/fields contains the columns, " +
+              "and the logged-in user's Web Role has Create permission. Details: " +
+              attemptErrors.filter(Boolean).join(" | ")
+            ));
+          }
+
+          if (payloadIndex >= payloadVariants.length) {
+            return tryEntitySet(entityIndex + 1, 0);
+          }
+
+          return safePowerPagesWrite({
+            method: "POST",
+            url: "/_api/" + entitySetCandidates[entityIndex],
+            headers: { Prefer: "return=representation" },
+            body: JSON.stringify(payloadVariants[payloadIndex])
+          }).catch(function (error) {
+            attemptErrors.push(
+              "[" + entitySetCandidates[entityIndex] + " payload " + (payloadIndex + 1) + "] " +
+              normalize(error && error.message)
+            );
+            return tryEntitySet(entityIndex, payloadIndex + 1);
+          });
+        }
+
+        return tryEntitySet(0, 0);
       }
 
       function readAttachment(input) {
@@ -6345,45 +8823,75 @@ function submitTicketForm() {
       }
 
       function invokeCreateTicketFlow(ticketPayload) {
-        return fetch(createTicketFlowUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type": "text/plain;charset=UTF-8"
-          },
-          body: JSON.stringify(ticketPayload)
-        }).then(function () {
-          return {};
+        var triggerUrl = "/_api/cloudflow/v1.0/trigger/" + createTicketCloudFlowId;
+
+        return safePowerPagesPost({
+          type: "POST",
+          url: triggerUrl,
+          contentType: "application/json",
+          data: JSON.stringify({
+            eventData: JSON.stringify(ticketPayload)
+          })
+        }).catch(function () {
+          throw new Error("Submit failed while calling the Power Pages cloud flow.");
         });
       }
 
       function invokeFollowupFlow(followupPayload) {
         return fetch(followupTicketFlowUrl, {
           method: "POST",
-          mode: "no-cors",
           headers: {
-            "Content-Type": "text/plain;charset=UTF-8"
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(followupPayload)
-        }).then(function () {
-          return {};
+        }).then(function (response) {
+          if (!response.ok) {
+            throw new Error("Follow-up flow request failed with status " + response.status);
+          }
+
+          return response.text().then(function (text) {
+            return text ? JSON.parse(text) : {};
+          }).catch(function () {
+            return {};
+          });
         });
       }
 
       function safePowerPagesPost(options) {
         return new Promise(function (resolve, reject) {
           var attempts = 0;
-          var maxAttempts = 20;
+          var maxAttempts = 40;
           var delay = 300;
 
           function trySubmit() {
             attempts += 1;
+
+            ensurePowerPagesWebApiWrapper();
+
+            if (typeof window.getPowerPagesSubmitInvoker === "function") {
+              var submitInvoker = window.getPowerPagesSubmitInvoker();
+              if (submitInvoker) {
+                submitInvoker({
+                  type: options.type || "POST",
+                  url: options.url,
+                  contentType: options.contentType || "application/json",
+                  headers: options.headers || {},
+                  data: options.data
+                })
+                  .done(resolve)
+                  .fail(function (xhr) {
+                    reject(new Error(getAjaxErrorMessage(xhr)));
+                  });
+                return;
+              }
+            }
 
             if (window.shell && typeof window.shell.ajaxSafePost === "function") {
               window.shell.ajaxSafePost({
                 type: options.type || "POST",
                 url: options.url,
                 contentType: options.contentType || "application/json",
+                headers: options.headers || {},
                 data: options.data
               })
                 .done(resolve)
@@ -6439,17 +8947,153 @@ function submitTicketForm() {
               }
             }
 
-            if (attempts < maxAttempts) {
-              window.setTimeout(trySubmit, delay);
-              return;
-            }
+            getPowerPagesRequestToken()
+              .then(function (token) {
+                if (!token) {
+                  throw new Error("Power Pages request token is not available on this page.");
+                }
 
-            reject(new Error("Power Pages submit API is not available on this page."));
+                return fetch(options.url, {
+                  method: options.type || "POST",
+                  headers: Object.assign({
+                    Accept: "application/json",
+                    "Content-Type": options.contentType || "application/json",
+                    __RequestVerificationToken: token
+                  }, options.headers || {}),
+                  body: options.data || null,
+                  credentials: "same-origin"
+                });
+              })
+              .then(function (response) {
+                return response.text().then(function (text) {
+                  var parsed = parseMaybeJson(text);
+
+                  if (!response.ok) {
+                    throw new Error(getFetchErrorMessage(parsed, response.status));
+                  }
+
+                  resolve(parsed || {});
+                });
+              })
+              .catch(function (error) {
+                if (attempts < maxAttempts && /token|not available/i.test(String(error && error.message || ""))) {
+                  window.setTimeout(trySubmit, delay);
+                  return;
+                }
+
+                reject(error instanceof Error ? error : new Error(String(error || "Power Pages submit failed.")));
+              });
+            return;
           }
 
           trySubmit();
         });
       }
+
+      function safePowerPagesWrite(options) {
+        /*
+          Use the same safe submit path as PATCH/flow calls.
+          This is more reliable in Power Pages because it can use, in order:
+          1. getPowerPagesSubmitInvoker()
+          2. shell.ajaxSafePost()
+          3. webapi.safeAjax()
+          4. shell.getTokenDeferred() + jQuery.ajax()
+          5. __RequestVerificationToken + fetch()
+        */
+        return safePowerPagesPost({
+          type: options.method || "POST",
+          url: options.url,
+          contentType: "application/json",
+          headers: options.headers || {},
+          data: options.body || null
+        });
+      }
+
+      function getPowerPagesRequestToken() {
+        return new Promise(function (resolve) {
+          var tokenField;
+          var metaToken;
+          var candidates;
+          var i;
+
+          candidates = [
+            "input[name='__RequestVerificationToken']",
+            "input[name='__RequestVerificationToken'][type='hidden']",
+            "input[name='RequestVerificationToken']",
+            "input[name='__RequestVerificationToken_Lw__']"
+          ];
+
+          for (i = 0; i < candidates.length; i += 1) {
+            tokenField = document.querySelector(candidates[i]);
+            if (tokenField && tokenField.value) {
+              resolve(tokenField.value);
+              return;
+            }
+          }
+
+          metaToken = document.querySelector("meta[name='csrf-token'], meta[name='request-verification-token']");
+          if (metaToken && metaToken.content) {
+            resolve(metaToken.content);
+            return;
+          }
+
+          if (window.shell && typeof window.shell.getTokenDeferred === "function") {
+            window.shell.getTokenDeferred()
+              .done(function (token) {
+                resolve(token || "");
+              })
+              .fail(function () {
+                resolve("");
+              });
+            return;
+          }
+
+          resolve("");
+        });
+      }
+
+      function safePowerPagesGet(url) {
+        return new Promise(function (resolve, reject) {
+          ensurePowerPagesWebApiWrapper();
+          getPowerPagesRequestToken()
+            .then(function (token) {
+              return fetch(url, {
+                method: "GET",
+                headers: Object.assign({
+                  Accept: "application/json"
+                }, token ? { __RequestVerificationToken: token } : {}),
+                credentials: "same-origin"
+              });
+            })
+            .then(function (response) {
+              return response.text().then(function (text) {
+                var parsed = parseMaybeJson(text);
+
+                if (!response.ok) {
+                  throw new Error(getFetchErrorMessage(parsed, response.status));
+                }
+
+                resolve(parsed || {});
+              });
+            })
+            .catch(function (error) {
+              reject(error instanceof Error ? error : new Error(String(error || "Power Pages read failed.")));
+            });
+        });
+      }
+
+      function getFetchErrorMessage(payload, status) {
+        if (payload && payload.error && payload.error.message) {
+          return payload.error.message;
+        }
+
+        if (payload && payload.Message) {
+          return payload.Message;
+        }
+
+        return "Request failed with status " + status + ".";
+      }
+
       function getAjaxErrorMessage(xhr) {
         if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) {
           return xhr.responseJSON.error.message;
@@ -6495,19 +9139,30 @@ function submitTicketForm() {
           "<td>Open</td>" +
           "<td>" + escapeHtml(ticket.assignee) + "</td>" +
           "<td></td>" +
-          '<td class="itops-row-action"><button class="itops-row-trigger" type="button">&#8942;</button><div class="itops-col-menu"><button class="itops-col-menu-item" type="button" data-action="view-ticket">View</button></div></td>';
+          buildTicketActionMenuMarkup(ticket.type, canManageServiceRequests);
         body.insertBefore(row, body.firstChild);
         rows = Array.prototype.slice.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"));
       }
 
       function loadTicketRows() {
         resetTicketRows();
-        if (getTicketsFlowUrl) {
-          loadTicketRowsFromFlow();
-          return;
+        if (serverTicketRows && serverTicketRows.length) {
+          var allowedProjects = getAllowedProjects();
+          var serverTickets = serverTicketRows
+            .map(function (record) {
+              return normalizeTicketRecord(record, "new_it_tickets");
+            })
+            .filter(function (ticket) {
+              return ticket.project && (!allowedProjects.length || allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1);
+            });
+
+          if (serverTickets.length) {
+            renderTicketRows(serverTickets);
+            return;
+          }
         }
 
-        toggleEmptyState(true);
+        loadTicketRowsFromDataverse();
       }
 
       function resetTicketRows() {
@@ -6517,15 +9172,119 @@ function submitTicketForm() {
           return;
         }
 
-        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets from the ticket list flow...</td></tr>';
+        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets...</td></tr>';
         rows = [];
+      }
+
+      function loadTicketRowsFromDataverse() {
+        var body = document.getElementById("ticket-table-body");
+        var allowedProjects = getAllowedProjects();
+        if (!body) {
+          toggleEmptyState(true);
+          return;
+        }
+
+        getTicketEntitySets()
+          .then(function (entitySets) {
+            tryEntitySet(entitySets, 0);
+          })
+          .catch(function (error) {
+            setMessage(error && error.message ? error.message : "Unable to discover the IT Tickets table.", true, false);
+            tryEntitySet(getPreferredTicketEntitySets(), 0);
+          });
+
+        function getPreferredTicketEntitySets() {
+          return [
+            "new_it_tickets",
+            "new_it_ticketses",
+            "new_it_ticket",
+            "new_it_ticketset",
+            "cr2b4_it_ticketses",
+            "cr2b4_it_tickets",
+            "cr2b4_it_ticketss"
+          ];
+        }
+
+        function getTicketEntitySets() {
+          return safePowerPagesGet("/_api/")
+            .then(function (data) {
+              var values = data && data.value ? data.value : [];
+              var discovered = values
+                .map(function (item) {
+                  return item && (item.url || item.name || "");
+                })
+                .filter(function (name) {
+                  return /ticket/i.test(String(name || ""));
+                });
+              var seen = {};
+              var ordered = getPreferredTicketEntitySets()
+                .concat(discovered)
+                .filter(function (name) {
+                  var key = String(name || "").toLowerCase();
+
+                  if (!key || seen[key]) {
+                    return false;
+                  }
+
+                  seen[key] = true;
+                  return true;
+                });
+
+              if (ordered.length) {
+                return ordered;
+              }
+
+              throw new Error("No ticket entity sets discovered.");
+            })
+            .catch(function () {
+              throw new Error("Unable to read API service document.");
+            });
+        }
+
+        function tryEntitySet(entitySets, index) {
+          if (!entitySets || index >= entitySets.length) {
+            toggleEmptyState(true);
+            setMessage("No readable Dataverse IT Tickets data was found. The Get Tickets flow is the real ticket source and may still need to be wired back in.", true, false);
+            return;
+          }
+
+          safePowerPagesGet("/_api/" + entitySets[index] + "?$top=500&$count=true")
+            .then(function (data) {
+              var records = data && data.value ? data.value : [];
+              var tickets = records.map(function (record) {
+                return normalizeTicketRecord(record, entitySets[index]);
+              }).filter(function (ticket) {
+                return ticket.project && (!allowedProjects.length || allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1);
+              });
+
+              if (isLikelyTicketResult(tickets)) {
+                renderTicketRows(tickets);
+                return;
+              }
+
+              tryEntitySet(entitySets, index + 1);
+            })
+            .catch(function () {
+              tryEntitySet(entitySets, index + 1);
+            });
+        }
+
+        function isLikelyTicketResult(tickets) {
+          if (!tickets || !tickets.length) {
+            return false;
+          }
+
+          return tickets.some(function (ticket) {
+            return Boolean(ticket.ticketId || ticket.title || ticket.status || ticket.type || ticket.module || ticket.subModule);
+          });
+        }
       }
 
       function loadTicketRowsFromFlow() {
         var body = document.getElementById("ticket-table-body");
         var allowedProjects = getAllowedProjects();
 
-        if (!body || !allowedProjects.length) {
+        if (!body) {
           toggleEmptyState(true);
           return Promise.resolve();
         }
@@ -6588,7 +9347,7 @@ function submitTicketForm() {
                 return normalizeFlowTicketRecord(record);
               })
               .filter(function (ticket) {
-                return ticket.project && allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1;
+                return ticket.project && (!allowedProjects.length || allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1);
               });
 
             if (tickets.length) {
@@ -6635,6 +9394,8 @@ function submitTicketForm() {
       }
 
       function extractTicketRecords(payload) {
+        payload = parseMaybeJson(payload);
+
         if (!payload) {
           return [];
         }
@@ -6655,21 +9416,55 @@ function submitTicketForm() {
           return payload.data;
         }
 
+        if (payload.records && Array.isArray(payload.records)) {
+          return payload.records;
+        }
+
+        if (payload.items && Array.isArray(payload.items)) {
+          return payload.items;
+        }
+
         if (payload.body) {
+          payload.body = parseMaybeJson(payload.body);
+
           if (Array.isArray(payload.body)) {
             return payload.body;
           }
 
-          if (Array.isArray(payload.body.value)) {
+          if (payload.body && Array.isArray(payload.body.value)) {
             return payload.body.value;
           }
 
-          if (Array.isArray(payload.body.tickets)) {
+          if (payload.body && Array.isArray(payload.body.tickets)) {
             return payload.body.tickets;
+          }
+
+          if (payload.body && Array.isArray(payload.body.records)) {
+            return payload.body.records;
+          }
+        }
+
+        var keys = Object.keys(payload);
+        for (var i = 0; i < keys.length; i += 1) {
+          var value = parseMaybeJson(payload[keys[i]]);
+          if (Array.isArray(value)) {
+            return value;
           }
         }
 
         return [];
+      }
+
+      function parseMaybeJson(value) {
+        if (!value || typeof value !== "string") {
+          return value;
+        }
+
+        try {
+          return JSON.parse(value);
+        } catch (error) {
+          return value;
+        }
       }
 
       function normalizeFlowTicketRecord(record) {
@@ -6686,20 +9481,24 @@ function submitTicketForm() {
         return {
           entitySet: "flow",
           recordId: normalize(pick(["ID", "Id", "id"])),
-          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId"])),
-          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle"])),
-          type: normalize(pick(["Issue_Type", "Type", "issue_type", "type"])),
-          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project"])),
-          module: normalize(pick(["Module", "module"])),
-          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule"])),
-          status: normalize(pick(["Status", "status"])),
-          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee"])),
-          businessUser: normalize(pick(["BusinessUsers", "businessUsers"])),
-          projectOwner: normalize(pick(["ProjectOwners", "projectOwners"])),
-          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments"])),
-          requestor: normalize(pick(["Requestor", "requestor"])),
-          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail"])),
-          followupComments: normalize(pick(["Followup_Comments", "followupComments"]))
+          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId", "new_ticket_id", "new_ticketid"])),
+          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle", "new_ticket_title", "new_title"])),
+          type: normalize(pick([
+            "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType",
+            "Request_Type", "RequestType", "issue_type", "issueType", "type", "ticket_type", "request_type",
+            "new_issue_type", "new_type", "new_ticket_type", "new_request_type"
+          ])),
+          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project", "new_applicationproject", "new_project"])),
+          module: normalize(pick(["Module", "module", "new_module"])),
+          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule", "new_sub_module", "new_submodule"])),
+          status: normalize(pick(["Status", "status", "Current_Status", "new_status", "new_current_status"])),
+          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee", "new_defaultassignee", "new_assignedto"])),
+          businessUser: normalize(pick(["BusinessUsers", "businessUsers", "new_businessusers"])),
+          projectOwner: normalize(pick(["ProjectOwners", "projectOwners", "new_projectowners"])),
+          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution"])),
+          requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by"])),
+          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail", "new_requestoremail", "new_requestor_email"])),
+          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup"]))
         };
       }
 
@@ -6752,9 +9551,10 @@ function submitTicketForm() {
             "cr2b4_ticket_title", "cr2b4_title", "cr2b4_ticket_x0020_title"
           ])),
           type: normalize(pick([
-            "new_issue_type", "new_issue_x0020_type", "new_type",
-            "Issue_Type", "Issue Type", "Type", "type", "issue_type",
-            "cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type"
+            "new_issue_type", "new_issue_x0020_type", "new_type", "new_ticket_type", "new_request_type", "new_issuetype",
+            "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType", "Request_Type", "RequestType",
+            "type", "issue_type", "issueType", "ticket_type", "request_type",
+            "cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type", "cr2b4_ticket_type", "cr2b4_request_type"
           ])),
           project: normalize(pick([
             "new_applicationproject", "new_application_project", "new_project", "new_projectname", "new_project_x0020_name",
@@ -6812,6 +9612,12 @@ function submitTicketForm() {
 
             function renderTicketRows(tickets) {
         var body = document.getElementById("ticket-table-body");
+        var roleName = getCurrentPortalRoleName();
+        var canEditServiceRequests = canManageServiceRequests && (
+          roleHasAccess(roleName, "Service Requests", "All Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Open Requests", "edit") ||
+          roleHasAccess(roleName, "Service Requests", "Closed Requests", "edit")
+        );
 
         if (!body) {
           return;
@@ -6844,12 +9650,14 @@ function submitTicketForm() {
             "<td>" + escapeHtml(ticket.status) + "</td>" +
             "<td>" + escapeHtml(ticket.assignee) + "</td>" +
             "<td>" + escapeHtml(ticket.resolution) + "</td>" +
-            '<td class="itops-row-action"><button class="itops-row-trigger" type="button">&#8942;</button><div class="itops-col-menu"><button class="itops-col-menu-item" type="button" data-action="view-ticket">View</button></div></td>';
+            buildTicketActionMenuMarkup(ticket.type, canEditServiceRequests);
           body.appendChild(row);
         });
 
         rows = Array.prototype.slice.call(document.querySelectorAll("#ticket-table-body tr[data-row='true']"));
+        updateServiceRequestActions(roleName);
         filterRows();
+        itopsApplyFinalUiFixes();
       }
 
       function openFilterPopover(button, event) {
@@ -6970,7 +9778,7 @@ function submitTicketForm() {
         if (showEmpty && !emptyRow) {
           emptyRow = document.createElement("tr");
           emptyRow.id = "no-records-row";
-          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No tickets available until the ticket list flow is configured or returns rows.</td>';
+          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No records available</td>';
           body.appendChild(emptyRow);
         }
 
@@ -6991,6 +9799,11 @@ function submitTicketForm() {
           return;
         }
 
+        if (messageTimer) {
+          window.clearTimeout(messageTimer);
+          messageTimer = null;
+        }
+
         if (hide) {
           message.textContent = "";
           message.classList.remove("is-open");
@@ -7002,6 +9815,12 @@ function submitTicketForm() {
         message.style.borderColor = isError ? "#efb1b1" : "#b9d8ef";
         message.style.background = isError ? "#fff1f1" : "#eef7ff";
         message.style.color = isError ? "#8a1f1f" : "#294e63";
+
+        messageTimer = window.setTimeout(function () {
+          message.textContent = "";
+          message.classList.remove("is-open");
+          messageTimer = null;
+        }, isError ? 7000 : 4000);
       }
 
       function normalize(value) {
@@ -7045,26 +9864,6 @@ function submitTicketForm() {
 
     });
   })();
-
-      document.addEventListener("DOMContentLoaded", function () {
-        itopsApplyAssignedNameDisplay(document);
-      });
-
-      setTimeout(function () {
-        itopsApplyAssignedNameDisplay(document);
-      }, 300);
-
-
-      document.addEventListener("DOMContentLoaded", function () {
-        itopsApplyFinalUiFixes();
-        setTimeout(itopsApplyFinalUiFixes, 250);
-        setTimeout(itopsApplyFinalUiFixes, 800);
-      });
-
-      document.addEventListener("click", function () {
-        setTimeout(itopsApplyFinalUiFixes, 80);
-      });
-
 </script>
 <div class="row sectionBlockLayout text-start" style="display: flex; flex-wrap: wrap; margin: 0px; min-height: auto; padding: 8px;">
   <div class="container" style="padding: 0px; display: flex; flex-wrap: wrap;"><div class="col-lg-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; min-width: 250px;"></div></div>
