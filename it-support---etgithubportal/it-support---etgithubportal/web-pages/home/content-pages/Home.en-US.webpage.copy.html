@@ -1091,6 +1091,12 @@
     font-weight: 700;
   }
 
+  .itops-project-hint {
+    font-size: 12px;
+    color: #6c7f8d;
+    white-space: nowrap;
+  }
+
   .itops-topbar select,
   .itops-form-field input,
   .itops-form-field select,
@@ -4197,10 +4203,13 @@ html {
       <div class="itops-project-label">Projects</div>
       <select id="project-filter">
         <option value="">Find items</option>
-        {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% assign project_key = project_name | downcase | prepend: '|' | append: '|' %} {% if project_name != blank and allowed_project_keys contains project_key %}
+        {% for row in securityRows.results.entities %} {% assign project_name = row.cr2b4_applicationproject | default: row.cr2b4_title | strip %} {% if project_name != blank %}
         <option value="{{ project_name | escape }}" data-assignee="{{ row.cr2b4_defaultx0020assignee | escape }}" data-bu="{{ row.cr2b4_businessx0020users | escape }}" data-po="{{ row.cr2b4_projectx0020owners | escape }}">{{ project_name }}</option>
         {% endif %} {% endfor %}
       </select>
+      {% if securityRows.results.entities.size == 0 %}
+      <div class="itops-project-hint">No projects are configured in the security list yet.</div>
+      {% endif %}
       <button id="show-create-ticket" class="itops-primary-btn" type="button">Create Ticket</button>
     </div>
 
