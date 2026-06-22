@@ -7,6 +7,7 @@ adx_entityname: ASP Contacts
 adx_entitypermission_webrole:
 - 9c6c4623-855e-f111-a826-7c1e5251d90e
 - c9df4d1d-855e-f111-a826-7c1e5251d90e
+- f06e02ca-f664-f111-a826-7c1e5251d90e
 adx_entitypermissionid: af655517-855e-f111-a826-7c1e5251d90e
 adx_read: true
 adx_scope: 756150000

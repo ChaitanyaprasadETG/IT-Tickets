@@ -86,6 +86,24 @@
 - adx_name: Webapi/cr2b4_it_security_list/enabled
   adx_sitesettingid: 4f85473a-5a7c-4f96-9e86-2e4a90c1d111
   adx_value: true
+- adx_name: Webapi/cr2b4_it_ticketses/enabled
+  adx_sitesettingid: d7f31b9e-c452-44b6-93e3-c4ff095913e8
+  adx_value: true
+- adx_name: Webapi/cr2b4_it_ticketses/fields
+  adx_sitesettingid: d4bb9900-b1ad-4727-b5a8-371c33a49858
+  adx_value: '*'
+- adx_name: Webapi/cr2b4_it_tickets/enabled
+  adx_sitesettingid: e2fbcb41-500d-471c-8a0a-0b84eb65ac75
+  adx_value: true
+- adx_name: Webapi/cr2b4_it_tickets/fields
+  adx_sitesettingid: 3a9b0718-5550-4704-9cf8-82e93ddad609
+  adx_value: '*'
+- adx_name: Webapi/cr2b4_it_security_lists/enabled
+  adx_sitesettingid: fefce9e3-713e-45f3-8a66-90bd5f501f69
+  adx_value: true
+- adx_name: Webapi/cr2b4_it_security_lists/fields
+  adx_sitesettingid: 784d4df6-2978-467b-89ac-621b1c728d76
+  adx_value: '*'
 - adx_name: Authentication/OpenIdConnect/AzureAD/Caption
   adx_sitesettingid: 51cbdb5c-855e-f111-a826-7c1e5251d90e
   adx_value: SSO Login
@@ -146,6 +164,12 @@
   adx_value: sharepoint.com;microsoftonline.com
 - adx_name: Webapi/cr2b4_it_security_list/fields
   adx_sitesettingid: 7c8f87a1-3f62-4d96-a12c-9c54ff11d112
+  adx_value: '*'
+- adx_name: Webapi/cr2b4_it_access_requests/enabled
+  adx_sitesettingid: 9616863a-2798-412a-a556-42c240d8a021
+  adx_value: true
+- adx_name: Webapi/cr2b4_it_access_requests/fields
+  adx_sitesettingid: bf039e95-69d5-486b-b949-3a898ef0a030
   adx_value: '*'
 - adx_description: C1 home page
   adx_name: C1/Home

@@ -6,7 +6,12 @@ adx_create: true
 adx_delete: true
 adx_entitylogicalname: cr2b4_it_access_requests
 adx_entityname: IT Access Requests
-adx_entitypermission_webrole: []
+adx_entitypermission_webrole:
+- d5cf515a-fc64-f111-a826-7c1e5251d90e
+- 3f1240c8-e564-f111-a826-7c1e5251d90e
+- 9c6c4623-855e-f111-a826-7c1e5251d90e
+- c9df4d1d-855e-f111-a826-7c1e5251d90e
+- f06e02ca-f664-f111-a826-7c1e5251d90e
 adx_entitypermissionid: fdb65db5-cfdd-41a1-a673-5e61cacd57dc
 adx_parententitypermission: 
 adx_parentrelationship: 

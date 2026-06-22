@@ -2,13 +2,15 @@ adx_append: true
 adx_appendto: true
 adx_create: true
 adx_delete: false
-adx_entitylogicalname: cr2b4_it_security_list
-adx_entityname: IT Security List
+adx_entitylogicalname: cr2b4_it_tickets
+adx_entityname: IT Tickets
 adx_entitypermission_webrole:
+- d5cf515a-fc64-f111-a826-7c1e5251d90e
+- 3f1240c8-e564-f111-a826-7c1e5251d90e
 - 9c6c4623-855e-f111-a826-7c1e5251d90e
 - c9df4d1d-855e-f111-a826-7c1e5251d90e
 - f06e02ca-f664-f111-a826-7c1e5251d90e
-adx_entitypermissionid: 5f2f0fc1-2ae2-4c73-b819-7a4f98f4d113
+adx_entitypermissionid: 75e1c8c4-e84b-4799-a7f3-d0fdf3822f87
 adx_read: true
 adx_scope: 756150000
 adx_write: true
