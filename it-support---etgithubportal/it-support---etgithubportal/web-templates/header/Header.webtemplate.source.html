@@ -1175,21 +1175,41 @@
   }
 
   function collectTicketPayload(cells) {
+    var project = getTicketControlValue(findFieldControlByLabels(cells, ["project"]));
+    var title = getTicketControlValue(findFieldControlByLabels(cells, ["ticket title", "title"]));
+    var type = getTicketControlValue(findFieldControlByLabels(cells, ["type"]));
+    var module = getTicketControlValue(findFieldControlByLabels(cells, ["module"]));
+    var subModule = getTicketControlValue(findFieldControlByLabels(cells, ["sub module", "submodule"]));
+    var requestor = getTicketControlValue(findFieldControlByLabels(cells, ["requestor", "requester"]));
+    var assignee = getTicketControlValue(findFieldControlByLabels(cells, ["assignee"]));
+    var description = getTicketControlValue(findFieldControlByLabels(cells, ["description"]));
+    var ticketId = "TKT-" + String(Date.now());
+
     return {
-      TicketTitle: getTicketControlValue(findFieldControlByLabels(cells, ["ticket title", "title"])),
-      Project: getTicketControlValue(findFieldControlByLabels(cells, ["project"])),
-      TicketStatus: getTicketControlValue(findFieldControlByLabels(cells, ["ticket status", "status"])),
-      Type: getTicketControlValue(findFieldControlByLabels(cells, ["type"])),
-      Module: getTicketControlValue(findFieldControlByLabels(cells, ["module"])),
-      SubModule: getTicketControlValue(findFieldControlByLabels(cells, ["sub module", "submodule"])),
-      Requestor: getTicketControlValue(findFieldControlByLabels(cells, ["requestor", "requester"])),
-      Assignee: getTicketControlValue(findFieldControlByLabels(cells, ["assignee"])),
-      Description: getTicketControlValue(findFieldControlByLabels(cells, ["description"]))
+      Ticket_ID: ticketId,
+      ApplicationProject: project,
+      Ticket_Title: title,
+      Status: getTicketControlValue(findFieldControlByLabels(cells, ["ticket status", "status"])) || "Open",
+      Current_Status: getTicketControlValue(findFieldControlByLabels(cells, ["ticket status", "status"])) || "Open",
+      Issue_Type: type,
+      DefaultAssignee: assignee,
+      BusinessUsers: "",
+      ProjectOwners: "",
+      ProjectUsers: "",
+      Module: module,
+      Sub_Module: subModule,
+      Requestor: requestor,
+      RequestorEmail: "{{ user.email | default: user.emailaddress1 | escape }}",
+      Ticket_Description: description,
+      Resolution_Comments: "",
+      PlannerTaskID: "",
+      AttachmentName: "",
+      AttachmentContentBytes: ""
     };
   }
 
   function submitCreateTicketToCloudFlow(button, payload, triggerUrl) {
-    if (!payload.TicketTitle || !payload.Project || !payload.TicketStatus) {
+    if (!payload.Ticket_Title || !payload.ApplicationProject || !payload.Status) {
       showTicketAlert("Please fill Ticket Title, Project, and Status before submitting.");
       return;
     }

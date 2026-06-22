@@ -6508,7 +6508,7 @@ function submitTicketForm() {
           return;
         }
 
-        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets from the Get Tickets flow...</td></tr>';
+        body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets from the ticket list flow...</td></tr>';
         rows = [];
       }
 
@@ -6961,7 +6961,7 @@ function submitTicketForm() {
         if (showEmpty && !emptyRow) {
           emptyRow = document.createElement("tr");
           emptyRow.id = "no-records-row";
-          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No tickets available until the Get Tickets flow is configured or returns rows.</td>';
+          emptyRow.innerHTML = '<td colspan="10" class="itops-empty">No tickets available until the ticket list flow is configured or returns rows.</td>';
           body.appendChild(emptyRow);
         }
 
