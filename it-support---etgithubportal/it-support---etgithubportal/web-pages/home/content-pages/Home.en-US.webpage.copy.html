@@ -4,16 +4,14 @@ Required Power Pages setup for direct Dataverse write:
 1) Site Settings:
    Webapi/cr2b4_it_ticketses/enabled = true
    Webapi/cr2b4_it_ticketses/fields = *
-   Webapi/cr2b4_it_tickets/enabled = true
-   Webapi/cr2b4_it_tickets/fields = *
+   Webapi/cr2b4_it_access_requestses/enabled = true
+   Webapi/cr2b4_it_access_requestses/fields = *
    Webapi/cr2b4_it_security_lists/enabled = true
    Webapi/cr2b4_it_security_lists/fields = *
-   Webapi/cr2b4_it_access_requests/enabled = true
-   Webapi/cr2b4_it_access_requests/fields = *
 2) Table Permissions:
    IT_Tickets: Read, Create, Write assigned to the portal Web Role.
-   IT_Security_List: Read, Create, Write, Delete assigned to the portal Web Role.
    IT_Access_Requests: Read, Create, Write, Delete assigned to the admin portal Web Role.
+   IT_Security_List: Read, Create, Write, Delete assigned to the portal Web Role.
 3) Clear portal cache after publishing.
 {%- endcomment -%}
  {% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% assign has_it_support_admin_role = false %} {% assign has_it_support_user_role = false %} {% if user %} {% assign hub_role = 'User' %} {% assign has_it_support_user_role = true %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% if hub_email_lc == 'chaitanya.prasad@etgworld.com' %} {% assign has_it_support_admin_role = true %} {% assign has_it_support_user_role = false %} {% endif %} {% if has_it_support_admin_role %} {% assign hub_role = 'Admin' %} {% elsif has_it_support_user_role %} {% assign hub_role = 'User' %} {% endif %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = '' %} {% assign get_tickets_flow_url = '' %}
@@ -5484,18 +5482,19 @@ html {
         "Home|In Progress": "home-inprogress",
         "Home|Closed": "home-closed"
       };
-      var createTicketCloudFlowId = "{{ create_ticket_cloud_flow_id | escape }}";
+      var createTicketFlowUrl = "{{ settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | escape }}";
       var getTicketsFlowUrl = "{{ get_tickets_flow_url | escape }}";
-      var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: '' | escape }}";
-      var accessRequestFlowUrl = "";
+      var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | escape }}";
+      var accessRequestFlowUrl = "{{ settings['ITSupport/AccessRequestFlowUrl'] | default: '' | escape }}";
       var currentHubEmail = "{{ hub_email | escape }}";
       var projectAccessSharePointUrl = "{{ settings['ITSupport/ProjectAccessSharePointUrl'] | default: '' | escape }}";
-      var portalRoleWebRoleMap = {
-        Admin: "c9df4d1d-855e-f111-a826-7c1e5251d90e",
-        Technician: "3f1240c8-e564-f111-a826-7c1e5251d90e",
-        User: "d5cf515a-fc64-f111-a826-7c1e5251d90e"
-      };
-      var followupCommentsAttribute = "cr2b4_Followup_Comments";
+      var createTicketEntitySetCandidates = [
+        "new_it_ticketses",
+        "new_it_tickets",
+        "cr2b4_it_ticketses",
+        "cr2b4_it_tickets"
+      ];
+      var followupCommentsAttribute = "cr2b4_followup_comments";
       var messageTimer = null;
       var accessRequestEntitySetCandidates = [
         "cr2b4_it_access_requestses",
@@ -5527,7 +5526,6 @@ html {
       filterRows();
       applyRoleAccessConfig(getCurrentPortalRoleName());
       switchMainView(activeQuickView);
-
       updateRequestSummary();
       loadAdminUsersFromDataverse();
       loadProjectAccessRowsFromDataverse()
@@ -6474,7 +6472,7 @@ function switchMainView(viewName) {
           cr2b4_FullName: fullName,
           cr2b4_Role: normalize(userValues.role) || "User",
           cr2b4_Status: accessRequestApprovedValue,
-          cr2b4_ApprovedBy: normalize(currentHubEmail),
+          cr2b4_ApprovedBy: currentHubEmail || "",
           cr2b4_Comments: normalize(userValues.comments || (existingRow ? existingRow.getAttribute("data-comments") : "") || "Approved from admin portal")
         };
 
@@ -6495,7 +6493,8 @@ function switchMainView(viewName) {
           Role: normalize(userValues.role) || "User",
           Comments: normalize(userValues.comments || (existingRow ? existingRow.getAttribute("data-comments") : "") || "Approved from admin portal"),
           Status: accessRequestApprovedValue,
-          ApprovedBy: normalize(currentHubEmail),
+          Access_Status: accessRequestApprovedValue,
+          ApprovedBy: currentHubEmail || "",
           RecordId: normalize(existingRow ? existingRow.getAttribute("data-record-id") : ""),
           RequestedAt: new Date().toISOString(),
           PortalUrl: window.location.origin
@@ -6542,6 +6541,15 @@ function switchMainView(viewName) {
           message.indexOf("not found") !== -1;
       }
 
+      function isPowerPagesTokenError(error) {
+        var message = normalize(error && error.message).toLowerCase();
+        return message.indexOf("request token is not available") !== -1 ||
+          message.indexOf("token api is not ready") !== -1 ||
+          message.indexOf("unable to acquire token") !== -1 ||
+          message.indexOf("requestverificationtoken") !== -1 ||
+          (message.indexOf("token") !== -1 && message.indexOf("not available") !== -1);
+      }
+
       function loadEntitySetRecords(entitySetCandidates) {
         var index = 0;
 
@@ -6579,19 +6587,18 @@ function switchMainView(viewName) {
           return "";
         }
 
-        var fullName = normalize(pick(["cr2b4_FullName", "cr2b4_fullname", "cr2b4_full_name", "fullname", "name"]));
+        var fullName = normalize(pick(["cr2b4_FullName", "cr2b4_fullname", "cr2b4_full_name", "FullName", "fullname", "name"]));
         var nameParts = fullName ? fullName.split(/\s+/) : [];
 
         return {
           recordId: normalize(pick(["cr2b4_it_access_requestsid", "cr2b4_it_access_requestid", "id"])),
-          email: normalize(pick(["cr2b4_Email", "cr2b4_email", "email"])).toLowerCase(),
-          firstName: normalize(pick(["cr2b4_FirstName", "cr2b4_firstname", "firstname"])) || normalize(nameParts[0]),
-          lastName: normalize(pick(["cr2b4_LastName", "cr2b4_lastname", "lastname"])) || normalize(nameParts.slice(1).join(" ")),
+          email: normalize(pick(["cr2b4_Email", "cr2b4_email", "Email", "email"])).toLowerCase(),
+          firstName: normalize(pick(["cr2b4_FirstName", "cr2b4_firstname", "FirstName", "firstname"])) || normalize(nameParts[0]),
+          lastName: normalize(pick(["cr2b4_LastName", "cr2b4_lastname", "LastName", "lastname"])) || normalize(nameParts.slice(1).join(" ")),
           fullName: fullName,
-          role: normalize(pick(["cr2b4_Role", "cr2b4_role", "role"])) || "User",
-          status: normalize(pick(["cr2b4_Status", "cr2b4_status", "Status", "status", "cr2b4_Access_Status", "cr2b4_access_status", "cr2b4_accessstatus", "access_status", "statuscode"])) || accessRequestApprovedValue,
-          approvedBy: normalize(pick(["cr2b4_ApprovedBy", "cr2b4_approvedby", "approvedby", "approved_by"])),
-          comments: normalize(pick(["cr2b4_Comments", "cr2b4_comments", "comments"]))
+          role: normalize(pick(["cr2b4_Role", "cr2b4_role", "Role", "role"])) || "User",
+          status: normalize(pick(["cr2b4_Status", "cr2b4_Access_Status", "cr2b4_access_status", "cr2b4_accessstatus", "Status", "access_status", "statuscode"])) || accessRequestApprovedValue,
+          comments: normalize(pick(["cr2b4_Comments", "cr2b4_comments", "Comments", "comments"]))
         };
       }
 
@@ -6677,17 +6684,6 @@ function switchMainView(viewName) {
             "businessusers",
             "Business Users"
           ])),
-          requestedUser: normalize(pick([
-            "cr2b4_RequestedUser",
-            "cr2b4_requesteduser",
-            "cr2b4_requested_user",
-            "cr2b4_requestor",
-            "cr2b4_requestedby",
-            "Requested User",
-            "RequestedUser",
-            "requesteduser",
-            "requested_user"
-          ])),
           projectOwners: normalize(pick([
             "cr2b4_ProjectOwners",
             "cr2b4_projectowners",
@@ -6698,6 +6694,14 @@ function switchMainView(viewName) {
             "projectOwners",
             "projectowners",
             "Project Owners"
+          ])),
+          requestedUser: normalize(pick([
+            "cr2b4_RequestedUser",
+            "cr2b4_requesteduser",
+            "RequestedUser",
+            "requestedUser",
+            "requesteduser",
+            "Requested User"
           ]))
         };
       }
@@ -6707,8 +6711,8 @@ function switchMainView(viewName) {
         var combined = [
           values.defaultAssignee,
           values.businessUsers,
-          values.requestedUser,
-          values.projectOwners
+          values.projectOwners,
+          values.requestedUser
         ].join("|").toLowerCase();
 
         if (isAdminUser) {
@@ -6821,31 +6825,28 @@ function switchMainView(viewName) {
         return tryEntitySet();
       }
 
-      function extractAccessRequestRecordId(response) {
-        return normalize(
-          response && (
-            response.cr2b4_it_access_requestsid ||
-            response.cr2b4_it_access_requestid ||
-            response.id
-          )
-        );
-      }
-
       function getPortalRoleWebRoleId(roleName) {
-        return portalRoleWebRoleMap[normalize(roleName)] || "";
+        var normalizedRole = normalize(roleName).toLowerCase();
+
+        if (normalizedRole === "admin") {
+          return "f06e02ca-f664-f111-a826-7c1e5251d90e";
+        }
+
+        if (normalizedRole === "technician") {
+          return "3f1240c8-e564-f111-a826-7c1e5251d90e";
+        }
+
+        return "d5cf515a-fc64-f111-a826-7c1e5251d90e";
       }
 
       function findContactByEmail(email) {
         var normalizedEmail = normalize(email).toLowerCase();
-        var filter;
 
         if (!normalizedEmail) {
           return Promise.resolve(null);
         }
 
-        filter = "emailaddress1 eq '" + normalizedEmail.replace(/'/g, "''") + "'";
-
-        return safePowerPagesGet("/_api/contacts?$select=contactid,fullname,emailaddress1&$filter=" + encodeURIComponent(filter))
+        return safePowerPagesGet("/_api/contacts?$select=contactid,fullname,emailaddress1&$filter=" + encodeURIComponent("emailaddress1 eq '" + normalizedEmail.replace(/'/g, "''") + "'"))
           .then(function (response) {
             var records = response && response.value ? response.value : [];
             return records.length ? records[0] : null;
@@ -6854,51 +6855,48 @@ function switchMainView(viewName) {
 
       function assignPortalRoleToContact(email, roleName) {
         var webRoleId = getPortalRoleWebRoleId(roleName);
-        var normalizedEmail = normalize(email).toLowerCase();
 
-        if (!webRoleId || !normalizedEmail) {
-          return Promise.resolve({ skipped: true });
-        }
-
-        return findContactByEmail(normalizedEmail).then(function (contact) {
+        return findContactByEmail(email).then(function (contact) {
           var contactId = normalize(contact && (contact.contactid || contact.id));
 
-          if (!contactId) {
-            throw new Error("No matching portal contact was found for " + normalizedEmail + ". The Dataverse role row was saved, but the portal role could not be assigned.");
+          if (!contactId || !webRoleId) {
+            return { skipped: true };
           }
 
-          var payloadVariants = [
-            {
+          return safePowerPagesWrite({
+            method: "POST",
+            url: "/_api/adx_webrole_contacts",
+            headers: { Prefer: "return=representation" },
+            body: JSON.stringify({
               "adx_webroleid@odata.bind": "/adx_webroles(" + webRoleId + ")",
               "adx_contactid@odata.bind": "/contacts(" + contactId + ")"
-            },
-            {
-              "adx_webroleid@odata.bind": "/adx_webroles(" + webRoleId + ")",
-              "contactid@odata.bind": "/contacts(" + contactId + ")"
+            })
+          }).catch(function (error) {
+            if (isRetryableEntitySetError(error) || /adx_webrole_contact/i.test(normalize(error && error.message))) {
+              return safePowerPagesWrite({
+                method: "POST",
+                url: "/_api/adx_webrole_contacts",
+                headers: { Prefer: "return=representation" },
+                body: JSON.stringify({
+                  "adx_webroleid@odata.bind": "/adx_webroles(" + webRoleId + ")",
+                  "contactid@odata.bind": "/contacts(" + contactId + ")"
+                })
+              });
             }
-          ];
 
-          function tryVariant(index) {
-            if (index >= payloadVariants.length) {
-              throw new Error("Unable to assign the selected portal role in Dataverse.");
-            }
-
-            return safePowerPagesWrite({
-              method: "POST",
-              url: "/_api/adx_webrole_contacts",
-              headers: { Prefer: "return=representation" },
-              body: JSON.stringify(payloadVariants[index])
-            }).catch(function (error) {
-              if (isRetryableEntitySetError(error) || /adx_webrole_contact/i.test(normalize(error && error.message))) {
-                return tryVariant(index + 1);
-              }
-
-              throw error;
-            });
-          }
-
-          return tryVariant(0);
+            throw error;
+          });
         });
+      }
+
+      function extractAccessRequestRecordId(response) {
+        return normalize(
+          response && (
+            response.cr2b4_it_access_requestsid ||
+            response.cr2b4_it_access_requestid ||
+            response.id
+          )
+        );
       }
 
       function syncAdminUserRow(row, userValues) {
@@ -7040,18 +7038,13 @@ function switchMainView(viewName) {
           if (accessRequestFlowUrl) {
             invokeAccessRequestAdminFlow(payload)
               .then(function () {
-                return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
-                  setMessage(error && error.message ? error.message : "User updated, but the portal role assignment could not be completed.", true, false);
-                });
-              })
-              .then(function () {
                 syncAdminUserRow(editingUserRow, userValues);
                 setMessage("User updated successfully", false, false);
                 resetAdminUserForm();
                 switchMainView("admin-existing-user");
               })
               .catch(function (error) {
-                setMessage(error && error.message ? error.message : "Unable to update the user in Dataverse.", true, false);
+                hideAdminMessage();
               });
             return;
           }
@@ -7064,7 +7057,7 @@ function switchMainView(viewName) {
           callAccessRequestApi("PATCH", editingUserRow.getAttribute("data-record-id"), payload)
             .then(function () {
               return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
-                setMessage(error && error.message ? error.message : "User updated, but the portal role assignment could not be completed.", true, false);
+                console.warn("Portal role assignment failed:", error);
               });
             })
             .then(function () {
@@ -7074,18 +7067,13 @@ function switchMainView(viewName) {
               switchMainView("admin-existing-user");
             })
             .catch(function (error) {
-              setMessage(error && error.message ? error.message : "Unable to update the user in Dataverse.", true, false);
+              hideAdminMessage();
             });
           return;
         }
 
         if (accessRequestFlowUrl) {
           invokeAccessRequestAdminFlow(payload)
-            .then(function () {
-              return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
-                setMessage(error && error.message ? error.message : "User added, but the portal role assignment could not be completed.", true, false);
-              });
-            })
             .then(function () {
               var row = document.createElement("tr");
               row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
@@ -7097,7 +7085,7 @@ function switchMainView(viewName) {
               switchMainView("admin-existing-user");
             })
             .catch(function (error) {
-              setMessage(error && error.message ? error.message : "Unable to save the user in Dataverse.", true, false);
+              hideAdminMessage();
             });
           return;
         }
@@ -7105,25 +7093,23 @@ function switchMainView(viewName) {
         callAccessRequestApi("POST", "", payload)
           .then(function (response) {
             var recordId = extractAccessRequestRecordId(response);
-            return assignPortalRoleToContact(userValues.email, userValues.role)
-              .catch(function (error) {
-                setMessage(error && error.message ? error.message : "User added, but the portal role assignment could not be completed.", true, false);
-              })
-              .then(function () {
-                var row = document.createElement("tr");
+            var row = document.createElement("tr");
 
-                row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
-                row.setAttribute("data-record-id", recordId);
-                tbody.insertBefore(row, tbody.firstChild);
-                syncAdminUserRow(row, userValues);
-                syncAdminEmptyUserState();
-                setMessage("User added successfully", false, false);
-                resetAdminUserForm();
-                switchMainView("admin-existing-user");
-              });
+            row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+            row.setAttribute("data-record-id", recordId);
+            tbody.insertBefore(row, tbody.firstChild);
+            return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
+              console.warn("Portal role assignment failed:", error);
+            }).then(function () {
+              syncAdminUserRow(row, userValues);
+              syncAdminEmptyUserState();
+              setMessage("User added successfully", false, false);
+              resetAdminUserForm();
+              switchMainView("admin-existing-user");
+            });
           })
           .catch(function (error) {
-            setMessage(error && error.message ? error.message : "Unable to save the user in Dataverse.", true, false);
+            hideAdminMessage();
           });
       }
 
@@ -7250,49 +7236,8 @@ function switchMainView(viewName) {
           cr2b4_DefaultAssignee: values.defaultAssignee,
           cr2b4_BusinessUsers: values.businessUsers,
           cr2b4_ProjectOwners: values.projectOwners,
-          cr2b4_RequestedUser: normalize(currentHubEmail)
+          cr2b4_RequestedUser: currentHubEmail || ""
         };
-      }
-
-      function syncProjectAccessToSharePoint(values, operation, recordId) {
-        if (!projectAccessSharePointUrl) {
-          return Promise.resolve({});
-        }
-
-        return fetch(projectAccessSharePointUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            Operation: normalize(operation || "Upsert"),
-            RecordId: normalize(recordId || ""),
-            ApplicationProject: normalize(values.projectName),
-            DefaultAssignee: normalize(values.defaultAssignee),
-            BusinessUsers: normalize(values.businessUsers),
-            ProjectOwners: normalize(values.projectOwners),
-            RequestedUser: normalize(currentHubEmail),
-            PortalUrl: window.location.origin
-          })
-        }).then(function (response) {
-          if (!response.ok) {
-            return response.text().then(function (text) {
-              throw new Error(text || ("SharePoint sync failed with status " + response.status + "."));
-            });
-          }
-
-          return response.text().then(function (text) {
-            if (!text) {
-              return {};
-            }
-
-            try {
-              return JSON.parse(text);
-            } catch (error) {
-              return {};
-            }
-          });
-        });
       }
 
       function callProjectAccessApi(method, recordId, payload) {
@@ -7422,7 +7367,6 @@ function switchMainView(viewName) {
         row.setAttribute("data-default-assignee", values.defaultAssignee);
         row.setAttribute("data-business-users", values.businessUsers);
         row.setAttribute("data-project-owners", values.projectOwners);
-        row.setAttribute("data-requested-user", normalize(currentHubEmail));
         row.cells[0].textContent = values.projectName;
         row.cells[1].textContent = values.defaultAssignee;
         row.cells[2].textContent = values.businessUsers;
@@ -7479,11 +7423,6 @@ function switchMainView(viewName) {
 
           callProjectAccessApi("PATCH", editingProjectAccessRow.getAttribute("data-record-id"), payload)
             .then(function () {
-              return syncProjectAccessToSharePoint(values, "Update", editingProjectAccessRow.getAttribute("data-record-id")).catch(function (error) {
-                setMessage(error && error.message ? error.message : "Project access updated in Dataverse, but the SharePoint sync failed.", true, false);
-              });
-            })
-            .then(function () {
               syncProjectAccessRow(editingProjectAccessRow, values);
               syncProjectAccessEmptyState();
               setMessage("Project access updated successfully", false, false);
@@ -7505,15 +7444,11 @@ function switchMainView(viewName) {
             row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
             row.setAttribute("data-record-id", recordId);
             tbody.insertBefore(row, tbody.firstChild);
-            return syncProjectAccessToSharePoint(values, "Create", recordId).catch(function (error) {
-              setMessage(error && error.message ? error.message : "Project access saved in Dataverse, but the SharePoint sync failed.", true, false);
-            }).then(function () {
             syncProjectAccessRow(row, values);
             syncProjectAccessEmptyState();
             setMessage("Project access added successfully", false, false);
             resetProjectAccessForm();
             switchMainView("admin-project-access");
-            });
           })
           .catch(function (error) {
             setMessage(error && error.message ? error.message : "Unable to save project access in Dataverse.", true, false);
@@ -8417,7 +8352,7 @@ function bindEvents() {
               resetFollowupAttachments();
             }
 
-            if (attachments.length && followupTicketFlowUrl) {
+            if (followupTicketFlowUrl) {
               return invokeFollowupFlow(payload).then(function () {
                 storeLocally();
               });
@@ -8485,32 +8420,14 @@ function bindEvents() {
             };
             window.followupPayloadPreview = payload;
 
-            if (attachments.length) {
-              if (followupTicketFlowUrl) {
-                return invokeFollowupFlow(payload).then(function (response) {
-                  return {
-                    response: response,
-                    attachments: allAttachments,
-                    persistedToFlow: true
-                  };
-                });
-              }
-
-              if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
-                return updateFollowupInDataverse(activeDetailTicket.entitySet, activeDetailTicket.recordId, followupValue).then(function (response) {
-                  return {
-                    response: response,
-                    attachments: allAttachments,
-                    persistedToFlow: false
-                  };
-                });
-              }
-
-              return {
-                response: {},
-                attachments: allAttachments,
-                persistedToFlow: false
-              };
+            if (followupTicketFlowUrl) {
+              return invokeFollowupFlow(payload).then(function (response) {
+                return {
+                  response: response,
+                  attachments: allAttachments,
+                  persistedToFlow: true
+                };
+              });
             }
 
             if (activeDetailTicket.recordId && activeDetailTicket.entitySet) {
@@ -8519,16 +8436,6 @@ function bindEvents() {
                   response: response,
                   attachments: allAttachments,
                   persistedToFlow: false
-                };
-              });
-            }
-
-            if (followupTicketFlowUrl) {
-              return invokeFollowupFlow(payload).then(function (response) {
-                return {
-                  response: response,
-                  attachments: allAttachments,
-                  persistedToFlow: true
                 };
               });
             }
@@ -8758,7 +8665,7 @@ function bindEvents() {
         setMessage("", false, true);
       }
 
-      function submitTicketForm() {
+function submitTicketForm() {
   var project = document.getElementById("ticket-project");
   var title = document.getElementById("ticket-title");
   var type = document.getElementById("ticket-type");
@@ -8793,10 +8700,6 @@ function bindEvents() {
 
         readAttachment(attachment)
           .then(function (attachmentData) {
-            var selectedProjectOption = projectFilter && projectFilter.selectedIndex >= 0
-              ? projectFilter.options[projectFilter.selectedIndex]
-              : null;
-
             var ticketPayload = buildTicketPayload({
               project: normalize(project.value),
               title: normalize(title.value),
@@ -8805,8 +8708,6 @@ function bindEvents() {
               subModule: normalize(subModule ? subModule.value : ""),
               assignee: normalize(assignee ? assignee.value : ""),
               description: normalize(description ? description.value : ""),
-              businessUsers: normalize(selectedProjectOption ? selectedProjectOption.getAttribute("data-bu") : ""),
-              projectOwners: normalize(selectedProjectOption ? selectedProjectOption.getAttribute("data-po") : ""),
               attachment: attachmentData
             });
 
@@ -8824,9 +8725,6 @@ function bindEvents() {
               assignee: ticketPayload.DefaultAssignee,
               description: ticketPayload.Ticket_Description
             });
-            window.setTimeout(function () {
-              loadTicketRows();
-            }, 0);
             closeCreateView();
             filterRows();
             setMessage("Ticket submitted successfully", false);
@@ -8852,10 +8750,12 @@ function bindEvents() {
           Ticket_ID: ticketId,
           ApplicationProject: ticket.project,
           Ticket_Title: ticket.title,
+          Status: "Open",
+          Current_Status: "Open",
           Issue_Type: ticket.type,
           DefaultAssignee: ticket.assignee,
-          BusinessUsers: ticket.businessUsers || "",
-          ProjectOwners: ticket.projectOwners || "",
+          BusinessUsers: "",
+          ProjectOwners: "",
           ProjectUsers: "",
           Module: ticket.module,
           Sub_Module: ticket.subModule,
@@ -8871,106 +8771,132 @@ function bindEvents() {
       }
 
       function submitTicketPayload(ticketPayload) {
-        return createDataverseTicket(ticketPayload);
+        return createTicketInDataverse(ticketPayload)
+          .then(function (createResult) {
+            if (!createTicketFlowUrl) {
+              return createResult;
+            }
+
+            return invokeCreateTicketFlow(buildCreateTicketFlowPayload(ticketPayload, createResult))
+              .catch(function (error) {
+                console.warn("Ticket flow sync failed:", error);
+                return createResult;
+              })
+              .then(function () {
+                return createResult;
+              });
+          });
       }
 
-      function createDataverseTicket(ticketPayload) {
-        /*
-          Dataverse target: IT_Tickets table.
-          IMPORTANT: the URL must be the IT_Tickets ENTITY SET NAME, not the logical table name.
-          Keep all candidates below; the code will try each one until the Dataverse Web API accepts it.
-        */
-        var entitySetCandidates = [
-          "cr2b4_it_ticketses",
-          "cr2b4_it_tickets",
-          "cr2b4_it_ticketss",
-          "cr2b4_itticketses",
-          "cr2b4_ittickets"
-        ];
+      function buildCreateTicketFlowPayload(ticketPayload, createResult) {
+        var flowPayload = {};
 
-        var attachmentUrls = ticketPayload.AttachmentUrl || ticketPayload.AttachmentUrls || "";
+        Object.keys(ticketPayload || {}).forEach(function (key) {
+          flowPayload[key] = ticketPayload[key];
+        });
 
-        var fullPayload = {
-          cr2b4_Ticket_ID: ticketPayload.Ticket_ID,
-          cr2b4_Ticket_Title: ticketPayload.Ticket_Title,
-          cr2b4_Ticket_Description: ticketPayload.Ticket_Description,
-          cr2b4_ApplicationProject: ticketPayload.ApplicationProject,
-          cr2b4_Issue_Type: ticketPayload.Issue_Type,
-          cr2b4_Module: ticketPayload.Module,
-          cr2b4_Sub_Module: ticketPayload.Sub_Module,
-          cr2b4_DefaultAssignee: ticketPayload.DefaultAssignee,
-          cr2b4_BusinessUsers: ticketPayload.BusinessUsers,
-          cr2b4_ProjectOwners: ticketPayload.ProjectOwners,
-          cr2b4_ProjectUsers: ticketPayload.ProjectUsers,
-          cr2b4_Requestor: ticketPayload.Requestor,
-          cr2b4_RequestorEmail: ticketPayload.RequestorEmail,
-          cr2b4_PlannerTaskID: ticketPayload.PlannerTaskID,
-          cr2b4_Resolution_Comments: ticketPayload.Resolution_Comments,
-          cr2b4_Followup_Comments: ticketPayload.Followup_Comments || "",
-          cr2b4_Attachments: attachmentUrls
-        };
+        flowPayload.Destination = "SharePoint";
+        flowPayload.DataverseEntitySet = createResult && createResult.entitySetName ? createResult.entitySetName : "";
+        flowPayload.DataverseRecordId = createResult && createResult.recordId ? createResult.recordId : "";
 
-        /*
-          Fallback payloads are intentionally smaller.
-          They let the save continue even if one or two optional columns were not created yet.
-        */
-        var payloadVariants = [
-          fullPayload,
-          {
+        return flowPayload;
+      }
+
+      function buildDataverseTicketCreatePayload(ticketPayload, entitySetName) {
+        var isCr2b4 = /^cr2b4_/i.test(entitySetName || "");
+
+        if (isCr2b4) {
+          return {
             cr2b4_Ticket_ID: ticketPayload.Ticket_ID,
             cr2b4_Ticket_Title: ticketPayload.Ticket_Title,
+            cr2b4_Ticket_Description: ticketPayload.Ticket_Description,
             cr2b4_ApplicationProject: ticketPayload.ApplicationProject,
             cr2b4_Issue_Type: ticketPayload.Issue_Type,
+            cr2b4_Status: ticketPayload.Status,
+            cr2b4_Current_Status: ticketPayload.Current_Status,
+            cr2b4_DefaultAssignee: ticketPayload.DefaultAssignee,
+            cr2b4_BusinessUsers: ticketPayload.BusinessUsers,
+            cr2b4_ProjectOwners: ticketPayload.ProjectOwners,
+            cr2b4_ProjectUsers: ticketPayload.ProjectUsers,
             cr2b4_Module: ticketPayload.Module,
             cr2b4_Sub_Module: ticketPayload.Sub_Module,
-            cr2b4_DefaultAssignee: ticketPayload.DefaultAssignee,
             cr2b4_Requestor: ticketPayload.Requestor,
             cr2b4_RequestorEmail: ticketPayload.RequestorEmail,
-            cr2b4_Ticket_Description: ticketPayload.Ticket_Description,
-            cr2b4_Resolution_Comments: ticketPayload.Resolution_Comments
-          },
-          {
-            cr2b4_Ticket_ID: ticketPayload.Ticket_ID,
-            cr2b4_Ticket_Title: ticketPayload.Ticket_Title,
-            cr2b4_ApplicationProject: ticketPayload.ApplicationProject,
-            cr2b4_DefaultAssignee: ticketPayload.DefaultAssignee
-          },
-          {
-            cr2b4_Ticket_Title: ticketPayload.Ticket_Title,
-            cr2b4_ApplicationProject: ticketPayload.ApplicationProject
-          }
-        ];
-        var attemptErrors = [];
+            cr2b4_Resolution_Comments: ticketPayload.Resolution_Comments,
+            cr2b4_Followup_Comments: ticketPayload.Followup_Comments,
+            cr2b4_PlannerTaskID: ticketPayload.PlannerTaskID,
+            cr2b4_AttachmentName: ticketPayload.AttachmentName,
+            cr2b4_AttachmentContentBytes: ticketPayload.AttachmentContentBytes
+          };
+        }
 
-        function tryEntitySet(entityIndex, payloadIndex) {
-          if (entityIndex >= entitySetCandidates.length) {
-            return Promise.reject(new Error(
-              "Unable to save the ticket in Dataverse IT_Tickets. " +
-              "Check that Webapi/<entityset>/enabled is true, Webapi/<entityset>/fields contains the columns, " +
-              "and the logged-in user's Web Role has Create permission. Details: " +
-              attemptErrors.filter(Boolean).join(" | ")
-            ));
-          }
+        return {
+          new_name: ticketPayload.Ticket_Title,
+          new_Ticket_ID: ticketPayload.Ticket_ID,
+          new_Ticket_Title: ticketPayload.Ticket_Title,
+          new_Ticket_Description: ticketPayload.Ticket_Description,
+          new_ApplicationProject: ticketPayload.ApplicationProject,
+          new_Issue_Type: ticketPayload.Issue_Type,
+          new_Status: ticketPayload.Status,
+          new_Current_Status: ticketPayload.Current_Status,
+          new_DefaultAssignee: ticketPayload.DefaultAssignee,
+          new_BusinessUsers: ticketPayload.BusinessUsers,
+          new_ProjectOwners: ticketPayload.ProjectOwners,
+          new_ProjectUsers: ticketPayload.ProjectUsers,
+          new_Module: ticketPayload.Module,
+          new_Sub_Module: ticketPayload.Sub_Module,
+          new_Requestor: ticketPayload.Requestor,
+          new_RequestorEmail: ticketPayload.RequestorEmail,
+          new_Resolution_Comments: ticketPayload.Resolution_Comments,
+          new_Followup_Comments: ticketPayload.Followup_Comments,
+          new_PlannerTaskID: ticketPayload.PlannerTaskID,
+          new_AttachmentName: ticketPayload.AttachmentName,
+          new_AttachmentContentBytes: ticketPayload.AttachmentContentBytes
+        };
+      }
 
-          if (payloadIndex >= payloadVariants.length) {
-            return tryEntitySet(entityIndex + 1, 0);
+      function createTicketInDataverse(ticketPayload) {
+        var index = 0;
+
+        function tryCreate() {
+          var entitySetName = createTicketEntitySetCandidates[index];
+
+          if (!entitySetName) {
+            return Promise.reject(new Error("Unable to find the IT Tickets Dataverse table."));
           }
 
           return safePowerPagesWrite({
             method: "POST",
-            url: "/_api/" + entitySetCandidates[entityIndex],
-            headers: { Prefer: "return=representation" },
-            body: JSON.stringify(payloadVariants[payloadIndex])
+            url: "/_api/" + entitySetName,
+            body: JSON.stringify(buildDataverseTicketCreatePayload(ticketPayload, entitySetName))
+          }).then(function (response) {
+            return {
+              entitySetName: entitySetName,
+              recordId: extractTicketRecordId(response)
+            };
           }).catch(function (error) {
-            attemptErrors.push(
-              "[" + entitySetCandidates[entityIndex] + " payload " + (payloadIndex + 1) + "] " +
-              normalize(error && error.message)
-            );
-            return tryEntitySet(entityIndex, payloadIndex + 1);
+            if (isRetryableEntitySetError(error) && index < createTicketEntitySetCandidates.length - 1) {
+              index += 1;
+              return tryCreate();
+            }
+
+            throw error;
           });
         }
 
-        return tryEntitySet(0, 0);
+        return tryCreate();
+      }
+
+      function extractTicketRecordId(response) {
+        return normalize(
+          response && (
+            response.cr2b4_it_ticketsid ||
+            response.cr2b4_it_ticketid ||
+            response.new_it_ticketsid ||
+            response.new_it_ticketid ||
+            response.id
+          )
+        );
       }
 
       function readAttachment(input) {
@@ -8998,17 +8924,15 @@ function bindEvents() {
       }
 
       function invokeCreateTicketFlow(ticketPayload) {
-        var triggerUrl = "/_api/cloudflow/v1.0/trigger/" + createTicketCloudFlowId;
-
-        return safePowerPagesPost({
-          type: "POST",
-          url: triggerUrl,
-          contentType: "application/json",
-          data: JSON.stringify({
-            eventData: JSON.stringify(ticketPayload)
-          })
-        }).catch(function () {
-          throw new Error("Submit failed while calling the Power Pages cloud flow.");
+        return fetch(createTicketFlowUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=UTF-8"
+          },
+          body: JSON.stringify(ticketPayload)
+        }).catch(function (error) {
+          throw new Error("Submit failed while calling the Power Automate flow." + (error && error.message ? " " + error.message : ""));
         });
       }
 
@@ -9229,95 +9153,31 @@ function bindEvents() {
 
       function safePowerPagesGet(url) {
         return new Promise(function (resolve, reject) {
-          var attempts = 0;
-          var maxAttempts = 40;
-          var delay = 300;
-
-          function tryRead() {
-            attempts += 1;
-            ensurePowerPagesWebApiWrapper();
-
-            if (window.webapi && typeof window.webapi.safeAjax === "function") {
-              window.webapi.safeAjax({
-                type: "GET",
-                url: url,
-                headers: {
+          ensurePowerPagesWebApiWrapper();
+          getPowerPagesRequestToken()
+            .then(function (token) {
+              return fetch(url, {
+                method: "GET",
+                headers: Object.assign({
                   Accept: "application/json"
-                }
-              })
-                .done(function (data) {
-                  resolve(data || {});
-                })
-                .fail(function (xhr) {
-                  reject(new Error(getAjaxErrorMessage(xhr)));
-                });
-              return;
-            }
-
-            if (window.shell && typeof window.shell.getTokenDeferred === "function" && window.jQuery) {
-              window.shell.getTokenDeferred()
-                .done(function (token) {
-                  window.jQuery.ajax({
-                    type: "GET",
-                    url: url,
-                    headers: Object.assign({
-                      Accept: "application/json"
-                    }, token ? { __RequestVerificationToken: token } : {})
-                  })
-                    .done(function (data) {
-                      resolve(data || {});
-                    })
-                    .fail(function (xhr) {
-                      reject(new Error(getAjaxErrorMessage(xhr)));
-                    });
-                })
-                .fail(function () {
-                  if (attempts < maxAttempts) {
-                    window.setTimeout(tryRead, delay);
-                    return;
-                  }
-                  reject(new Error("Power Pages token API is not ready."));
-                });
-              return;
-            }
-
-            getPowerPagesRequestToken()
-              .then(function (token) {
-                if (!token) {
-                  throw new Error("Power Pages request token is not available on this page.");
-                }
-
-                return fetch(url, {
-                  method: "GET",
-                  headers: Object.assign({
-                    Accept: "application/json",
-                    __RequestVerificationToken: token
-                  }),
-                  credentials: "same-origin"
-                });
-              })
-              .then(function (response) {
-                return response.text().then(function (text) {
-                  var parsed = parseMaybeJson(text);
-
-                  if (!response.ok) {
-                    throw new Error(getFetchErrorMessage(parsed, response.status));
-                  }
-
-                  resolve(parsed || {});
-                });
-              })
-              .catch(function (error) {
-                if (attempts < maxAttempts && /token|not available/i.test(String(error && error.message || ""))) {
-                  window.setTimeout(tryRead, delay);
-                  return;
-                }
-
-                reject(error instanceof Error ? error : new Error(String(error || "Power Pages read failed.")));
+                }, token ? { __RequestVerificationToken: token } : {}),
+                credentials: "same-origin"
               });
-          }
+            })
+            .then(function (response) {
+              return response.text().then(function (text) {
+                var parsed = parseMaybeJson(text);
 
-          tryRead();
+                if (!response.ok) {
+                  throw new Error(getFetchErrorMessage(parsed, response.status));
+                }
+
+                resolve(parsed || {});
+              });
+            })
+            .catch(function (error) {
+              reject(error instanceof Error ? error : new Error(String(error || "Power Pages read failed.")));
+            });
         });
       }
 
@@ -9413,7 +9273,6 @@ function bindEvents() {
 
         body.innerHTML = '<tr id="no-records-row"><td colspan="10" class="itops-empty">Loading tickets...</td></tr>';
         rows = [];
-        serverTicketRows = [];
       }
 
       function loadTicketRowsFromDataverse() {
@@ -9484,7 +9343,7 @@ function bindEvents() {
         function tryEntitySet(entitySets, index) {
           if (!entitySets || index >= entitySets.length) {
             toggleEmptyState(true);
-            setMessage("No readable Dataverse IT Tickets data was found. Check the IT_Tickets Web API settings and table permissions.", true, false);
+            setMessage("No readable Dataverse IT Tickets data was found. The Get Tickets flow is the real ticket source and may still need to be wired back in.", true, false);
             return;
           }
 
@@ -9498,7 +9357,6 @@ function bindEvents() {
               });
 
               if (isLikelyTicketResult(tickets)) {
-                serverTicketRows = records.slice();
                 renderTicketRows(tickets);
                 return;
               }
@@ -9722,25 +9580,24 @@ function bindEvents() {
         return {
           entitySet: "flow",
           recordId: normalize(pick(["ID", "Id", "id"])),
-          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId", "new_ticket_id", "new_ticketid", "cr2b4_Ticket_ID", "cr2b4_ticket_id"])),
-          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle", "new_ticket_title", "new_title", "cr2b4_Ticket_Title", "cr2b4_ticket_title"])),
+          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId", "new_ticket_id", "new_ticketid"])),
+          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle", "new_ticket_title", "new_title"])),
           type: normalize(pick([
             "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType",
             "Request_Type", "RequestType", "issue_type", "issueType", "type", "ticket_type", "request_type",
-            "new_issue_type", "new_type", "new_ticket_type", "new_request_type",
-            "cr2b4_Issue_Type", "cr2b4_issue_type"
+            "new_issue_type", "new_type", "new_ticket_type", "new_request_type"
           ])),
-          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project", "new_applicationproject", "new_project", "cr2b4_ApplicationProject", "cr2b4_applicationproject"])),
-          module: normalize(pick(["Module", "module", "new_module", "cr2b4_Module", "cr2b4_module"])),
-          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule", "new_sub_module", "new_submodule", "cr2b4_Sub_Module", "cr2b4_sub_module"])),
-          status: normalize(pick(["Status", "status", "Current_Status", "new_status", "new_current_status", "cr2b4_Status", "cr2b4_Current_Status"])),
-          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee", "new_defaultassignee", "new_assignedto", "cr2b4_DefaultAssignee", "cr2b4_AssignedTo"])),
-          businessUser: normalize(pick(["BusinessUsers", "businessUsers", "new_businessusers", "cr2b4_BusinessUsers"])),
-          projectOwner: normalize(pick(["ProjectOwners", "projectOwners", "new_projectowners", "cr2b4_ProjectOwners"])),
-          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution", "cr2b4_Resolution_Comments"])),
-          requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by", "cr2b4_Requestor"])),
-          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail", "new_requestoremail", "new_requestor_email", "cr2b4_RequestorEmail"])),
-          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup", "cr2b4_Followup_Comments"]))
+          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project", "new_applicationproject", "new_project"])),
+          module: normalize(pick(["Module", "module", "new_module"])),
+          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule", "new_sub_module", "new_submodule"])),
+          status: normalize(pick(["Status", "status", "Current_Status", "new_status", "new_current_status"])),
+          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee", "new_defaultassignee", "new_assignedto"])),
+          businessUser: normalize(pick(["BusinessUsers", "businessUsers", "new_businessusers"])),
+          projectOwner: normalize(pick(["ProjectOwners", "projectOwners", "new_projectowners"])),
+          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution"])),
+          requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by"])),
+          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail", "new_requestoremail", "new_requestor_email"])),
+          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup"]))
         };
       }
 
@@ -9749,17 +9606,11 @@ function bindEvents() {
           return [];
         }
 
-        var allowedProjects = Array.prototype.slice.call(projectFilter.options)
+        return Array.prototype.slice.call(projectFilter.options)
           .map(function (option) {
             return normalize(option.value).toLowerCase();
           })
           .filter(Boolean);
-
-        if (!allowedProjects.length && !isAdminUser) {
-          return ["__no_access__"];
-        }
-
-        return allowedProjects;
       }
 
       function normalizeTicketRecord(record, entitySetName) {
@@ -9791,69 +9642,69 @@ function bindEvents() {
           ticketId: normalize(pick([
             "new_ticket_id", "new_ticketid", "new_ticket_x0020_id", "new_ticketno", "new_ticket_number", "new_id",
             "Ticket_ID", "Ticket ID", "ticket_id", "ticketid", "ID", "Id",
-            "cr2b4_Ticket_ID", "cr2b4_ticket_id", "cr2b4_ticketid", "cr2b4_ticket_x0020_id"
+            "cr2b4_ticket_id", "cr2b4_ticketid", "cr2b4_ticket_x0020_id"
           ])),
           title: normalize(pick([
             "new_ticket_title", "new_title", "new_ticket_x0020_title", "new_name",
             "Ticket_Title", "Ticket Title", "ticket_title", "tickettitle", "Title", "title",
-            "cr2b4_Ticket_Title", "cr2b4_ticket_title", "cr2b4_title", "cr2b4_ticket_x0020_title"
+            "cr2b4_ticket_title", "cr2b4_title", "cr2b4_ticket_x0020_title"
           ])),
           type: normalize(pick([
             "new_issue_type", "new_issue_x0020_type", "new_type", "new_ticket_type", "new_request_type", "new_issuetype",
             "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType", "Request_Type", "RequestType",
             "type", "issue_type", "issueType", "ticket_type", "request_type",
-            "cr2b4_Issue_Type", "cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type", "cr2b4_ticket_type", "cr2b4_request_type"
+            "cr2b4_issue_type", "cr2b4_issue_x0020_type", "cr2b4_type", "cr2b4_ticket_type", "cr2b4_request_type"
           ])),
           project: normalize(pick([
             "new_applicationproject", "new_application_project", "new_project", "new_projectname", "new_project_x0020_name",
             "ApplicationProject", "Application Project", "Project", "project", "applicationproject",
-            "cr2b4_ApplicationProject", "cr2b4_applicationproject", "cr2b4_application_project", "cr2b4_project"
+            "cr2b4_applicationproject", "cr2b4_application_project", "cr2b4_project"
           ])),
           module: normalize(pick([
-            "new_module", "new_modulename", "Module", "module", "cr2b4_Module", "cr2b4_module"
+            "new_module", "new_modulename", "Module", "module", "cr2b4_module"
           ])),
           subModule: normalize(pick([
             "new_sub_module", "new_sub_x0020_module", "new_submodule",
             "Sub_Module", "Sub Module", "sub_module", "submodule",
-            "cr2b4_Sub_Module", "cr2b4_sub_module", "cr2b4_sub_x0020_module"
+            "cr2b4_sub_module", "cr2b4_sub_x0020_module"
           ])),
           status: normalize(pick([
             "new_status", "new_current_status", "Status", "status", "Current_Status", "Current Status",
-            "cr2b4_Status", "cr2b4_Current_Status", "cr2b4_status", "cr2b4_current_status"
+            "cr2b4_status", "cr2b4_current_status"
           ])) || "Open",
           assignee: normalize(pick([
             "new_defaultassignee", "new_default_assignee", "new_default_x0020_assignee", "new_assignedto", "new_assigned_to",
             "DefaultAssignee", "Default Assignee", "Assigned_To", "Assigned To", "AssignedTo", "assignedto", "assignee",
-            "cr2b4_DefaultAssignee", "cr2b4_defaultassignee", "cr2b4_default_assignee", "cr2b4_defaultx0020assignee"
+            "cr2b4_defaultassignee", "cr2b4_default_assignee", "cr2b4_defaultx0020assignee"
           ])),
           businessUser: normalize(pick([
             "new_businessusers", "new_business_users", "new_business_x0020_users",
             "BusinessUsers", "Business Users", "businessusers",
-            "cr2b4_BusinessUsers", "cr2b4_businessusers", "cr2b4_business_users"
+            "cr2b4_businessusers", "cr2b4_business_users"
           ])),
           projectOwner: normalize(pick([
             "new_projectowners", "new_project_owners", "new_project_x0020_owners",
             "ProjectOwners", "Project Owners", "projectowners",
-            "cr2b4_ProjectOwners", "cr2b4_projectowners", "cr2b4_project_owners"
+            "cr2b4_projectowners", "cr2b4_project_owners"
           ])),
           resolution: normalize(pick([
             "new_resolution_comments", "new_resolution", "new_resolution_x0020_comments",
             "Resolution_Comments", "Resolution Comments", "Resolution", "resolution_comments",
-            "cr2b4_Resolution_Comments", "cr2b4_resolution_comments", "cr2b4_resolution"
+            "cr2b4_resolution_comments", "cr2b4_resolution"
           ])),
           requestor: normalize(pick([
             "new_requestor", "new_requested_by", "new_requestedby", "Requestor", "Requested By", "RequestedBy", "requestor",
-            "cr2b4_Requestor", "cr2b4_requestor"
+            "cr2b4_requestor"
           ])),
           requestorEmail: normalize(pick([
             "new_requestoremail", "new_requestor_email", "new_requestedbyemail", "new_requested_by_email",
             "RequestorEmail", "Requestor Email", "RequestedByEmail", "Requested By Email", "requestoremail",
-            "cr2b4_RequestorEmail", "cr2b4_requestoremail", "cr2b4_requestor_email"
+            "cr2b4_requestoremail", "cr2b4_requestor_email"
           ])),
           followupComments: normalize(pick([
             "new_followup_comments", "new_followup", "new_followup_x0020_comments",
             "Followup_Comments", "Followup Comments", "followup_comments",
-            "cr2b4_Followup_Comments", "cr2b4_followup_comments"
+            "cr2b4_followup_comments"
           ]))
         };
       }
