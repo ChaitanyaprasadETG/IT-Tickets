@@ -171,6 +171,12 @@
 - adx_name: Webapi/cr2b4_it_access_requests/fields
   adx_sitesettingid: bf039e95-69d5-486b-b949-3a898ef0a030
   adx_value: '*'
+- adx_name: Webapi/cr2b4_it_access_requestses/enabled
+  adx_sitesettingid: de4b1e75-d25f-4f7b-9816-e1bb248bcf49
+  adx_value: true
+- adx_name: Webapi/cr2b4_it_access_requestses/fields
+  adx_sitesettingid: 9e3541d1-5acc-4597-8006-f45c1b7f835a
+  adx_value: '*'
 - adx_description: C1 home page
   adx_name: C1/Home
   adx_sitesettingid: 7de04d1d-855e-f111-a826-7c1e5251d90e
