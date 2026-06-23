@@ -4,7 +4,7 @@ import path from "node:path";
 const rootDir = process.cwd();
 const sourceDir = path.join(rootDir, "it-support---etgithubportal", "it-support---etgithubportal");
 const outputDir = path.join(rootDir, "dist");
-const entryPointPath = path.join(outputDir, "index.js");
+const entryPointPath = path.join(outputDir, "index.mjs");
 
 async function removeIfExists(targetPath) {
   await fs.rm(targetPath, { recursive: true, force: true });
@@ -34,12 +34,13 @@ async function main() {
   await fs.writeFile(
     entryPointPath,
     [
-      "const http = require('node:http');",
-      "const fs = require('node:fs');",
-      "const path = require('node:path');",
+      "import http from 'node:http';",
+      "import fs from 'node:fs';",
+      "import path from 'node:path';",
+      "import { fileURLToPath } from 'node:url';",
       "",
       "const port = Number(process.env.PORT || process.env.NEXT_PUBLIC_PORT || 3000);",
-      "const rootDir = __dirname;",
+      "const rootDir = path.dirname(fileURLToPath(import.meta.url));",
       "",
       "function send(res, statusCode, body, contentType) {",
       "  res.writeHead(statusCode, { 'content-type': contentType || 'text/plain; charset=utf-8' });",
