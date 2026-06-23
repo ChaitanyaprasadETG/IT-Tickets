@@ -91,7 +91,7 @@ async function main() {
       "  console.log(`IT Support portal scaffold listening on ${port}`);",
       "});",
       ""
-    ].join("\\n"),
+    ].join("\n"),
     "utf8"
   );
   console.log(`Built portal export into ${path.relative(rootDir, outputDir)}`);
