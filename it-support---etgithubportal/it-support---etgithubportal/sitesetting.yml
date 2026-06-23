@@ -358,6 +358,7 @@
 - adx_description: Direct Power Automate HTTP endpoint that handles Admin/Profile access requests.
   adx_name: ITSupport/AccessRequestFlowUrl
   adx_sitesettingid: 4f1d09c2-5ec7-4cf2-95e9-11db5d3f4b8e
+  adx_value: https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/912b4baaaac34ee5987321a26345e207/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Icm1xUtedTPP3AmTScl5NBIVqOGvZ05kbmZQs2gJEYk
 - adx_name: Authentication/OpenAuth/Microsoft/ClientSecret
   adx_sitesettingid: f1e04d1d-855e-f111-a826-7c1e5251d90e
 - adx_description: Used to group a set of entities under an entry in the record type facet view.

@@ -5485,7 +5485,7 @@ html {
       var createTicketFlowUrl = "{{ settings['ITSupport/CreateTicketFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | escape }}";
       var getTicketsFlowUrl = "{{ get_tickets_flow_url | escape }}";
       var followupTicketFlowUrl = "{{ followup_ticket_flow_url | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/23b08e9672d3405986985053846b616e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=wupQ05zAxBkJdRmRbjKsVCIEBynTHx36A3Ws8wl9Neg' | escape }}";
-      var accessRequestFlowUrl = "{{ settings['ITSupport/AccessRequestFlowUrl'] | default: '' | escape }}";
+      var accessRequestFlowUrl = "{{ settings['ITSupport/AccessRequestFlowUrl'] | default: 'https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/912b4baaaac34ee5987321a26345e207/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Icm1xUtedTPP3AmTScl5NBIVqOGvZ05kbmZQs2gJEYk' | escape }}";
       var currentHubEmail = "{{ hub_email | escape }}";
       var projectAccessSharePointUrl = "{{ settings['ITSupport/ProjectAccessSharePointUrl'] | default: '' | escape }}";
       var createTicketEntitySetCandidates = [
