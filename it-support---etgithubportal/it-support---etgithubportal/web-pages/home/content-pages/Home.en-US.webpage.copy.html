@@ -6915,7 +6915,7 @@ html {
           }
         });
 
-        Array.prototype.forEach.call(root.querySelectorAll(".itops-attachment-item, .itops-attachment-file, .itops-followup-file-item, .itops-followup-file-name, .itops-followup-file-meta"), function (node) {
+        Array.prototype.forEach.call(root.querySelectorAll(".itops-followup-file-name, .itops-followup-file-size, #ticket-attachment-name, #ticket-attachment-size"), function (node) {
           node.textContent = node.textContent.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/ig, function (email) {
             return itopsDisplayName(email);
           });
@@ -10160,23 +10160,24 @@ function submitTicketForm() {
 
       function submitTicketPayload(ticketPayload) {
         /*
-          Create Ticket submit must call the Dataverse IT_Tickets Power Automate flow.
-          The flow receives the same payload and writes the values into Dataverse IT_Tickets.
+          Prefer the Create Ticket flow when it is configured.
+          Custom portal pages do not always expose a request token for direct Dataverse writes.
         */
-        if (!createTicketFlowUrl || ticketPayload.AttachmentContent) {
-          /* Attachment uploads in the existing flow are failing because the flow uses OData Id URL as Row ID.
-             Create the ticket directly from the portal so Submit does not fail.
-             To upload into a Dataverse file column through Power Automate, set the flow Row ID to the GUID output from Add a new row, not the OData Id URL. */
-          return createTicketInDataverse(ticketPayload);
+        if (createTicketFlowUrl) {
+          return invokeCreateTicketFlow(ticketPayload).catch(function (error) {
+            if (canUseDirectDataverseSubmit()) {
+              return createTicketInDataverse(ticketPayload);
+            }
+
+            throw error;
+          });
         }
 
-        return invokeCreateTicketFlow(ticketPayload).catch(function (error) {
-          /* If the HTTP flow is unavailable, still create the ticket row directly through Power Pages Web API. */
-          if (/Power Automate flow URL is missing|Failed to fetch|CORS|HTTP 0|Network/i.test(error && error.message ? error.message : "")) {
-            return createTicketInDataverse(ticketPayload);
-          }
-          throw error;
-        });
+        if (!canUseDirectDataverseSubmit()) {
+          return Promise.reject(new Error("Power Pages request token is not available on this page and the Create Ticket flow URL is not configured."));
+        }
+
+        return createTicketInDataverse(ticketPayload);
       }
 
       function buildCreateTicketFlowPayload(ticketPayload, createResult) {
@@ -10371,6 +10372,26 @@ function submitTicketForm() {
 
             throw new Error("Submit failed while calling the Dataverse Create Ticket Power Automate flow." + (error && error.message ? " " + error.message : ""));
           });
+      }
+
+      function canUseDirectDataverseSubmit() {
+        if (typeof window.getPowerPagesSubmitInvoker === "function" && window.getPowerPagesSubmitInvoker()) {
+          return true;
+        }
+
+        if (window.shell && (typeof window.shell.ajaxSafePost === "function" || typeof window.shell.getTokenDeferred === "function")) {
+          return true;
+        }
+
+        if (window.webapi && typeof window.webapi.safeAjax === "function" && window.jQuery) {
+          return true;
+        }
+
+        if (document.querySelector("input[name='__RequestVerificationToken'], input[name='RequestVerificationToken'], input[name='__RequestVerificationToken_Lw__'], meta[name='csrf-token'], meta[name='request-verification-token']")) {
+          return true;
+        }
+
+        return false;
       }
 
       function invokeFollowupFlow(followupPayload) {
