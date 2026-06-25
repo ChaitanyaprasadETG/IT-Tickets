@@ -6143,6 +6143,31 @@ html {
         setMessage("", false, true);
       }
 
+      function openCreateAttachmentPicker(input) {
+        if (!input) {
+          return;
+        }
+
+        try {
+          input.value = "";
+        } catch (error) {
+          /* ignore input reset errors */
+        }
+
+        if (typeof input.showPicker === "function") {
+          try {
+            input.showPicker();
+            return;
+          } catch (error) {
+            /* fall through to click */
+          }
+        }
+
+        if (typeof input.click === "function") {
+          input.click();
+        }
+      }
+
       function bindAttachmentDisplay() {
         var input = document.getElementById("ticket-attachment");
         var dropZone = document.querySelector("#ticket-create-view .itops-attachment-box");
@@ -6159,11 +6184,10 @@ html {
         if (choose && choose.getAttribute("data-itops-bound") !== "true") {
           choose.setAttribute("data-itops-bound", "true");
           choose.addEventListener("click", function (event) {
-            event.preventDefault();
             event.stopPropagation();
-            if (input) {
-              input.value = "";
-              input.click();
+            if (event && typeof event.preventDefault === "function" && event.detail === 0) {
+              event.preventDefault();
+              openCreateAttachmentPicker(input);
             }
           });
         }
@@ -6174,9 +6198,7 @@ html {
             if (event.target && event.target.closest && event.target.closest(".itops-attachment-choose")) {
               return;
             }
-            if (typeof input.click === "function") {
-              input.click();
-            }
+            openCreateAttachmentPicker(input);
           });
           dropZone.addEventListener("dragover", function (event) {
             event.preventDefault();
