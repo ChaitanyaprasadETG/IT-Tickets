@@ -4789,7 +4789,7 @@ html {
                 <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 <div>
                   <div class="itops-section-title">User Details</div>
-                  <div class="itops-section-subtitle">Add a new admin or business user record</div>
+                  <div class="itops-section-subtitle">Create or update an IT Access Request record in Dataverse</div>
                 </div>
               </div>
               <div class="itops-form-grid itops-form-grid-top">
@@ -4818,7 +4818,7 @@ html {
             </div>
             <div class="itops-bottom-actions" style="justify-content:flex-end;">
               <button id="admin-reset-user" class="itops-flat-btn" type="button">Reset</button>
-              <button id="admin-save-user" class="itops-primary-btn" type="button">Add User</button>
+              <button id="admin-save-user" class="itops-primary-btn" type="button">Save</button>
             </div>
           </div>
         </div>
@@ -4842,7 +4842,7 @@ html {
                 <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12M6 10h12M6 16h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 <div>
                   <div class="itops-section-title">Users List</div>
-                  <div class="itops-section-subtitle">Existing users mapped for this portal</div>
+                  <div class="itops-section-subtitle">Existing IT Access Request rows loaded from Dataverse</div>
                 </div>
               </div>
               <div class="itops-table-wrap">
@@ -5538,7 +5538,7 @@ html {
       var isAdminUser = !!pageContext.isAdminUser;
       var isTechnicianUser = !!pageContext.isTechnicianUser || isAdminUser;
       var canManageServiceRequests = isTechnicianUser || isAdminUser;
-      var activeQuickView = canManageServiceRequests ? "service-all" : "home-all";
+      var activeQuickView = "home-all";
       var activeDetailTicket = null;
       var mentionCandidates = [];
       var pendingFollowupAttachments = [];
@@ -6176,6 +6176,9 @@ html {
 
         container.innerHTML = attachments
           .map(function (attachment) {
+            var attachmentName = attachment.AttachmentName || attachment.name || attachment.FileName || attachment.fileName || "Attachment";
+            var attachmentUrl = attachment.url || attachment.Url || attachment.Link || attachment.link || attachment.AbsoluteUri || "";
+
             return (
               '<div class="itops-attachment-item">' +
                 '<svg class="itops-field-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
@@ -6183,7 +6186,9 @@ html {
                   '<path d="M14 3v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />' +
                 '</svg>' +
                 '<div class="itops-followup-file-meta">' +
-                  '<div class="itops-followup-file-name">' + escapeHtml(attachment.AttachmentName || attachment.name || "Attachment") + '</div>' +
+                  (attachmentUrl
+                    ? '<a class="itops-followup-file-name" href="' + escapeHtml(attachmentUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(attachmentName) + '</a>'
+                    : '<div class="itops-followup-file-name">' + escapeHtml(attachmentName) + '</div>') +
                   '<div class="itops-followup-file-size">' + escapeHtml(attachment.AttachmentSize || formatFileSize(attachment.size || 0)) + '</div>' +
                 '</div>' +
               '</div>'
@@ -6474,7 +6479,7 @@ html {
 
 function switchMainView(viewName) {
         var shell = document.querySelector(".itops-shell");
-        var resolvedView = viewName || (canManageServiceRequests ? "service-all" : "home-open");
+        var resolvedView = viewName || "home-all";
         var currentRoleName = getCurrentPortalRoleName();
 
         if (!isViewAllowedForRole(currentRoleName, resolvedView)) {
@@ -6583,6 +6588,16 @@ function switchMainView(viewName) {
         });
       }
 
+      var accessRequestActionLabel = "Save";
+
+      function setAdminUserActionLabel(label) {
+        var saveButton = document.getElementById("admin-save-user");
+
+        if (saveButton) {
+          saveButton.textContent = normalize(label) || accessRequestActionLabel;
+        }
+      }
+
       function resetAdminUserForm() {
         editingUserRow = null;
 
@@ -6590,25 +6605,24 @@ function switchMainView(viewName) {
         var lastName = document.getElementById("admin-last-name");
         var email = document.getElementById("admin-email");
         var role = document.getElementById("admin-role");
-        var saveButton = document.getElementById("admin-save-user");
-
         if (firstName) firstName.value = "";
         if (lastName) lastName.value = "";
         if (email) email.value = "";
         if (role) role.value = "";
-        if (saveButton) saveButton.textContent = "Add User";
+        setAdminUserActionLabel(accessRequestActionLabel);
       }
 
       function buildAccessRequestPayload(userValues, existingRow) {
         var firstName = normalize(userValues.firstName);
         var lastName = normalize(userValues.lastName);
         var fullName = normalize((firstName + " " + lastName).replace(/\s+/g, " "));
+        var status = normalize(existingRow ? existingRow.getAttribute("data-status") : "") || accessRequestApprovedValue;
         var payload = {
           cr2b4_Email: normalize(userValues.email).toLowerCase(),
           cr2b4_FullName: fullName,
           cr2b4_Role: normalize(userValues.role) || "User",
-          cr2b4_Access_Status: accessRequestApprovedValue,
-          cr2b4_Status: accessRequestApprovedValue,
+          cr2b4_Access_Status: status,
+          cr2b4_Status: status,
           cr2b4_ApprovedBy: currentHubEmail || "",
           cr2b4_Comments: normalize(userValues.comments || (existingRow ? existingRow.getAttribute("data-comments") : "") || "Approved from admin portal")
         };
@@ -7026,16 +7040,6 @@ function switchMainView(viewName) {
         });
       }
 
-      function extractAccessRequestRecordId(response) {
-        return normalize(
-          response && (
-            response.cr2b4_it_access_requestsid ||
-            response.cr2b4_it_access_requestid ||
-            response.id
-          )
-        );
-      }
-
       function syncAdminUserRow(row, userValues) {
         var fullName = normalize(userValues.fullName || row.getAttribute("data-fullname") || (normalize(userValues.firstName) + " " + normalize(userValues.lastName)).replace(/\s+/g, " "));
         var nameParts = splitNameParts(fullName);
@@ -7183,9 +7187,12 @@ function switchMainView(viewName) {
               });
             })
             .then(function () {
-              syncAdminUserRow(editingUserRow, userValues);
-              setMessage("User updated successfully", false, false);
+              return loadAdminUsersFromDataverse();
+            })
+            .then(function () {
+              setMessage("User saved successfully", false, false);
               resetAdminUserForm();
+              setAdminUserActionLabel(accessRequestActionLabel);
               switchMainView("admin-existing-user");
             })
             .catch(function (error) {
@@ -7196,19 +7203,14 @@ function switchMainView(viewName) {
 
         callAccessRequestApi("POST", "", payload)
           .then(function (response) {
-            var recordId = extractAccessRequestRecordId(response);
-            var row = document.createElement("tr");
-
-            row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
-            row.setAttribute("data-record-id", recordId);
-            tbody.insertBefore(row, tbody.firstChild);
             return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
               console.warn("Portal role assignment failed:", error);
             }).then(function () {
-              syncAdminUserRow(row, userValues);
-              syncAdminEmptyUserState();
-              setMessage("User added successfully", false, false);
+              return loadAdminUsersFromDataverse();
+            }).then(function () {
+              setMessage("User saved successfully", false, false);
               resetAdminUserForm();
+              setAdminUserActionLabel(accessRequestActionLabel);
               switchMainView("admin-existing-user");
             });
           })
@@ -7231,7 +7233,6 @@ function switchMainView(viewName) {
           var lastName = document.getElementById("admin-last-name");
           var email = document.getElementById("admin-email");
           var role = document.getElementById("admin-role");
-          var saveButton = document.getElementById("admin-save-user");
           var existingFullName = normalize(row.getAttribute("data-fullname") || (cells[1] ? cells[1].textContent + " " + cells[2].textContent : ""));
           var nameParts = splitNameParts(existingFullName || normalize(cells[0] ? cells[0].textContent : ""));
 
@@ -7241,7 +7242,7 @@ function switchMainView(viewName) {
           if (firstName) firstName.value = normalize(cells[1] ? cells[1].textContent : "") || nameParts.firstName;
           if (lastName) lastName.value = normalize(cells[2] ? cells[2].textContent : "") || nameParts.lastName;
           if (role) role.value = normalize(cells[3] ? cells[3].textContent : "");
-          if (saveButton) saveButton.textContent = "Update User";
+          setAdminUserActionLabel(accessRequestActionLabel);
 
           switchMainView("admin-new-user");
           hideAdminMessage();
@@ -9609,6 +9610,48 @@ function submitTicketForm() {
         }
       }
 
+      function normalizeTicketAttachments(value) {
+        value = parseMaybeJson(value);
+
+        if (!value) {
+          return [];
+        }
+
+        if (Array.isArray(value)) {
+          return value.map(function (item) {
+            if (typeof item === "string") {
+              return { name: item, url: item };
+            }
+
+            item = item || {};
+            return {
+              name: normalize(item.name || item.Name || item.FileName || item.fileName || item.DisplayName || item.displayName || item.url || item.Url),
+              url: normalize(item.url || item.Url || item.ServerRelativeUrl || item.AbsoluteUri || item.Link || item.link)
+            };
+          }).filter(function (item) {
+            return !!item.name || !!item.url;
+          });
+        }
+
+        if (typeof value === "string") {
+          return value.split(/[\n,;]+/).map(function (entry) {
+            entry = normalize(entry);
+            return entry ? { name: entry, url: entry } : null;
+          }).filter(Boolean);
+        }
+
+        if (typeof value === "object") {
+          return [{
+            name: normalize(value.name || value.Name || value.FileName || value.fileName || value.DisplayName || value.displayName || value.url || value.Url),
+            url: normalize(value.url || value.Url || value.ServerRelativeUrl || value.AbsoluteUri || value.Link || value.link)
+          }].filter(function (item) {
+            return !!item.name || !!item.url;
+          });
+        }
+
+        return [];
+      }
+
       function normalizeFlowTicketRecord(record) {
         function pick(names) {
           for (var i = 0; i < names.length; i += 1) {
@@ -9640,7 +9683,8 @@ function submitTicketForm() {
           resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution"])),
           requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by"])),
           requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail", "new_requestoremail", "new_requestor_email"])),
-          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup"]))
+          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup"])),
+          attachments: normalizeTicketAttachments(pick(["Attachments", "Attachment", "attachments", "attachment", "AttachmentFiles", "attachmentFiles"]))
         };
       }
 
@@ -9748,6 +9792,11 @@ function submitTicketForm() {
             "new_followup_comments", "new_followup", "new_followup_x0020_comments",
             "Followup_Comments", "Followup Comments", "followup_comments",
             "cr2b4_followup_comments"
+          ])),
+          attachments: normalizeTicketAttachments(pick([
+            "new_attachments", "new_attachment", "new_attachmentfiles", "new_attachment_files",
+            "Attachments", "Attachment", "attachments", "attachment", "AttachmentFiles", "attachmentFiles",
+            "cr2b4_attachments", "cr2b4_attachment", "cr2b4_attachmentfiles"
           ]))
         };
       }
