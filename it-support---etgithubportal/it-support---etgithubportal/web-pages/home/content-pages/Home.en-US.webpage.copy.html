@@ -15,7 +15,7 @@ Required Power Pages setup for direct Dataverse write:
    IT_Security_List: Read, Create, Write, Delete assigned to the portal Web Role.
 3) Clear portal cache after publishing.
 {%- endcomment -%}
-{% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% assign has_it_support_admin_role = false %} {% assign has_it_support_user_role = false %} {% if user %} {% assign hub_role = 'User' %} {% assign has_it_support_user_role = true %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% if hub_email_lc == 'chaitanya.prasad@etgworld.com' %} {% assign has_it_support_admin_role = true %} {% assign has_it_support_user_role = false %} {% endif %} {% if has_it_support_admin_role %} {% assign hub_role = 'Admin' %} {% elsif has_it_support_user_role %} {% assign hub_role = 'User' %} {% endif %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = '' %} {% assign get_tickets_flow_url = '' %}
+{% assign hub_name = user.fullname | default: '' | strip %} {% if hub_name == blank and user %} {% assign hub_name = user.firstname | default: '' | append: ' ' | append: user.lastname | default: '' | strip %} {% endif %} {% if hub_name == blank %} {% assign hub_name = 'Guest' %} {% endif %} {% assign hub_role = 'Guest' %} {% assign has_it_support_admin_role = false %} {% assign has_it_support_user_role = false %} {% if user %} {% assign hub_role = 'User' %} {% assign has_it_support_user_role = true %} {% endif %} {% assign hub_email = user.email | default: user.emailaddress1 | default: '' | strip %} {% assign hub_email_lc = hub_email | downcase %} {% if hub_email_lc == 'chaitanya.prasad@etgworld.com' %} {% assign has_it_support_admin_role = true %} {% assign has_it_support_user_role = false %} {% endif %} {% if has_it_support_admin_role %} {% assign hub_role = 'Admin' %} {% elsif has_it_support_user_role %} {% assign hub_role = 'User' %} {% endif %} {% assign auth_action_label = 'Sign In' %} {% assign auth_action_url = website.sign_in_url_substitution %} {% if user %} {% assign auth_action_label = 'Logout' %} {% assign auth_action_url = website.sign_out_url_substitution %} {% endif %} {% assign create_ticket_cloud_flow_id = '' %} {% assign get_tickets_flow_url = settings['ITSupport/GetTicketsFlowUrl'] | default: '' %}
 
 <script id="itops-page-context" type="application/json">
 {
@@ -31,7 +31,7 @@ Required Power Pages setup for direct Dataverse write:
   "getTicketsFlowUrl": "{{ get_tickets_flow_url | default: '' | escape }}",
   "followupTicketFlowUrl": "{{ followup_ticket_flow_url | default: '' | escape }}",
   "accessRequestFlowUrl": "{{ settings['ITSupport/AccessRequestFlowUrl'] | default: '' | escape }}",
-  "projectAccessSharePointUrl": "{{ settings['ITSupport/ProjectAccessSharePointUrl'] | default: '' | escape }}"
+  "projectAccessFlowUrl": "{{ settings['ITSupport/ProjectAccessFlowUrl'] | default: '' | escape }}"
 }
 </script>
 
@@ -2410,11 +2410,17 @@ Required Power Pages setup for direct Dataverse write:
   }
 
   .itops-attachment-box input[type="file"] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+  }
+
+
+  .itops-attachment-box.is-dragover {
+    border-color: #1168d8 !important;
+    background: #eef7ff !important;
   }
 
   .itops-attachment-choose {
@@ -3011,6 +3017,230 @@ Required Power Pages setup for direct Dataverse write:
   color: #b83b3b !important;
 }
 
+
+/* =========================================================
+   PROJECT ACCESS MULTI-LINE DRAWER
+   - Business Users and Project Owners are Dataverse multi-line text columns
+   - Grid shows compact preview; click opens drawer with full list
+   ========================================================= */
+#admin-project-access-view #project-access-business-users,
+#admin-project-access-view #project-access-project-owners {
+  min-height: 72px !important;
+  height: 72px !important;
+  padding: 10px 14px !important;
+  resize: vertical !important;
+  border-radius: 4px !important;
+}
+
+#admin-project-access-view .itops-multiline-preview {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  max-width: 100% !important;
+  min-height: 26px !important;
+  padding: 0 8px !important;
+  border: 1px solid #cfe0f2 !important;
+  border-radius: 999px !important;
+  background: #f4f9ff !important;
+  color: #1267d8 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+#admin-project-access-view .itops-multiline-preview-label {
+  display: inline-block !important;
+  max-width: 160px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle !important;
+}
+
+#admin-project-access-view .itops-multiline-preview-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 24px !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  border-radius: 999px !important;
+  background: #e2efff !important;
+  color: #0d4d9c !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+#project-access-text-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 180 !important;
+  display: none !important;
+  background: rgba(14, 20, 28, 0.46) !important;
+  -webkit-backdrop-filter: blur(1px) !important;
+  backdrop-filter: blur(1px) !important;
+}
+
+#project-access-text-overlay.is-open {
+  display: block !important;
+}
+
+#project-access-text-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 190 !important;
+  display: none !important;
+  flex-direction: column !important;
+  width: min(460px, 92vw) !important;
+  height: 100vh !important;
+  background: #ffffff !important;
+  box-shadow: -18px 0 38px rgba(21, 36, 52, 0.18) !important;
+}
+
+#project-access-text-drawer.is-open {
+  display: flex !important;
+}
+
+.project-access-text-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  min-height: 58px !important;
+  padding: 0 18px !important;
+  border-bottom: 1px solid #e1e8ef !important;
+  background: #ffffff !important;
+}
+
+.project-access-text-header h2 {
+  margin: 0 !important;
+  color: #15283a !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+}
+
+.project-access-text-close {
+  width: 34px !important;
+  height: 34px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #294e63 !important;
+  cursor: pointer !important;
+  font-size: 28px !important;
+  line-height: 1 !important;
+}
+
+.project-access-text-body {
+  padding: 18px !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+}
+
+.project-access-text-project {
+  margin: 0 0 14px !important;
+  color: #29465a !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+.project-access-text-list {
+  display: grid !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.project-access-text-list li {
+  padding: 10px 12px !important;
+  border: 1px solid #dce6ee !important;
+  border-radius: 8px !important;
+  background: #f8fbff !important;
+  color: #21394c !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.project-access-text-empty {
+  padding: 14px !important;
+  border: 1px dashed #c7d5e2 !important;
+  border-radius: 8px !important;
+  color: #617285 !important;
+  font-size: 13px !important;
+}
+
+/* Row-by-row display for multiline Business Users / Project Owners */
+#admin-project-access-view .itops-multiline-preview-label {
+  max-width: 190px !important;
+}
+
+.project-access-text-list li.project-access-email-row {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.project-access-email-index {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  background: #e2efff !important;
+  color: #0d4d9c !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.project-access-email-text {
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+
+/* Immediate Project Access view display: show full names directly, not "View 1 Business User" buttons */
+#admin-project-access-view .project-access-name-list {
+  display: grid !important;
+  gap: 3px !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+}
+
+#admin-project-access-view .project-access-name-item {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #21394c !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+#admin-project-access-view .project-access-more-count {
+  display: inline-flex !important;
+  width: fit-content !important;
+  margin-top: 2px !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  background: #eef5fb !important;
+  color: #1267d8 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+#admin-project-access-view td:nth-child(3),
+#admin-project-access-view td:nth-child(4) {
+  white-space: normal !important;
+  vertical-align: top !important;
+}
+
+
 @media (max-width: 1280px) {
   #admin-project-access-view .itops-form-grid-top {
     grid-template-columns: 1fr !important;
@@ -3380,6 +3610,85 @@ body::-webkit-scrollbar,
   .itops-detail-panel.is-service-mode #detail-followup {
     min-height: 72px !important;
   }
+}
+
+
+/* =========================================================
+   PROJECT ACCESS LIST - PROJECT DROPDOWN + NO PROJECT COLUMN
+   ========================================================= */
+#admin-project-access-view .itops-role-toolbar {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+}
+
+#admin-project-access-view #project-access-project-filter {
+  min-width: 240px !important;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  border: 1px solid #cfd9e5 !important;
+  border-radius: 4px !important;
+  background: #ffffff !important;
+  color: #29465a !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(1),
+#admin-project-access-view .itops-table td:nth-child(1) {
+  width: 26% !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(2),
+#admin-project-access-view .itops-table td:nth-child(2) {
+  width: 31% !important;
+  white-space: normal !important;
+  vertical-align: top !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(3),
+#admin-project-access-view .itops-table td:nth-child(3) {
+  width: 31% !important;
+  white-space: normal !important;
+  vertical-align: top !important;
+}
+
+#admin-project-access-view .itops-table th:nth-child(4),
+#admin-project-access-view .itops-table td:nth-child(4) {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  text-align: center !important;
+}
+
+#admin-project-access-view tr[data-project-hidden='true'] {
+  display: none !important;
+}
+
+
+/* =========================================================
+   CREATE TICKET FIXES - module/submodule free text + attachment picker
+   ========================================================= */
+#ticket-module,
+#ticket-sub-module {
+  background: #ffffff !important;
+  color: #29465a !important;
+  pointer-events: auto !important;
+}
+
+#ticket-module[readonly],
+#ticket-sub-module[readonly] {
+  background: #ffffff !important;
+}
+
+#ticket-create-view .itops-attachment-box {
+  cursor: pointer !important;
+}
+
+#ticket-create-view .itops-attachment-choose {
+  position: relative !important;
+  z-index: 3 !important;
+  pointer-events: auto !important;
 }
 
 </style>
@@ -4891,8 +5200,9 @@ html {
               </div>
               <div class="itops-form-grid itops-form-grid-top">
                 <div class="itops-form-field">
-                  <label for="project-access-name">Application Project</label>
-                  <input id="project-access-name" type="text" placeholder="Enter application project" />
+                  <label for="project-access-name">Project</label>
+                  <input id="project-access-name" type="text" list="project-access-name-list" placeholder="Enter project" />
+                  <datalist id="project-access-name-list"></datalist>
                 </div>
                 <div class="itops-form-field">
                   <label for="project-access-assignee">Default Assignee</label>
@@ -4900,11 +5210,11 @@ html {
                 </div>
                 <div class="itops-form-field">
                   <label for="project-access-business-users">Business Users</label>
-                  <input id="project-access-business-users" type="text" placeholder="Enter business users" />
+                  <textarea id="project-access-business-users" rows="3" placeholder="Enter one business user email per line"></textarea>
                 </div>
                 <div class="itops-form-field">
                   <label for="project-access-project-owners">Project Owners</label>
-                  <input id="project-access-project-owners" type="text" placeholder="Enter project owners" />
+                  <textarea id="project-access-project-owners" rows="3" placeholder="Enter one project owner email per line"></textarea>
                 </div>
               </div>
             </div>
@@ -4915,18 +5225,26 @@ html {
             </div>
 
             <div class="itops-form-section">
-              <div class="itops-section-heading">
+              <div class="itops-section-heading" style="align-items:center;">
                 <svg class="itops-section-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12M6 10h12M6 16h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 <div>
                   <div class="itops-section-title">Project Access List</div>
                   <div class="itops-section-subtitle">Projects synced from the IT Security List</div>
                 </div>
               </div>
+              <div class="itops-role-toolbar" style="align-items:flex-end;margin-bottom:16px;">
+                <div class="itops-form-field itops-role-select">
+                  <label for="project-access-project-filter">Project</label>
+                  <select id="project-access-project-filter" aria-label="Project">
+                    <option value="">Find items</option>
+                  </select>
+                </div>
+                <button id="project-access-new" class="itops-primary-btn" type="button" style="margin-left:auto;min-width:118px;min-height:36px;">+ New Project</button>
+              </div>
               <div class="itops-table-wrap">
                 <table class="itops-table">
                   <thead>
                     <tr>
-                      <th><div class="itops-th-wrap"><span>Application Project</span></div></th>
                       <th><div class="itops-th-wrap"><span>Default Assignee</span></div></th>
                       <th><div class="itops-th-wrap"><span>Business Users</span></div></th>
                       <th><div class="itops-th-wrap"><span>Project Owners</span></div></th>
@@ -4935,7 +5253,7 @@ html {
                   </thead>
                   <tbody>
                     <tr>
-                      <td colspan="5" class="itops-empty">No project access available</td>
+                      <td colspan="4" class="itops-empty">No project access available</td>
                     </tr>
                   </tbody>
                 </table>
@@ -5035,6 +5353,19 @@ html {
       <button id="filter-apply" class="itops-primary-btn" type="button">Apply</button>
       <button id="filter-clear" class="itops-flat-btn" type="button">Clear</button>
     </div>
+
+
+    <div id="project-access-text-overlay" hidden></div>
+    <aside id="project-access-text-drawer" hidden aria-label="Project access multi-line details">
+      <div class="project-access-text-header">
+        <h2 id="project-access-text-title">Project Access Details</h2>
+        <button id="project-access-text-close" class="project-access-text-close" type="button" aria-label="Close project access details">&times;</button>
+      </div>
+      <div class="project-access-text-body">
+        <p id="project-access-text-project" class="project-access-text-project"></p>
+        <ul id="project-access-text-list" class="project-access-text-list"></ul>
+      </div>
+    </aside>
 
     <div id="ticket-detail-overlay" class="itops-detail-overlay" hidden></div>
     <aside id="ticket-detail-panel" class="itops-detail-panel" hidden aria-label="Ticket details">
@@ -5219,7 +5550,7 @@ html {
                 </svg>
                 Module
               </label>
-              <input id="ticket-module" type="text" placeholder="Enter text" />
+              <input id="ticket-module" type="text" placeholder="Enter text" autocomplete="off" />
             </div>
 
             <div class="itops-form-field">
@@ -5230,7 +5561,7 @@ html {
                 </svg>
                 Sub Module
               </label>
-              <input id="ticket-sub-module" type="text" placeholder="Enter text" />
+              <input id="ticket-sub-module" type="text" placeholder="Enter text" autocomplete="off" />
             </div>
           </div>
         </section>
@@ -5314,7 +5645,7 @@ html {
                   </svg>
                   Choose File
                 </label>
-                <input id="ticket-attachment" type="file" />
+                <input id="ticket-attachment" type="file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.msapp" />
               </div>
               <div id="ticket-attachment-list" class="itops-attachment-list">
                 <div class="itops-attachment-file">
@@ -5513,6 +5844,7 @@ html {
       var signinLoginButton = document.getElementById("signin-login-button");
       var signinEmailInput = document.getElementById("signin-email");
       var projectFilter = document.getElementById("project-filter");
+      var projectAccessProjectFilter = document.getElementById("project-access-project-filter");
       var ticketProject = document.getElementById("ticket-project");
       var listView = document.getElementById("ticket-list-view");
       var createView = document.getElementById("ticket-create-view");
@@ -5593,16 +5925,59 @@ html {
         "Home|Closed": "home-closed"
       };
       /*
-        Flow endpoints are currently disabled on this page because the portal
-        is returning unauthorized requests from the configured endpoints.
-        Dataverse remains the active path for load/create/update operations.
+        Flow endpoints are enabled for Access Request admin save/delete.
+        IMPORTANT: Power Automate trigger URLs must keep raw ampersands (&).
+        Power Pages/HTML can store them as &amp;, so normalize the URL before fetch.
       */
-      var enableFlowSync = false;
-      var createTicketFlowUrl = enableFlowSync ? (pageContext.createTicketFlowUrl || "") : "";
-      var getTicketsFlowUrl = enableFlowSync ? (pageContext.getTicketsFlowUrl || "") : "";
-      var followupTicketFlowUrl = enableFlowSync ? (pageContext.followupTicketFlowUrl || "") : "";
-      var accessRequestFlowUrl = enableFlowSync ? (pageContext.accessRequestFlowUrl || "") : "";
-      var projectAccessSharePointUrl = pageContext.projectAccessSharePointUrl || "";
+      var enableFlowSync = true;
+
+      function normalizeFlowUrl(value) {
+        return normalize(value || "")
+          .replace(/&amp;/g, "&")
+          .replace(/&#38;/g, "&");
+      }
+
+      function appendNoCache(url) {
+        /*
+          Power Pages /_api does not support custom query parameters like _ts.
+          Adding _ts makes the service request fail with:
+          "The _ts query parameter is not supported".
+          Keep this helper for existing refresh calls, but return the original URL.
+        */
+        return url;
+      }
+
+      function delay(ms) {
+        return new Promise(function (resolve) {
+          window.setTimeout(resolve, ms || 0);
+        });
+      }
+
+      var createTicketFlowUrl = enableFlowSync ? normalizeFlowUrl("https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1cf36e3ac63942309ef94d7cbd5b4620/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=nzvxEmTmdY2V9k-CEnAFHNzqk1yDUWKSlY2WZ8jMepo") : "";
+      var getTicketsFlowUrl = "";
+      var followupTicketFlowUrl = enableFlowSync ? normalizeFlowUrl(pageContext.followupTicketFlowUrl || "") : "";
+      var accessRequestFlowUrl = enableFlowSync ? normalizeFlowUrl(pageContext.accessRequestFlowUrl || "") : "";
+      var projectAccessFlowUrl = enableFlowSync ? normalizeFlowUrl(pageContext.projectAccessFlowUrl || "") : "";
+
+      /* Fallback for the current environment if the Site Setting is blank. */
+      if (!accessRequestFlowUrl) {
+        accessRequestFlowUrl = normalizeFlowUrl("https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/912b4baaaac34ee5987321a26345e207/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Icm1xUtedTPP3AmTScl5NBIVqOGvZ05kbmZQs2gJEYk");
+      }
+
+      if (!projectAccessFlowUrl) {
+        projectAccessFlowUrl = normalizeFlowUrl("https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8afc1ee368c7494db407dd33187143a6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=PsTaR5cpVui75uvOcogII5EDL00qwcD7vmXHJkZ8Vb8");
+      }
+
+      /* Create Ticket submits to the Dataverse IT_Tickets Power Automate flow. */
+      if (!createTicketFlowUrl) {
+        createTicketFlowUrl = normalizeFlowUrl("https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1cf36e3ac63942309ef94d7cbd5b4620/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=nzvxEmTmdY2V9k-CEnAFHNzqk1yDUWKSlY2WZ8jMepo");
+      }
+
+      /* Follow-up Submit in Ticket Details uses the Dataverse flow or direct Dataverse update only. */
+      if (!followupTicketFlowUrl) {
+        followupTicketFlowUrl = normalizeFlowUrl("https://ea54051ef890e224b18ef160b07e92.43.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1cf36e3ac63942309ef94d7cbd5b4620/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=nzvxEmTmdY2V9k-CEnAFHNzqk1yDUWKSlY2WZ8jMepo");
+      }
+
       var createTicketEntitySetCandidates = [
         "cr2b4_it_ticketses",
         "cr2b4_it_tickets"
@@ -5624,6 +5999,7 @@ html {
       ];
       var accessRequestApprovedValue = "Approved";
       var serverTicketRows = [];
+      var selectedCreateAttachmentFile = null;
       var editingUserRow = null;
       var editingProjectAccessRow = null;
 
@@ -5637,16 +6013,17 @@ html {
       resolveAdminAccess();
       filterRows();
       applyRoleAccessConfig(getCurrentPortalRoleName());
-      switchMainView(activeQuickView);
       updateRequestSummary();
-      loadAdminUsersFromDataverse();
-      loadProjectAccessRowsFromDataverse()
-        .catch(function (error) {
-          setMessage(error && error.message ? error.message : "Unable to load projects from the IT Security List.", true, false);
-          populateProjectFilter([]);
+      refreshAllAccessAndProfileData()
+        .then(function () {
+          switchMainView(activeQuickView || "home-open");
+          filterRows();
+          updateRequestSummary();
         })
-        .finally(function () {
-          loadTicketRows();
+        .catch(function (error) {
+          setMessage(error && error.message ? error.message : "Unable to refresh portal data.", true, false);
+          populateProjectFilter([]);
+          switchMainView(activeQuickView || "home-open");
         });
 
       function bindSigninLogin() {
@@ -5687,37 +6064,164 @@ html {
         window.location.href = currentAuthActionUrl;
       }
 
-      function bindAttachmentDisplay() {
+      function clearCreateAttachmentDisplay() {
         var input = document.getElementById("ticket-attachment");
         var list = document.getElementById("ticket-attachment-list");
         var name = document.getElementById("ticket-attachment-name");
         var size = document.getElementById("ticket-attachment-size");
-        var remove = document.getElementById("ticket-attachment-remove");
 
-        if (!input || !list || !name || !size) {
+        selectedCreateAttachmentFile = null;
+
+        if (input) {
+          input.value = "";
+        }
+
+        if (list) {
+          list.classList.remove("is-visible");
+        }
+
+        if (name) {
+          name.textContent = "No file selected";
+        }
+
+        if (size) {
+          size.textContent = "";
+        }
+      }
+
+      function validateCreateAttachment(file) {
+        var allowedExtensions = ["jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx", "txt", "msapp"];
+        var maxBytes = 25 * 1024 * 1024;
+        var extension = "";
+
+        if (!file) {
+          return true;
+        }
+
+        extension = String(file.name || "").split(".").pop().toLowerCase();
+
+        if (allowedExtensions.indexOf(extension) === -1) {
+          clearCreateAttachmentDisplay();
+          setMessage("This file type is not allowed. Allowed types: jpg, jpeg, png, pdf, doc, docx, xls, xlsx, txt, msapp.", true, false);
+          return false;
+        }
+
+        if (file.size > maxBytes) {
+          clearCreateAttachmentDisplay();
+          setMessage("Attachment size must be 25 MB or less.", true, false);
+          return false;
+        }
+
+        return true;
+      }
+
+      function updateCreateAttachmentDisplay() {
+        var input = document.getElementById("ticket-attachment");
+        var list = document.getElementById("ticket-attachment-list");
+        var name = document.getElementById("ticket-attachment-name");
+        var size = document.getElementById("ticket-attachment-size");
+        var file = selectedCreateAttachmentFile || (input && input.files && input.files.length ? input.files[0] : null);
+
+        if (!list || !name || !size) {
           return;
         }
 
-        input.addEventListener("change", function () {
-          var file = input.files && input.files[0];
-          if (!file) {
-            list.classList.remove("is-visible");
-            name.textContent = "No file selected";
-            size.textContent = "";
-            return;
-          }
+        if (!file) {
+          clearCreateAttachmentDisplay();
+          return;
+        }
 
-          name.textContent = file.name;
-          size.textContent = formatFileSize(file.size);
-          list.classList.add("is-visible");
-        });
+        if (!validateCreateAttachment(file)) {
+          return;
+        }
 
-        if (remove) {
-          remove.addEventListener("click", function () {
-            input.value = "";
-            list.classList.remove("is-visible");
-            name.textContent = "No file selected";
-            size.textContent = "";
+        selectedCreateAttachmentFile = file;
+        name.textContent = file.name;
+        size.textContent = formatFileSize(file.size || 0);
+        list.classList.add("is-visible");
+        setMessage("", false, true);
+      }
+
+      function bindAttachmentDisplay() {
+        var input = document.getElementById("ticket-attachment");
+        var dropZone = document.querySelector("#ticket-create-view .itops-attachment-box");
+        var choose = document.querySelector("label[for='ticket-attachment'].itops-attachment-choose");
+        var remove = document.getElementById("ticket-attachment-remove");
+
+        if (!input || input.getAttribute("data-itops-bound") === "true") {
+          return;
+        }
+
+        input.setAttribute("data-itops-bound", "true");
+        input.addEventListener("change", updateCreateAttachmentDisplay);
+
+        if (choose && choose.getAttribute("data-itops-bound") !== "true") {
+          choose.setAttribute("data-itops-bound", "true");
+          choose.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (input) {
+              input.value = "";
+              input.click();
+            }
+          });
+        }
+
+        if (dropZone && dropZone.getAttribute("data-itops-bound") !== "true") {
+          dropZone.setAttribute("data-itops-bound", "true");
+          dropZone.addEventListener("click", function (event) {
+            if (event.target && event.target.closest && event.target.closest(".itops-attachment-choose")) {
+              return;
+            }
+            if (typeof input.click === "function") {
+              input.click();
+            }
+          });
+          dropZone.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            dropZone.classList.add("is-dragover");
+          });
+          dropZone.addEventListener("dragleave", function () {
+            dropZone.classList.remove("is-dragover");
+          });
+          dropZone.addEventListener("drop", function (event) {
+            var files = event.dataTransfer && event.dataTransfer.files;
+            var transfer;
+            event.preventDefault();
+            dropZone.classList.remove("is-dragover");
+
+            if (!files || !files.length) {
+              return;
+            }
+
+            if (!validateCreateAttachment(files[0])) {
+              return;
+            }
+
+            selectedCreateAttachmentFile = files[0];
+
+            try {
+              transfer = new DataTransfer();
+              transfer.items.add(files[0]);
+              input.files = transfer.files;
+            } catch (error) {
+              try {
+                input.files = files;
+              } catch (fallbackError) {
+                /* Keep the selected file in selectedCreateAttachmentFile even when the browser blocks assigning input.files. */
+              }
+            }
+
+            updateCreateAttachmentDisplay();
+          });
+        }
+
+        if (remove && remove.getAttribute("data-itops-bound") !== "true") {
+          remove.setAttribute("data-itops-bound", "true");
+          remove.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            clearCreateAttachmentDisplay();
           });
         }
       }
@@ -6176,9 +6680,6 @@ html {
 
         container.innerHTML = attachments
           .map(function (attachment) {
-            var attachmentName = attachment.AttachmentName || attachment.name || attachment.FileName || attachment.fileName || "Attachment";
-            var attachmentUrl = attachment.url || attachment.Url || attachment.Link || attachment.link || attachment.AbsoluteUri || "";
-
             return (
               '<div class="itops-attachment-item">' +
                 '<svg class="itops-field-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
@@ -6186,9 +6687,7 @@ html {
                   '<path d="M14 3v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />' +
                 '</svg>' +
                 '<div class="itops-followup-file-meta">' +
-                  (attachmentUrl
-                    ? '<a class="itops-followup-file-name" href="' + escapeHtml(attachmentUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(attachmentName) + '</a>'
-                    : '<div class="itops-followup-file-name">' + escapeHtml(attachmentName) + '</div>') +
+                  '<div class="itops-followup-file-name">' + escapeHtml(attachment.AttachmentName || attachment.name || "Attachment") + '</div>' +
                   '<div class="itops-followup-file-size">' + escapeHtml(attachment.AttachmentSize || formatFileSize(attachment.size || 0)) + '</div>' +
                 '</div>' +
               '</div>'
@@ -6527,6 +7026,11 @@ function switchMainView(viewName) {
 
         if (adminProjectAccessView) {
           adminProjectAccessView.classList.toggle("itops-panel-hidden", resolvedView !== "admin-project-access");
+          if (resolvedView === "admin-project-access") {
+            loadProjectAccessRowsFromDataverse().catch(function () {
+              populateProjectAccessProjectDropdownFromRows();
+            });
+          }
         }
 
         if (adminUserRolesView) {
@@ -6711,7 +7215,7 @@ function switchMainView(viewName) {
             return Promise.reject(new Error("Unable to find the requested Dataverse Web API endpoint."));
           }
 
-          return safePowerPagesGet("/_api/" + entitySetName + "?$top=500").then(function (response) {
+          return safePowerPagesGet(appendNoCache("/_api/" + entitySetName + "?$top=500")).then(function (response) {
             return response && response.value ? response.value : [];
           }).catch(function (error) {
             if (isRetryableEntitySetError(error) && index < entitySetCandidates.length - 1) {
@@ -6787,33 +7291,77 @@ function switchMainView(viewName) {
           });
       }
 
-      function normalizeProjectAccessRow(record) {
-        function pick(names) {
-          for (var i = 0; i < names.length; i += 1) {
-            var value = record[names[i]];
-            if (value !== undefined && value !== null && value !== "") {
-              return value;
-            }
-          }
+      function pickProjectAccessRecordValue(record, exactNames, containsNames) {
+        var i;
+        var key;
+        var lowerKey;
+        var value;
 
+        if (!record) {
           return "";
         }
 
+        for (i = 0; i < exactNames.length; i += 1) {
+          value = record[exactNames[i]];
+          if (value !== undefined && value !== null && value !== "") {
+            return value;
+          }
+        }
+
+        /*
+          Power Pages can return Dataverse fields with slightly different casing,
+          publisher prefixes, or formatted-value suffixes depending on table setup.
+          This fallback keeps Project Access dropdowns populated from the actual
+          IT_Security_List response instead of relying on one exact property name.
+        */
+        for (key in record) {
+          if (!Object.prototype.hasOwnProperty.call(record, key)) {
+            continue;
+          }
+          lowerKey = String(key).toLowerCase();
+          if (lowerKey.indexOf("@") !== -1) {
+            continue;
+          }
+          for (i = 0; i < containsNames.length; i += 1) {
+            if (lowerKey.indexOf(containsNames[i]) !== -1) {
+              value = record[key];
+              if (value !== undefined && value !== null && value !== "") {
+                return value;
+              }
+            }
+          }
+        }
+
+        return "";
+      }
+
+      function normalizeProjectAccessRow(record) {
         return {
-          recordId: normalize(pick(["cr2b4_it_security_listid", "id"])),
-          projectName: normalize(pick([
+          recordId: normalize(pickProjectAccessRecordValue(record, [
+            "cr2b4_it_security_listid",
+            "cr2b4_it_security_listId",
+            "cr2b4_IT_Security_ListId",
+            "id"
+          ], ["it_security_listid", "security_listid"])),
+          projectName: normalize(pickProjectAccessRecordValue(record, [
             "cr2b4_ApplicationProject",
             "cr2b4_applicationproject",
             "cr2b4_application_project",
+            "cr2b4_applicationx0020project",
+            "cr2b4_application_x0020_project",
             "ApplicationProject",
+            "applicationProject",
             "applicationproject",
+            "Application Project",
             "project",
             "Project",
             "cr2b4_title",
+            "cr2b4_name",
             "title",
-            "Title"
-          ])),
-          defaultAssignee: normalize(pick([
+            "Title",
+            "name"
+          ], ["applicationproject", "application_project", "applicationx0020project"])),
+          defaultAssignee: normalizeProjectAccessMultiLineValue(pickProjectAccessRecordValue(record, [
             "cr2b4_DefaultAssignee",
             "cr2b4_defaultassignee",
             "cr2b4_defaultx0020assignee",
@@ -6823,8 +7371,8 @@ function switchMainView(viewName) {
             "defaultAssignee",
             "defaultassignee",
             "Default Assignee"
-          ])),
-          businessUsers: normalize(pick([
+          ], ["defaultassignee", "default_assignee", "defaultx0020assignee"])),
+          businessUsers: normalizeProjectAccessMultiLineValue(pickProjectAccessRecordValue(record, [
             "cr2b4_BusinessUsers",
             "cr2b4_businessusers",
             "cr2b4_businessx0020users",
@@ -6834,8 +7382,8 @@ function switchMainView(viewName) {
             "businessUsers",
             "businessusers",
             "Business Users"
-          ])),
-          projectOwners: normalize(pick([
+          ], ["businessusers", "business_users", "businessx0020users"])),
+          projectOwners: normalizeProjectAccessMultiLineValue(pickProjectAccessRecordValue(record, [
             "cr2b4_ProjectOwners",
             "cr2b4_projectowners",
             "cr2b4_projectx0020owners",
@@ -6845,26 +7393,21 @@ function switchMainView(viewName) {
             "projectOwners",
             "projectowners",
             "Project Owners"
-          ])),
-          requestedUser: normalize(pick([
+          ], ["projectowners", "project_owners", "projectx0020owners"])),
+          requestedUser: normalize(pickProjectAccessRecordValue(record, [
             "cr2b4_RequestedUser",
             "cr2b4_requesteduser",
+            "cr2b4_requested_x0020_user",
             "RequestedUser",
             "requestedUser",
             "requesteduser",
             "Requested User"
-          ]))
+          ], ["requesteduser", "requested_user", "requestedx0020user"]))
         };
       }
 
       function userCanAccessProject(values) {
         var email = normalize(currentHubEmail).toLowerCase();
-        var combined = [
-          values.defaultAssignee,
-          values.businessUsers,
-          values.projectOwners,
-          values.requestedUser
-        ].join("|").toLowerCase();
 
         if (isAdminUser) {
           return true;
@@ -6874,7 +7417,12 @@ function switchMainView(viewName) {
           return false;
         }
 
-        return combined.indexOf(email) !== -1;
+        return (
+          projectAccessValueContainsEmail(values.defaultAssignee, email) ||
+          projectAccessValueContainsEmail(values.businessUsers, email) ||
+          projectAccessValueContainsEmail(values.projectOwners, email) ||
+          projectAccessValueContainsEmail(values.requestedUser, email)
+        );
       }
 
       function populateProjectFilter(records) {
@@ -6909,8 +7457,120 @@ function switchMainView(viewName) {
         }
       }
 
+      function getProjectAccessProjectFilter() {
+        return document.getElementById("project-access-project-filter");
+      }
+
+      function populateProjectAccessProjectDropdown(records) {
+        var select = getProjectAccessProjectFilter();
+        var projectNameInput = document.getElementById("project-access-name");
+        var projectNameList = document.getElementById("project-access-name-list");
+        var currentValue = normalize(select ? select.value : "");
+        var inputValue = normalize(projectNameInput ? projectNameInput.value : "");
+        var seen = {};
+        var options = ['<option value="">Find items</option>'];
+        var listOptions = [];
+
+        (records || [])
+          .map(normalizeProjectAccessRow)
+          .filter(function (entry) {
+            return entry.projectName && userCanAccessProject(entry);
+          })
+          .sort(function (a, b) {
+            return a.projectName.localeCompare(b.projectName);
+          })
+          .forEach(function (entry) {
+            var key = entry.projectName.toLowerCase();
+            if (seen[key]) {
+              return;
+            }
+            seen[key] = true;
+            options.push('<option value="' + escapeHtml(entry.projectName) + '">' + escapeHtml(entry.projectName) + '</option>');
+            listOptions.push('<option value="' + escapeHtml(entry.projectName) + '"></option>');
+          });
+
+        if (select) {
+          select.innerHTML = options.join("");
+          if (currentValue && Array.prototype.some.call(select.options, function (option) { return normalize(option.value).toLowerCase() === currentValue.toLowerCase(); })) {
+            select.value = currentValue;
+          } else {
+            select.value = "";
+          }
+        }
+
+        if (projectNameList) {
+          projectNameList.innerHTML = listOptions.join("");
+        }
+
+        if (projectNameInput && inputValue) {
+          projectNameInput.value = inputValue;
+        }
+      }
+
+      function populateProjectAccessProjectDropdownFromRows() {
+        var rows = Array.prototype.slice.call(document.querySelectorAll("#admin-project-access-view tbody tr[data-project-access-row='true']"));
+        var records = rows.map(function (row) {
+          return {
+            cr2b4_it_security_listid: normalize(row.getAttribute("data-record-id")),
+            cr2b4_ApplicationProject: normalize(row.getAttribute("data-project-name")),
+            cr2b4_DefaultAssignee: normalize(row.getAttribute("data-default-assignee")),
+            cr2b4_BusinessUsers: normalize(row.getAttribute("data-business-users")),
+            cr2b4_ProjectOwners: normalize(row.getAttribute("data-project-owners")),
+            cr2b4_RequestedUser: normalize(row.getAttribute("data-requested-user"))
+          };
+        });
+
+        populateProjectAccessProjectDropdown(records);
+        applyProjectAccessProjectFilter();
+      }
+
+      function applyProjectAccessProjectFilter() {
+        var select = getProjectAccessProjectFilter();
+        var selectedProject = normalize(select ? select.value : "").toLowerCase();
+        var rows = Array.prototype.slice.call(document.querySelectorAll("#admin-project-access-view tbody tr[data-project-access-row='true']"));
+        var visibleCount = 0;
+        var tbody = getProjectAccessTableBody();
+        var emptyRow;
+        var selectedRow = null;
+
+        rows.forEach(function (row) {
+          var projectName = normalize(row.getAttribute("data-project-name")).toLowerCase();
+          var shouldShow = !selectedProject || projectName === selectedProject;
+          row.setAttribute("data-project-hidden", shouldShow ? "false" : "true");
+          if (shouldShow) {
+            visibleCount += 1;
+          }
+          if (selectedProject && projectName === selectedProject) {
+            selectedRow = row;
+          }
+        });
+
+        if (selectedRow) {
+          /* When a project is selected, open the same editor with existing Dataverse values so users can add/remove multiple emails line-by-line. */
+          editProjectAccessRow(selectedRow, true);
+        } else if (!selectedProject && !editingProjectAccessRow) {
+          toggleProjectAccessEditor(false);
+        }
+
+        if (tbody) {
+          emptyRow = tbody.querySelector("tr[data-project-filter-empty='true']");
+          if (visibleCount && emptyRow) {
+            emptyRow.parentNode.removeChild(emptyRow);
+          }
+          if (!visibleCount && rows.length) {
+            if (!emptyRow) {
+              emptyRow = document.createElement("tr");
+              emptyRow.setAttribute("data-project-filter-empty", "true");
+              emptyRow.innerHTML = '<td colspan="4" class="itops-empty">No project access available for the selected project</td>';
+              tbody.appendChild(emptyRow);
+            }
+          }
+        }
+      }
+
       function loadProjectAccessRowsFromDataverse() {
         var tbody = getProjectAccessTableBody();
+        var selectedProject = normalize(getProjectAccessProjectFilter() ? getProjectAccessProjectFilter().value : "");
 
         if (!tbody) {
           return Promise.resolve([]);
@@ -6918,23 +7578,30 @@ function switchMainView(viewName) {
 
         return loadEntitySetRecords(projectAccessEntitySetCandidates)
           .then(function (records) {
-            tbody.innerHTML = "";
-
-            records
+            var normalizedRecords = (records || [])
               .map(normalizeProjectAccessRow)
               .filter(function (entry) {
-                return entry.projectName;
-              })
-              .forEach(function (entry) {
-                var row = document.createElement("tr");
-                row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
-                row.setAttribute("data-record-id", entry.recordId);
-                tbody.appendChild(row);
-                syncProjectAccessRow(row, entry);
+                return entry.projectName && userCanAccessProject(entry);
               });
+
+            tbody.innerHTML = "";
+
+            normalizedRecords.forEach(function (entry) {
+              var row = document.createElement("tr");
+              row.innerHTML = "<td></td><td></td><td></td><td></td>";
+              row.setAttribute("data-record-id", entry.recordId);
+              tbody.appendChild(row);
+              syncProjectAccessRow(row, entry);
+            });
 
             syncProjectAccessEmptyState();
             populateProjectFilter(records);
+            populateProjectAccessProjectDropdown(records);
+            populateProjectAccessProjectDropdownFromRows();
+            if (selectedProject && getProjectAccessProjectFilter()) {
+              getProjectAccessProjectFilter().value = selectedProject;
+            }
+            applyProjectAccessProjectFilter();
             return records;
           })
           .catch(function (error) {
@@ -6991,53 +7658,24 @@ function switchMainView(viewName) {
       }
 
       function findContactByEmail(email) {
-        var normalizedEmail = normalize(email).toLowerCase();
+        /*
+          Power Pages blocks /_api/contacts without Contact table permission.
+          The browser console showed 403 Forbidden on:
+          /_api/contacts?$select=contactid,...
 
-        if (!normalizedEmail) {
-          return Promise.resolve(null);
-        }
-
-        return safePowerPagesGet("/_api/contacts?$select=contactid,fullname,emailaddress1&$filter=" + encodeURIComponent("emailaddress1 eq '" + normalizedEmail.replace(/'/g, "''") + "'"))
-          .then(function (response) {
-            var records = response && response.value ? response.value : [];
-            return records.length ? records[0] : null;
-          });
+          Do not call Contacts Web API from portal JavaScript during Save.
+          User create/update/delete is handled by the Access Request Power Automate flow.
+        */
+        return Promise.resolve(null);
       }
 
       function assignPortalRoleToContact(email, roleName) {
-        var webRoleId = getPortalRoleWebRoleId(roleName);
-
-        return findContactByEmail(email).then(function (contact) {
-          var contactId = normalize(contact && (contact.contactid || contact.id));
-
-          if (!contactId || !webRoleId) {
-            return { skipped: true };
-          }
-
-          return safePowerPagesWrite({
-            method: "POST",
-            url: "/_api/adx_webrole_contacts",
-            headers: { Prefer: "return=representation" },
-            body: JSON.stringify({
-              "adx_webroleid@odata.bind": "/adx_webroles(" + webRoleId + ")",
-              "adx_contactid@odata.bind": "/contacts(" + contactId + ")"
-            })
-          }).catch(function (error) {
-            if (isRetryableEntitySetError(error) || /adx_webrole_contact/i.test(normalize(error && error.message))) {
-              return safePowerPagesWrite({
-                method: "POST",
-                url: "/_api/adx_webrole_contacts",
-                headers: { Prefer: "return=representation" },
-                body: JSON.stringify({
-                  "adx_webroleid@odata.bind": "/adx_webroles(" + webRoleId + ")",
-                  "contactid@odata.bind": "/contacts(" + contactId + ")"
-                })
-              });
-            }
-
-            throw error;
-          });
-        });
+        /*
+          Disabled portal-side role assignment to prevent 403 Forbidden.
+          If web role assignment is required, do it inside Power Automate / Dataverse
+          using a connection with proper privileges, not from portal JavaScript.
+        */
+        return Promise.resolve({ skipped: true, reason: "Portal-side contact/webrole assignment disabled" });
       }
 
       function syncAdminUserRow(row, userValues) {
@@ -7132,6 +7770,177 @@ function switchMainView(viewName) {
         setMessage("", false, true);
       }
 
+      function findAdminUserRowByEmail(email) {
+        var tbody = getAdminUserTableBody();
+        var target = normalize(email).toLowerCase();
+
+        if (!tbody || !target) {
+          return null;
+        }
+
+        return Array.prototype.slice.call(tbody.querySelectorAll("tr[data-user-row='true']")).find(function (row) {
+          return normalize(row.cells[0] ? row.cells[0].textContent : "").toLowerCase() === target;
+        }) || null;
+      }
+
+      function upsertAdminUserRowImmediately(userValues, existingRow) {
+        var tbody = getAdminUserTableBody();
+        var row = existingRow || findAdminUserRowByEmail(userValues.email);
+
+        if (!tbody) {
+          return null;
+        }
+
+        if (!row) {
+          row = document.createElement("tr");
+          row.innerHTML = "<td></td><td></td><td></td><td></td>";
+          tbody.insertBefore(row, tbody.firstChild);
+        }
+
+        syncAdminUserRow(row, userValues);
+        syncAdminEmptyUserState();
+        return row;
+      }
+
+      function removeAdminUserRowImmediately(rowOrEmail) {
+        var row = typeof rowOrEmail === "string" ? findAdminUserRowByEmail(rowOrEmail) : rowOrEmail;
+
+        if (row && row.parentNode) {
+          row.parentNode.removeChild(row);
+        }
+
+        syncAdminEmptyUserState();
+      }
+
+      function rebuildProjectFilterFromCurrentRows() {
+        var rows = Array.prototype.slice.call(document.querySelectorAll("#admin-project-access-view tbody tr[data-project-access-row='true']"));
+        var records = rows.map(function (row) {
+          return {
+            cr2b4_it_security_listid: normalize(row.getAttribute("data-record-id")),
+            cr2b4_ApplicationProject: normalize(row.getAttribute("data-project-name")),
+            cr2b4_DefaultAssignee: normalize(row.getAttribute("data-default-assignee")),
+            cr2b4_BusinessUsers: normalize(row.getAttribute("data-business-users")),
+            cr2b4_ProjectOwners: normalize(row.getAttribute("data-project-owners")),
+            cr2b4_RequestedUser: normalize(row.getAttribute("data-requested-user"))
+          };
+        });
+
+        populateProjectFilter(records);
+        populateProjectAccessProjectDropdown(records);
+        applyProjectAccessProjectFilter();
+      }
+
+      function findProjectAccessRowByProject(projectName) {
+        var tbody = getProjectAccessTableBody();
+        var target = normalize(projectName).toLowerCase();
+
+        if (!tbody || !target) {
+          return null;
+        }
+
+        return Array.prototype.slice.call(tbody.querySelectorAll("tr[data-project-access-row='true']")).find(function (row) {
+          return normalize(row.getAttribute("data-project-name")).toLowerCase() === target;
+        }) || null;
+      }
+
+      function upsertProjectAccessRowImmediately(values, existingRow) {
+        var tbody = getProjectAccessTableBody();
+        var row = existingRow || findProjectAccessRowByProject(values.projectName);
+
+        if (!tbody) {
+          return null;
+        }
+
+        if (!row) {
+          row = document.createElement("tr");
+          row.innerHTML = "<td></td><td></td><td></td><td></td>";
+          tbody.insertBefore(row, tbody.firstChild);
+        }
+
+        syncProjectAccessRow(row, values);
+        syncProjectAccessEmptyState();
+        rebuildProjectFilterFromCurrentRows();
+        return row;
+      }
+
+      function removeProjectAccessRowImmediately(rowOrProjectName) {
+        var row = typeof rowOrProjectName === "string" ? findProjectAccessRowByProject(rowOrProjectName) : rowOrProjectName;
+
+        if (row && row.parentNode) {
+          row.parentNode.removeChild(row);
+        }
+
+        syncProjectAccessEmptyState();
+        rebuildProjectFilterFromCurrentRows();
+      }
+
+      function refreshDataverseAfterFlow(options) {
+        var settings = options || {};
+        var retries = Number(settings.retries || 4);
+        var delayMs = Number(settings.delayMs || 900);
+        var attempts = 0;
+
+        function applyOptimistic() {
+          if (settings.projectAction === "delete") {
+            removeProjectAccessRowImmediately(settings.projectName);
+          } else if (settings.projectValues) {
+            upsertProjectAccessRowImmediately(settings.projectValues, settings.projectRow || null);
+          }
+
+          if (settings.userAction === "delete") {
+            removeAdminUserRowImmediately(settings.userEmail);
+          } else if (settings.userValues) {
+            upsertAdminUserRowImmediately(settings.userValues, settings.userRow || null);
+          }
+        }
+
+        function reloadOnce() {
+          var tasks = [];
+
+          if (settings.includeUsers !== false) {
+            tasks.push(loadAdminUsersFromDataverse().catch(function () { return []; }));
+          }
+
+          if (settings.includeProjectAccess !== false) {
+            tasks.push(loadProjectAccessRowsFromDataverse().catch(function () { return []; }));
+          }
+
+          if (settings.includeTickets) {
+            tasks.push(Promise.resolve().then(function () { return loadTicketRows(); }).catch(function () { return []; }));
+          }
+
+          return Promise.all(tasks).then(function () {
+            applyOptimistic();
+          });
+        }
+
+        applyOptimistic();
+
+        function loop() {
+          attempts += 1;
+          return delay(attempts === 1 ? 250 : delayMs)
+            .then(reloadOnce)
+            .then(function () {
+              if (attempts < retries) {
+                return loop();
+              }
+              return true;
+            });
+        }
+
+        return loop();
+      }
+
+      function refreshAllAccessAndProfileData() {
+        return refreshDataverseAfterFlow({
+          includeUsers: true,
+          includeProjectAccess: true,
+          includeTickets: true,
+          retries: 3,
+          delayMs: 900
+        });
+      }
+
       function saveAdminUser() {
         var firstNameInput = document.getElementById("admin-first-name");
         var lastNameInput = document.getElementById("admin-last-name");
@@ -7151,17 +7960,17 @@ function switchMainView(viewName) {
         var payload;
 
         if (!firstName || !email || !role) {
-          hideAdminMessage();
+          setMessage("First name, email, and role are required.", true, false);
           return;
         }
 
         if (!isEmailLike(email)) {
-          hideAdminMessage();
+          setMessage("Please enter a valid email address.", true, false);
           return;
         }
 
         if (!tbody) {
-          hideAdminMessage();
+          setMessage("Existing User table was not found.", true, false);
           return;
         }
 
@@ -7172,50 +7981,40 @@ function switchMainView(viewName) {
         }
 
         payload = buildAccessRequestPayload(userValues, editingUserRow);
+        payload.Operation = editingUserRow ? "Update" : "Create";
+        payload.Email = email;
+        payload.FirstName = firstName;
+        payload.LastName = lastName;
+        payload.FullName = normalize((firstName + " " + lastName).trim());
+        payload.Role = role;
+        payload.Status = payload.Status || accessRequestApprovedValue;
+        payload.Access_Status = payload.Access_Status || accessRequestApprovedValue;
+        payload.RecordId = normalize(editingUserRow ? editingUserRow.getAttribute("data-record-id") : "");
+        payload.RequestedAt = new Date().toISOString();
+        payload.PortalUrl = window.location.origin;
+
         hideAdminMessage();
 
-        if (editingUserRow) {
-          if (!normalize(editingUserRow.getAttribute("data-record-id"))) {
-            hideAdminMessage();
-            return;
-          }
-
-          callAccessRequestApi("PATCH", editingUserRow.getAttribute("data-record-id"), payload)
-            .then(function () {
-              return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
-                console.warn("Portal role assignment failed:", error);
-              });
-            })
-            .then(function () {
-              return loadAdminUsersFromDataverse();
-            })
-            .then(function () {
-              setMessage("User saved successfully", false, false);
-              resetAdminUserForm();
-              setAdminUserActionLabel(accessRequestActionLabel);
-              switchMainView("admin-existing-user");
-            })
-            .catch(function (error) {
-              hideAdminMessage();
-            });
-          return;
-        }
-
-        callAccessRequestApi("POST", "", payload)
-          .then(function (response) {
-            return assignPortalRoleToContact(userValues.email, userValues.role).catch(function (error) {
-              console.warn("Portal role assignment failed:", error);
-            }).then(function () {
-              return loadAdminUsersFromDataverse();
-            }).then(function () {
-              setMessage("User saved successfully", false, false);
-              resetAdminUserForm();
-              setAdminUserActionLabel(accessRequestActionLabel);
-              switchMainView("admin-existing-user");
+        invokeAccessRequestAdminFlow(payload)
+          .then(function () {
+            upsertAdminUserRowImmediately(userValues, editingUserRow);
+            switchMainView("admin-existing-user");
+            setMessage("User saved successfully", false, false);
+            resetAdminUserForm();
+            setAdminUserActionLabel(accessRequestActionLabel);
+            return refreshDataverseAfterFlow({
+              includeUsers: true,
+              includeProjectAccess: true,
+              includeTickets: true,
+              userValues: userValues,
+              userRow: editingUserRow,
+              retries: 4,
+              delayMs: 900
             });
           })
           .catch(function (error) {
-            hideAdminMessage();
+            console.error("Access Request Power Automate save failed:", error);
+            setMessage("Unable to save user. Please check the Access Request Power Automate flow.", true, false);
           });
       }
 
@@ -7250,23 +8049,41 @@ function switchMainView(viewName) {
         }
 
         if (actionName === "delete") {
-          if (!normalize(row.getAttribute("data-record-id"))) {
-            hideAdminMessage();
-            return;
-          }
+          var deletePayload = buildAccessRequestPayload({
+            firstName: normalize(cells[1] ? cells[1].textContent : ""),
+            lastName: normalize(cells[2] ? cells[2].textContent : ""),
+            email: normalize(cells[0] ? cells[0].textContent : ""),
+            role: normalize(cells[3] ? cells[3].textContent : "")
+          }, row);
 
-          callAccessRequestApi("DELETE", row.getAttribute("data-record-id"))
+          deletePayload.Operation = "Delete";
+          deletePayload.Email = normalize(cells[0] ? cells[0].textContent : "");
+          deletePayload.RecordId = normalize(row.getAttribute("data-record-id") || "");
+          deletePayload.RequestedAt = new Date().toISOString();
+          deletePayload.PortalUrl = window.location.origin;
+
+          invokeAccessRequestAdminFlow(deletePayload)
             .then(function () {
+              var deletedEmail = deletePayload.Email;
               if (editingUserRow === row) {
                 resetAdminUserForm();
               }
-              row.parentNode.removeChild(row);
-              syncAdminEmptyUserState();
+              removeAdminUserRowImmediately(row);
               switchMainView("admin-existing-user");
               setMessage("User deleted successfully", false, false);
+              return refreshDataverseAfterFlow({
+                includeUsers: true,
+                includeProjectAccess: true,
+                includeTickets: true,
+                userAction: "delete",
+                userEmail: deletedEmail,
+                retries: 4,
+                delayMs: 900
+              });
             })
             .catch(function (error) {
-              hideAdminMessage();
+              console.error("Access Request Power Automate delete failed:", error);
+              setMessage("Unable to delete user. Please check the Access Request Power Automate flow.", true, false);
             });
         }
       }
@@ -7283,6 +8100,61 @@ function switchMainView(viewName) {
         if (saveButton) {
           saveButton.textContent = "Update Project Access";
         }
+      }
+
+      function openNewProjectAccessForm() {
+        editingProjectAccessRow = null;
+        setInputValue("project-access-name", "");
+        setInputValue("project-access-assignee", "");
+        setInputValue("project-access-business-users", "");
+        setInputValue("project-access-project-owners", "");
+
+        var projectFilter = getProjectAccessProjectFilter();
+        var newButton = document.getElementById("project-access-new");
+        var saveButton = document.getElementById("project-access-save");
+
+        /*
+          New Project Access should not reuse stale rows from the current DOM.
+          Clear the Project filter to the placeholder (Find items) and reload the
+          list from Dataverse before opening the empty editor, so deleted backend
+          rows do not remain visible in the webpage.
+        */
+        if (projectFilter) {
+          projectFilter.value = "";
+        }
+
+        toggleProjectAccessEditor(true);
+
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save Project Access";
+        }
+
+        if (newButton) {
+          newButton.disabled = true;
+          newButton.textContent = "Syncing...";
+        }
+
+        switchMainView("admin-project-access");
+        hideAdminMessage();
+
+        loadProjectAccessRowsFromDataverse()
+          .catch(function () {
+            return [];
+          })
+          .then(function () {
+            var refreshedFilter = getProjectAccessProjectFilter();
+            if (refreshedFilter) {
+              refreshedFilter.value = "";
+            }
+            applyProjectAccessProjectFilter();
+          })
+          .finally(function () {
+            if (newButton) {
+              newButton.disabled = false;
+              newButton.textContent = "+ New Project";
+            }
+          });
       }
 
       function toggleProjectAccessEditor(shouldShow) {
@@ -7308,9 +8180,9 @@ function switchMainView(viewName) {
       function getProjectAccessValues() {
         return {
           projectName: normalize(document.getElementById("project-access-name") ? document.getElementById("project-access-name").value : ""),
-          defaultAssignee: normalize(document.getElementById("project-access-assignee") ? document.getElementById("project-access-assignee").value : ""),
-          businessUsers: normalize(document.getElementById("project-access-business-users") ? document.getElementById("project-access-business-users").value : ""),
-          projectOwners: normalize(document.getElementById("project-access-project-owners") ? document.getElementById("project-access-project-owners").value : "")
+          defaultAssignee: normalizeProjectAccessMultiLineValue(document.getElementById("project-access-assignee") ? document.getElementById("project-access-assignee").value : ""),
+          businessUsers: normalizeProjectAccessMultiLineValue(document.getElementById("project-access-business-users") ? document.getElementById("project-access-business-users").value : ""),
+          projectOwners: normalizeProjectAccessMultiLineValue(document.getElementById("project-access-project-owners") ? document.getElementById("project-access-project-owners").value : "")
         };
       }
 
@@ -7322,6 +8194,62 @@ function switchMainView(viewName) {
           cr2b4_ProjectOwners: values.projectOwners,
           cr2b4_RequestedUser: currentHubEmail || ""
         };
+      }
+
+      function buildProjectAccessFlowPayload(values, existingRow, operation) {
+        var normalizedBusinessUsers = normalizeProjectAccessMultiLineValue(values.businessUsers);
+        var normalizedProjectOwners = normalizeProjectAccessMultiLineValue(values.projectOwners);
+
+        return {
+          Operation: normalize(operation || (existingRow ? "Update" : "Create")),
+          ApplicationProject: values.projectName,
+          DefaultAssignee: values.defaultAssignee,
+          BusinessUsers: normalizedBusinessUsers,
+          ProjectOwners: normalizedProjectOwners,
+          RequestedUser: currentHubEmail || "",
+          RecordId: normalize(existingRow ? existingRow.getAttribute("data-record-id") : ""),
+          RequestedAt: new Date().toISOString(),
+          PortalUrl: window.location.origin,
+
+          /* Also send Dataverse logical-name style fields so the flow can map either set. */
+          cr2b4_ApplicationProject: values.projectName,
+          cr2b4_DefaultAssignee: values.defaultAssignee,
+          cr2b4_BusinessUsers: normalizedBusinessUsers,
+          cr2b4_ProjectOwners: normalizedProjectOwners,
+          cr2b4_RequestedUser: currentHubEmail || ""
+        };
+      }
+
+      function invokeProjectAccessFlow(payload) {
+        if (!projectAccessFlowUrl) {
+          return Promise.reject(new Error("Project access flow URL is not configured. Add Site Setting ITSupport/ProjectAccessFlowUrl with the HTTP trigger URL."));
+        }
+
+        return fetch(projectAccessFlowUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }).then(function (response) {
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error(text || ("HTTP " + response.status));
+            });
+          }
+
+          return response.text().then(function (text) {
+            if (!text) {
+              return {};
+            }
+
+            try {
+              return JSON.parse(text);
+            } catch (error) {
+              return {};
+            }
+          });
+        });
       }
 
       function callProjectAccessApi(method, recordId, payload) {
@@ -7393,7 +8321,7 @@ function switchMainView(viewName) {
         }
 
         rows = tbody.querySelectorAll("tr[data-project-access-row='true']");
-        emptyRow = tbody.querySelector("tr:not([data-project-access-row='true'])");
+        emptyRow = tbody.querySelector("tr:not([data-project-access-row='true']):not([data-project-filter-empty='true'])");
 
         if (rows.length && emptyRow) {
           emptyRow.parentNode.removeChild(emptyRow);
@@ -7401,7 +8329,7 @@ function switchMainView(viewName) {
 
         if (!rows.length && !emptyRow) {
           emptyRow = document.createElement("tr");
-          emptyRow.innerHTML = '<td colspan="5" class="itops-empty">No project access available</td>';
+          emptyRow.innerHTML = '<td colspan="4" class="itops-empty">No project access available</td>';
           tbody.appendChild(emptyRow);
         }
       }
@@ -7438,27 +8366,249 @@ function switchMainView(viewName) {
         });
       }
 
+
+      function splitProjectAccessMultiLineValue(value) {
+        var normalizedValue = normalize(value);
+        var seen = {};
+
+        if (!normalizedValue) {
+          return [];
+        }
+
+        return normalizedValue
+          .replace(/\r\n/g, "\n")
+          .replace(/[;,]+/g, "\n")
+          .split(/\n|\s+/)
+          .map(function (entry) {
+            return normalize(entry).replace(/^<|>$/g, "");
+          })
+          .filter(function (entry) {
+            var key = entry.toLowerCase();
+            if (!entry || seen[key]) {
+              return false;
+            }
+            seen[key] = true;
+            return true;
+          });
+      }
+
+      function normalizeProjectAccessMultiLineValue(value) {
+        return splitProjectAccessMultiLineValue(value).join("\n");
+      }
+
+      function projectAccessValueContainsEmail(value, email) {
+        var targetEmail = normalize(email).toLowerCase();
+
+        if (!targetEmail) {
+          return false;
+        }
+
+        return splitProjectAccessMultiLineValue(value).some(function (entry) {
+          return entry.toLowerCase() === targetEmail;
+        });
+      }
+
+      function deriveProjectAccessDisplayNameFromEmail(email) {
+        var value = normalize(email).toLowerCase();
+        var localPart;
+
+        if (!value || value.indexOf("@") === -1) {
+          return normalize(email);
+        }
+
+        localPart = value.split("@")[0].replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim();
+
+        return localPart.replace(/\b\w/g, function (letter) {
+          return letter.toUpperCase();
+        });
+      }
+
+      function getProjectAccessDisplayNameForEmail(email) {
+        var target = normalize(email).toLowerCase();
+        var adminRow;
+        var fullName;
+        var firstName;
+        var lastName;
+
+        if (!target) {
+          return "";
+        }
+
+        adminRow = findAdminUserRowByEmail(target);
+
+        if (adminRow) {
+          fullName = normalize(adminRow.getAttribute("data-fullname"));
+          firstName = normalize(adminRow.cells && adminRow.cells[1] ? adminRow.cells[1].textContent : "");
+          lastName = normalize(adminRow.cells && adminRow.cells[2] ? adminRow.cells[2].textContent : "");
+          fullName = fullName || normalize((firstName + " " + lastName).replace(/\s+/g, " "));
+
+          if (fullName) {
+            return fullName;
+          }
+        }
+
+        if (target === normalize(currentHubEmail).toLowerCase() && normalize(pageContext.hubName)) {
+          return normalize(pageContext.hubName);
+        }
+
+        return deriveProjectAccessDisplayNameFromEmail(target);
+      }
+
+      function renderProjectAccessMultiLineCell(cell, label, value, projectName) {
+        var entries = splitProjectAccessMultiLineValue(value);
+        var visibleEntries = entries;
+        var remainingCount = 0;
+        var fullTooltip = entries.map(function (entry) {
+          return getProjectAccessDisplayNameForEmail(entry) + " (" + entry + ")";
+        }).join("\n");
+
+        if (!cell) {
+          return;
+        }
+
+        cell.innerHTML = "";
+        cell.setAttribute("title", fullTooltip);
+
+        if (!entries.length) {
+          cell.textContent = "";
+          return;
+        }
+
+        cell.innerHTML =
+          '<div class="project-access-name-list" data-project-access-full-values="' + escapeHtml(normalizeProjectAccessMultiLineValue(value)) + '">' +
+            visibleEntries.map(function (entry) {
+              return '<span class="project-access-name-item" title="' + escapeHtml(entry) + '">' +
+                escapeHtml(getProjectAccessDisplayNameForEmail(entry)) +
+              '</span>';
+            }).join("") +
+            (remainingCount > 0 ? '<span class="project-access-more-count">+' + remainingCount + ' more</span>' : '') +
+          '</div>';
+      }
+
+      function bindProjectAccessMultiLineButtons(row) {
+        if (!row) {
+          return;
+        }
+
+        Array.prototype.forEach.call(row.querySelectorAll("[data-project-access-multiline='true']"), function (button) {
+          if (button.getAttribute("data-bound") === "true") {
+            return;
+          }
+
+          button.setAttribute("data-bound", "true");
+          button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            openProjectAccessTextDrawer(
+              button.getAttribute("data-title"),
+              button.getAttribute("data-project"),
+              button.getAttribute("data-value")
+            );
+          });
+        });
+      }
+
+      function closeProjectAccessTextDrawer() {
+        var overlay = document.getElementById("project-access-text-overlay");
+        var drawer = document.getElementById("project-access-text-drawer");
+
+        if (overlay) {
+          overlay.classList.remove("is-open");
+          overlay.hidden = true;
+        }
+
+        if (drawer) {
+          drawer.classList.remove("is-open");
+          drawer.hidden = true;
+        }
+      }
+
+      function bindProjectAccessTextDrawer() {
+        var closeButton = document.getElementById("project-access-text-close");
+        var overlay = document.getElementById("project-access-text-overlay");
+
+        if (closeButton && closeButton.getAttribute("data-bound") !== "true") {
+          closeButton.setAttribute("data-bound", "true");
+          closeButton.addEventListener("click", closeProjectAccessTextDrawer);
+        }
+
+        if (overlay && overlay.getAttribute("data-bound") !== "true") {
+          overlay.setAttribute("data-bound", "true");
+          overlay.addEventListener("click", closeProjectAccessTextDrawer);
+        }
+      }
+
+      function openProjectAccessTextDrawer(title, projectName, value) {
+        var overlay = document.getElementById("project-access-text-overlay");
+        var drawer = document.getElementById("project-access-text-drawer");
+        var titleElement = document.getElementById("project-access-text-title");
+        var projectElement = document.getElementById("project-access-text-project");
+        var listElement = document.getElementById("project-access-text-list");
+        var entries = splitProjectAccessMultiLineValue(value);
+
+        bindProjectAccessTextDrawer();
+
+        if (titleElement) {
+          titleElement.textContent = normalize(title) || "Project Access Details";
+        }
+
+        if (projectElement) {
+          projectElement.textContent = normalize(projectName) ? ("Project: " + normalize(projectName)) : "";
+        }
+
+        if (listElement) {
+          if (!entries.length) {
+            listElement.innerHTML = '<li class="project-access-text-empty">No values available</li>';
+          } else {
+            listElement.innerHTML = entries.map(function (entry, index) {
+              return '<li class="project-access-email-row">' +
+                '<span class="project-access-email-index">' + (index + 1) + '</span>' +
+                '<span class="project-access-email-text" title="' + escapeHtml(entry) + '">' +
+                  escapeHtml(getProjectAccessDisplayNameForEmail(entry)) +
+                  '<br><small>' + escapeHtml(entry) + '</small>' +
+                '</span>' +
+              '</li>';
+            }).join("");
+          }
+        }
+
+        if (overlay) {
+          overlay.hidden = false;
+          overlay.classList.add("is-open");
+        }
+
+        if (drawer) {
+          drawer.hidden = false;
+          drawer.classList.add("is-open");
+        }
+      }
+
       function syncProjectAccessRow(row, values) {
         var menuButton = row ? row.querySelector(".itops-row-trigger") : null;
         var menu = row ? row.querySelector(".itops-col-menu") : null;
 
-        if (!row || !row.cells || row.cells.length < 5) {
+        if (!row) {
           return row;
         }
 
+        if (!row.cells || row.cells.length < 4) {
+          row.innerHTML = "<td></td><td></td><td></td><td></td>";
+        }
+
         row.setAttribute("data-project-access-row", "true");
+        row.setAttribute("data-project-hidden", "false");
         row.setAttribute("data-project-name", values.projectName);
         row.setAttribute("data-default-assignee", values.defaultAssignee);
         row.setAttribute("data-business-users", values.businessUsers);
         row.setAttribute("data-project-owners", values.projectOwners);
-        row.cells[0].textContent = values.projectName;
-        row.cells[1].textContent = values.defaultAssignee;
-        row.cells[2].textContent = values.businessUsers;
-        row.cells[3].textContent = values.projectOwners;
+        row.setAttribute("data-requested-user", values.requestedUser || currentHubEmail || "");
+        row.cells[0].textContent = values.defaultAssignee;
+        renderProjectAccessMultiLineCell(row.cells[1], "Business Users", values.businessUsers, values.projectName);
+        renderProjectAccessMultiLineCell(row.cells[2], "Project Owners", values.projectOwners, values.projectName);
 
         if (!menuButton || !menu) {
-          row.cells[4].className = "itops-row-action";
-          row.cells[4].innerHTML =
+          row.cells[3].className = "itops-row-action";
+          row.cells[3].innerHTML =
             '<button class="itops-row-trigger" type="button" aria-label="Project access actions">&#8942;</button>' +
             '<div class="itops-col-menu">' +
               '<button class="itops-inline-action" type="button" data-project-access-action="edit">Edit</button>' +
@@ -7468,23 +8618,76 @@ function switchMainView(viewName) {
 
         assignProjectAccessMenuIds(row);
         bindProjectAccessRowActions(row);
+        bindProjectAccessMultiLineButtons(row);
+        applyProjectAccessProjectFilter();
         return row;
+      }
+
+      function settleProjectAccessPromise(promise) {
+        return Promise.resolve(promise)
+          .then(function (value) {
+            return { ok: true, value: value };
+          })
+          .catch(function (error) {
+            return { ok: false, error: error };
+          });
+      }
+
+      function syncProjectAccessDirectDataverse(values, existingRow, isEditing, optimisticRow) {
+        var recordId = normalize(existingRow ? existingRow.getAttribute("data-record-id") : "");
+        var payload = buildProjectAccessPayload(values);
+        var targetRow = optimisticRow || existingRow;
+
+        if (isEditing && recordId) {
+          return callProjectAccessApi("PATCH", recordId, payload)
+            .then(function (response) {
+              var returnedId = extractProjectAccessRecordId(response) || recordId;
+              if (targetRow && returnedId) {
+                targetRow.setAttribute("data-record-id", returnedId);
+              }
+              return response;
+            });
+        }
+
+        return callProjectAccessApi("POST", "", payload)
+          .then(function (response) {
+            var returnedId = extractProjectAccessRecordId(response);
+            if (targetRow && returnedId) {
+              targetRow.setAttribute("data-record-id", returnedId);
+            }
+            return response;
+          });
       }
 
       function saveProjectAccess() {
         var values = getProjectAccessValues();
-        var tbody = getProjectAccessTableBody();
         var saveButton = document.getElementById("project-access-save");
-        var payload;
-        var isEditing = !!editingProjectAccessRow;
+        var currentEditingRow = editingProjectAccessRow;
+        var isEditing = false;
+        var flowPayload;
+        var optimisticRow;
+        var directSavePromise;
+        var flowSavePromise;
 
-        if (!values.projectName || !values.defaultAssignee || !tbody) {
-          hideAdminMessage();
+        if (!values.projectName || !values.defaultAssignee) {
+          setMessage("Project and Default Assignee are required.", true, false);
           return;
         }
 
-        payload = buildProjectAccessPayload(values);
+        values.businessUsers = normalizeProjectAccessMultiLineValue(values.businessUsers);
+        values.projectOwners = normalizeProjectAccessMultiLineValue(values.projectOwners);
+        currentEditingRow = currentEditingRow || findProjectAccessRowByProject(values.projectName);
+        isEditing = !!currentEditingRow;
         hideAdminMessage();
+
+        /* Match Profile behavior: update the DOM immediately, then sync Dataverse/Flow. */
+        optimisticRow = upsertProjectAccessRowImmediately(values, currentEditingRow);
+        populateProjectAccessProjectDropdownFromRows();
+        if (getProjectAccessProjectFilter()) {
+          getProjectAccessProjectFilter().value = values.projectName;
+        }
+        applyProjectAccessProjectFilter();
+        switchMainView("admin-project-access");
 
         if (saveButton) {
           saveButton.disabled = true;
@@ -7498,46 +8701,59 @@ function switchMainView(viewName) {
           }
         }
 
-        if (editingProjectAccessRow) {
-          if (!normalize(editingProjectAccessRow.getAttribute("data-record-id"))) {
-            finishSaving();
-            hideAdminMessage();
-            return;
-          }
+        directSavePromise = syncProjectAccessDirectDataverse(values, currentEditingRow, isEditing, optimisticRow);
+        flowPayload = buildProjectAccessFlowPayload(values, optimisticRow || currentEditingRow, isEditing ? "Update" : "Create");
+        flowSavePromise = invokeProjectAccessFlow(flowPayload);
 
-          callProjectAccessApi("PATCH", editingProjectAccessRow.getAttribute("data-record-id"), payload)
-            .then(function () {
-              syncProjectAccessRow(editingProjectAccessRow, values);
-              syncProjectAccessEmptyState();
-              setMessage("Project access updated successfully", false, false);
-              resetProjectAccessForm();
-              switchMainView("admin-project-access");
-            })
-            .catch(function (error) {
-              setMessage(error && error.message ? error.message : "Unable to update project access in Dataverse.", true, false);
-            })
-            .finally(finishSaving);
+        Promise.all([settleProjectAccessPromise(directSavePromise), settleProjectAccessPromise(flowSavePromise)])
+          .then(function (results) {
+            var directResult = results[0];
+            var flowResult = results[1];
+
+            if (!directResult.ok && !flowResult.ok) {
+              throw (flowResult.error || directResult.error || new Error("Unable to save project access."));
+            }
+
+            setMessage(isEditing ? "Project access updated successfully" : "Project access added successfully", false, false);
+            resetProjectAccessForm();
+            return refreshDataverseAfterFlow({
+              includeProjectAccess: true,
+              includeUsers: true,
+              includeTickets: false,
+              projectValues: values,
+              projectRow: optimisticRow,
+              retries: 5,
+              delayMs: 900
+            });
+          })
+          .catch(function (error) {
+            setMessage(error && error.message ? error.message : "Unable to save project access. Please check the IT Security List Power Automate flow and table permissions.", true, false);
+          })
+          .finally(finishSaving);
+      }
+
+      function editProjectAccessRow(row, keepView) {
+        if (!row) {
           return;
         }
 
-        callProjectAccessApi("POST", "", payload)
-          .then(function (response) {
-            var recordId = extractProjectAccessRecordId(response);
-            var row = document.createElement("tr");
+        editingProjectAccessRow = row;
+        toggleProjectAccessEditor(true);
+        setInputValue("project-access-name", row.getAttribute("data-project-name") || "");
+        setInputValue("project-access-assignee", row.getAttribute("data-default-assignee") || (row.cells[0] ? row.cells[0].textContent : ""));
+        setInputValue("project-access-business-users", row.getAttribute("data-business-users") || "");
+        setInputValue("project-access-project-owners", row.getAttribute("data-project-owners") || "");
 
-            row.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
-            row.setAttribute("data-record-id", recordId);
-            tbody.insertBefore(row, tbody.firstChild);
-            syncProjectAccessRow(row, values);
-            syncProjectAccessEmptyState();
-            setMessage("Project access added successfully", false, false);
-            resetProjectAccessForm();
-            switchMainView("admin-project-access");
-          })
-          .catch(function (error) {
-            setMessage(error && error.message ? error.message : "Unable to save project access in Dataverse.", true, false);
-          })
-          .finally(finishSaving);
+        var saveButton = document.getElementById("project-access-save");
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Update Project Access";
+        }
+
+        if (!keepView) {
+          switchMainView("admin-project-access");
+          hideAdminMessage();
+        }
       }
 
       function handleProjectAccessAction(actionName, row) {
@@ -7546,42 +8762,55 @@ function switchMainView(viewName) {
         }
 
         if (actionName === "edit") {
-          editingProjectAccessRow = row;
-          toggleProjectAccessEditor(true);
-          setInputValue("project-access-name", row.getAttribute("data-project-name") || (row.cells[0] ? row.cells[0].textContent : ""));
-          setInputValue("project-access-assignee", row.getAttribute("data-default-assignee") || (row.cells[1] ? row.cells[1].textContent : ""));
-          setInputValue("project-access-business-users", row.getAttribute("data-business-users") || (row.cells[2] ? row.cells[2].textContent : ""));
-          setInputValue("project-access-project-owners", row.getAttribute("data-project-owners") || (row.cells[3] ? row.cells[3].textContent : ""));
-
-          var saveButton = document.getElementById("project-access-save");
-          if (saveButton) {
-            saveButton.textContent = "Update Project Access";
-          }
-
-          switchMainView("admin-project-access");
-          hideAdminMessage();
+          editProjectAccessRow(row, false);
           return;
         }
 
         if (actionName === "delete") {
+          var values = {
+            projectName: row.getAttribute("data-project-name") || "",
+            defaultAssignee: row.getAttribute("data-default-assignee") || (row.cells[0] ? row.cells[0].textContent : ""),
+            businessUsers: row.getAttribute("data-business-users") || "",
+            projectOwners: row.getAttribute("data-project-owners") || ""
+          };
+
           if (!normalize(row.getAttribute("data-record-id"))) {
             hideAdminMessage();
             return;
           }
 
-          callProjectAccessApi("DELETE", row.getAttribute("data-record-id"))
-            .then(function () {
-              if (editingProjectAccessRow === row) {
-                resetProjectAccessForm();
+          var deletedProjectName = values.projectName;
+          var recordIdToDelete = normalize(row.getAttribute("data-record-id"));
+
+          if (editingProjectAccessRow === row) {
+            resetProjectAccessForm();
+          }
+
+          removeProjectAccessRowImmediately(row);
+          switchMainView("admin-project-access");
+
+          Promise.all([
+            settleProjectAccessPromise(callProjectAccessApi("DELETE", recordIdToDelete, null)),
+            settleProjectAccessPromise(invokeProjectAccessFlow(buildProjectAccessFlowPayload(values, row, "Delete")))
+          ])
+            .then(function (results) {
+              if (!results[0].ok && !results[1].ok) {
+                throw (results[1].error || results[0].error || new Error("Unable to delete project access."));
               }
 
-              row.parentNode.removeChild(row);
-              syncProjectAccessEmptyState();
-              switchMainView("admin-project-access");
               setMessage("Project access deleted successfully", false, false);
+              return refreshDataverseAfterFlow({
+                includeProjectAccess: true,
+                includeUsers: true,
+                includeTickets: true,
+                projectAction: "delete",
+                projectName: deletedProjectName,
+                retries: 4,
+                delayMs: 900
+              });
             })
             .catch(function (error) {
-              setMessage(error && error.message ? error.message : "Unable to delete project access from Dataverse.", true, false);
+              setMessage(error && error.message ? error.message : "Unable to delete project access. Please check the IT Security List Power Automate flow and table permissions.", true, false);
             });
         }
       }
@@ -7662,6 +8891,8 @@ function bindEvents() {
         var adminResetUser = document.getElementById("admin-reset-user");
         var projectAccessSave = document.getElementById("project-access-save");
         var projectAccessReset = document.getElementById("project-access-reset");
+        var projectAccessNew = document.getElementById("project-access-new");
+        var projectAccessProjectFilterControl = document.getElementById("project-access-project-filter");
         var userRoleSelect = document.getElementById("user-role-select");
         var userRoleSubmit = document.getElementById("user-role-submit");
         if (showCreate) {
@@ -7676,12 +8907,20 @@ function bindEvents() {
           adminResetUser.addEventListener("click", resetAdminUserForm);
         }
 
+        if (projectAccessNew) {
+          projectAccessNew.addEventListener("click", openNewProjectAccessForm);
+        }
+
         if (projectAccessSave) {
           projectAccessSave.addEventListener("click", saveProjectAccess);
         }
 
         if (projectAccessReset) {
           projectAccessReset.addEventListener("click", resetProjectAccessForm);
+        }
+
+        if (projectAccessProjectFilterControl) {
+          projectAccessProjectFilterControl.addEventListener("change", applyProjectAccessProjectFilter);
         }
 
         if (userRoleSelect) {
@@ -7712,7 +8951,11 @@ function bindEvents() {
 
         if (projectFilter) {
           projectFilter.addEventListener("change", function () {
-            filterRows();
+            loadTicketRows().then(function () {
+              filterRows();
+              updateRequestSummary();
+            });
+
             if (createView && !createView.classList.contains("itops-panel-hidden") && ticketProject) {
               hydrateProjectDefaults();
             }
@@ -8302,6 +9545,8 @@ function bindEvents() {
       function resetFollowupForm() {
         var input = document.getElementById("detail-followup");
 
+        selectedCreateAttachmentFile = null;
+
         if (input) {
           input.value = "";
         }
@@ -8346,6 +9591,8 @@ function bindEvents() {
       function resetFollowupAttachments() {
         var input = document.getElementById("detail-followup-attachment");
         var list = document.getElementById("detail-followup-file-list");
+
+        selectedCreateAttachmentFile = null;
 
         if (input) {
           input.value = "";
@@ -8548,7 +9795,23 @@ function bindEvents() {
             } else {
               setMessage("Follow-up request submitted successfully.", false, true);
             }
+
+            if (followupInput) {
+              followupInput.value = "";
+            }
             resetFollowupAttachments();
+
+            /* Refresh the visible ticket list from Dataverse after submit.
+               Keep the local row update above so the page reflects immediately while backend sync finishes. */
+            if (typeof loadTicketRows === "function") {
+              window.setTimeout(function () {
+                try {
+                  loadTicketRows();
+                } catch (refreshError) {
+                  console.warn("Ticket list refresh after follow-up failed:", refreshError);
+                }
+              }, 1200);
+            }
           })
           .catch(function (error) {
             setMessage(error && error.message ? error.message : "Unable to submit follow-up request.", true, true);
@@ -8574,6 +9837,9 @@ function bindEvents() {
       }
 
       function openCreateView() {
+        bindAttachmentDisplay();
+        hydrateProjectDefaults();
+
         var selectedProject = normalize(projectFilter ? projectFilter.value : "");
 
         if (!selectedProject) {
@@ -8714,16 +9980,21 @@ function bindEvents() {
         var subModule = document.getElementById("ticket-sub-module");
         ticketProject.value = normalize(projectFilter.value);
 
+        /* Module and Sub Module are always manual free-text fields. */
+        [module, subModule].forEach(function (field) {
+          if (field) {
+            field.removeAttribute("readonly");
+            field.disabled = false;
+            field.autocomplete = "off";
+          }
+        });
+
         if (!selected || !projectFilter.value) {
           if (assignee) assignee.value = "";
-          if (module) module.value = "";
-          if (subModule) subModule.value = "";
           return;
         }
 
         if (assignee) assignee.value = normalize(selected.getAttribute("data-assignee"));
-        if (module) module.value = "";
-        if (subModule) subModule.value = "";
       }
 
       function resetCreateForm() {
@@ -8800,6 +10071,9 @@ function submitTicketForm() {
             });
           })
           .then(function (ticketPayload) {
+            var createdType = ticketPayload.Issue_Type || "";
+            var targetView = isServiceRequestType(createdType) ? "service-all" : "home-open";
+
             addSubmittedRow({
               title: ticketPayload.Ticket_Title,
               project: ticketPayload.ApplicationProject,
@@ -8809,12 +10083,27 @@ function submitTicketForm() {
               assignee: ticketPayload.DefaultAssignee,
               description: ticketPayload.Ticket_Description
             });
+
             closeCreateView();
+            switchMainView(targetView);
             filterRows();
+            updateRequestSummary();
             setMessage("Ticket submitted successfully", false);
+
+            return refreshDataverseAfterFlow({
+              includeUsers: false,
+              includeProjectAccess: false,
+              includeTickets: true,
+              retries: 5,
+              delayMs: 1000
+            }).then(function () {
+              switchMainView(targetView);
+              filterRows();
+              updateRequestSummary();
+            });
           })
           .catch(function (error) {
-            setMessage("Submit failed. " + error.message, true);
+            setMessage("Submit failed. " + (error && error.message ? error.message : "Please check the Power Automate flow URL and Dataverse table permissions."), true);
           })
           .finally(function () {
             if (submitButtonBottom) {
@@ -8849,27 +10138,46 @@ function submitTicketForm() {
           Resolution_Comments: "",
           Followup_Comments: "",
           PlannerTaskID: "",
+          /* Dataverse file column support.
+             Power Automate should use AttachmentName as File name and
+             base64ToBinary(triggerBody()?['AttachmentContent']) as File content
+             in the Dataverse "Upload a file or image" action. */
           AttachmentName: ticket.attachment ? ticket.attachment.name : "",
-          AttachmentContentBytes: ticket.attachment ? ticket.attachment.contentBytes : ""
+          AttachmentContent: ticket.attachment ? ticket.attachment.contentBytes : "",
+          AttachmentContentBytes: ticket.attachment ? ticket.attachment.contentBytes : "",
+          AttachmentSize: ticket.attachment ? ticket.attachment.sizeText : "",
+          AttachmentCount: ticket.attachment ? 1 : 0,
+          AttachmentNames: ticket.attachment ? ticket.attachment.name : "",
+          Attachments: ticket.attachment ? [
+            {
+              AttachmentName: ticket.attachment.name,
+              AttachmentContent: ticket.attachment.contentBytes,
+              AttachmentContentBytes: ticket.attachment.contentBytes,
+              AttachmentSize: ticket.attachment.sizeText
+            }
+          ] : []
         };
       }
 
       function submitTicketPayload(ticketPayload) {
-        return createTicketInDataverse(ticketPayload)
-          .then(function (createResult) {
-            if (!createTicketFlowUrl) {
-              return createResult;
-            }
+        /*
+          Create Ticket submit must call the Dataverse IT_Tickets Power Automate flow.
+          The flow receives the same payload and writes the values into Dataverse IT_Tickets.
+        */
+        if (!createTicketFlowUrl || ticketPayload.AttachmentContent) {
+          /* Attachment uploads in the existing flow are failing because the flow uses OData Id URL as Row ID.
+             Create the ticket directly from the portal so Submit does not fail.
+             To upload into a Dataverse file column through Power Automate, set the flow Row ID to the GUID output from Add a new row, not the OData Id URL. */
+          return createTicketInDataverse(ticketPayload);
+        }
 
-            return invokeCreateTicketFlow(buildCreateTicketFlowPayload(ticketPayload, createResult))
-              .catch(function (error) {
-                console.warn("Ticket flow sync failed:", error);
-                return createResult;
-              })
-              .then(function () {
-                return createResult;
-              });
-          });
+        return invokeCreateTicketFlow(ticketPayload).catch(function (error) {
+          /* If the HTTP flow is unavailable, still create the ticket row directly through Power Pages Web API. */
+          if (/Power Automate flow URL is missing|Failed to fetch|CORS|HTTP 0|Network/i.test(error && error.message ? error.message : "")) {
+            return createTicketInDataverse(ticketPayload);
+          }
+          throw error;
+        });
       }
 
       function buildCreateTicketFlowPayload(ticketPayload, createResult) {
@@ -8879,7 +10187,7 @@ function submitTicketForm() {
           flowPayload[key] = ticketPayload[key];
         });
 
-        flowPayload.Destination = "SharePoint";
+        flowPayload.Destination = "Dataverse";
         flowPayload.DataverseEntitySet = createResult && createResult.entitySetName ? createResult.entitySetName : "";
         flowPayload.DataverseRecordId = createResult && createResult.recordId ? createResult.recordId : "";
 
@@ -8910,6 +10218,7 @@ function submitTicketForm() {
             cr2b4_Followup_Comments: ticketPayload.Followup_Comments,
             cr2b4_PlannerTaskID: ticketPayload.PlannerTaskID,
             cr2b4_AttachmentName: ticketPayload.AttachmentName,
+            cr2b4_AttachmentContent: ticketPayload.AttachmentContent,
             cr2b4_AttachmentContentBytes: ticketPayload.AttachmentContentBytes
           };
         }
@@ -8935,6 +10244,7 @@ function submitTicketForm() {
           new_Followup_Comments: ticketPayload.Followup_Comments,
           new_PlannerTaskID: ticketPayload.PlannerTaskID,
           new_AttachmentName: ticketPayload.AttachmentName,
+          new_AttachmentContent: ticketPayload.AttachmentContent,
           new_AttachmentContentBytes: ticketPayload.AttachmentContentBytes
         };
       }
@@ -8985,7 +10295,7 @@ function submitTicketForm() {
 
       function readAttachment(input) {
         return new Promise(function (resolve, reject) {
-          var file = input && input.files && input.files.length ? input.files[0] : null;
+          var file = selectedCreateAttachmentFile || (input && input.files && input.files.length ? input.files[0] : null);
           var reader;
 
           if (!file) {
@@ -8995,9 +10305,15 @@ function submitTicketForm() {
 
           reader = new FileReader();
           reader.onload = function () {
+            var contentBytes = String(reader.result || "").split(",")[1] || "";
             resolve({
               name: file.name,
-              contentBytes: String(reader.result || "").split(",")[1] || ""
+              contentBytes: contentBytes,
+              AttachmentName: file.name,
+              AttachmentContent: contentBytes,
+              AttachmentContentBytes: contentBytes,
+              sizeText: formatFileSize(file.size || 0),
+              size: file.size || 0
             });
           };
           reader.onerror = function () {
@@ -9008,36 +10324,103 @@ function submitTicketForm() {
       }
 
       function invokeCreateTicketFlow(ticketPayload) {
+        /*
+          Trigger the Dataverse IT_Tickets Power Automate flow directly.
+          First try normal JSON so Power Automate can validate the request body.
+          If the browser blocks CORS/preflight, fall back to no-cors text/plain so
+          the HTTP trigger still receives the payload.
+        */
         return fetch(createTicketFlowUrl, {
           method: "POST",
-          mode: "no-cors",
           headers: {
-            "Content-Type": "text/plain;charset=UTF-8"
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(ticketPayload)
-        }).catch(function (error) {
-          throw new Error("Submit failed while calling the Power Automate flow." + (error && error.message ? " " + error.message : ""));
-        });
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              return response.text().then(function (text) {
+                throw new Error(text || ("HTTP " + response.status));
+              });
+            }
+
+            return response.text().then(function (text) {
+              if (!text) {
+                return { submittedToFlow: true };
+              }
+
+              try {
+                return JSON.parse(text);
+              } catch (error) {
+                return { submittedToFlow: true, rawResponse: text };
+              }
+            });
+          })
+          .catch(function (error) {
+            if (error && (error.name === "TypeError" || /Failed to fetch|CORS/i.test(error.message || ""))) {
+              return fetch(createTicketFlowUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                  "Content-Type": "text/plain;charset=UTF-8"
+                },
+                body: JSON.stringify(ticketPayload)
+              }).then(function () {
+                return { submittedToFlow: true, opaque: true };
+              });
+            }
+
+            throw new Error("Submit failed while calling the Dataverse Create Ticket Power Automate flow." + (error && error.message ? " " + error.message : ""));
+          });
       }
 
       function invokeFollowupFlow(followupPayload) {
+        /* Trigger follow-up Power Automate without any external list dependency. */
+        if (!followupTicketFlowUrl) {
+          return Promise.reject(new Error("Follow-up Power Automate flow URL is missing."));
+        }
+
         return fetch(followupTicketFlowUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(followupPayload)
-        }).then(function (response) {
-          if (!response.ok) {
-            throw new Error("Follow-up flow request failed with status " + response.status);
-          }
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              return response.text().then(function (text) {
+                throw new Error(text || ("HTTP " + response.status));
+              });
+            }
 
-          return response.text().then(function (text) {
-            return text ? JSON.parse(text) : {};
-          }).catch(function () {
-            return {};
+            return response.text().then(function (text) {
+              if (!text) {
+                return { submittedToFlow: true };
+              }
+              try {
+                return JSON.parse(text);
+              } catch (error) {
+                return { submittedToFlow: true, rawResponse: text };
+              }
+            });
+          })
+          .catch(function (error) {
+            if (error && (error.name === "TypeError" || /Failed to fetch|CORS/i.test(error.message || ""))) {
+              return fetch(followupTicketFlowUrl, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                  "Content-Type": "text/plain;charset=UTF-8"
+                },
+                body: JSON.stringify(followupPayload)
+              }).then(function () {
+                return { submittedToFlow: true, opaque: true };
+              });
+            }
+
+            throw new Error("Follow-up submit failed while calling the Dataverse Power Automate flow." + (error && error.message ? " " + error.message : ""));
           });
-        });
       }
 
       function safePowerPagesPost(options) {
@@ -9242,8 +10625,12 @@ function submitTicketForm() {
             .then(function (token) {
               return fetch(url, {
                 method: "GET",
+                cache: "no-store",
                 headers: Object.assign({
-                  Accept: "application/json"
+                  Accept: "application/json",
+                  "Cache-Control": "no-cache, no-store, must-revalidate",
+                  Pragma: "no-cache",
+                  Expires: "0"
                 }, token ? { __RequestVerificationToken: token } : {}),
                 credentials: "same-origin"
               });
@@ -9329,30 +10716,7 @@ function submitTicketForm() {
 
       function loadTicketRows() {
         resetTicketRows();
-        if (serverTicketRows && serverTicketRows.length) {
-          var allowedProjects = getAllowedProjects();
-          var serverTickets = serverTicketRows
-            .map(function (record) {
-              return normalizeTicketRecord(record, "new_it_tickets");
-            })
-            .filter(function (ticket) {
-              return ticket.project && (!allowedProjects.length || allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1);
-            });
-
-          if (serverTickets.length) {
-            renderTicketRows(serverTickets);
-            return;
-          }
-        }
-
-        if (getTicketsFlowUrl) {
-          loadTicketRowsFromFlow().catch(function () {
-            loadTicketRowsFromDataverse();
-          });
-          return;
-        }
-
-        loadTicketRowsFromDataverse();
+        return loadTicketRowsFromDataverse();
       }
 
       function resetTicketRows() {
@@ -9369,28 +10733,20 @@ function submitTicketForm() {
       function loadTicketRowsFromDataverse() {
         var body = document.getElementById("ticket-table-body");
         var allowedProjects = getAllowedProjects();
+        var entitySets = ["cr2b4_it_ticketses", "cr2b4_it_tickets"];
+
         if (!body) {
           toggleEmptyState(true);
-          return;
+          return Promise.resolve([]);
         }
 
-        tryEntitySet(getPreferredTicketEntitySets(), 0);
-
-        function getPreferredTicketEntitySets() {
-          return [
-            "cr2b4_it_ticketses",
-            "cr2b4_it_tickets"
-          ];
-        }
-
-        function tryEntitySet(entitySets, index) {
-          if (!entitySets || index >= entitySets.length) {
+        function tryEntitySet(index) {
+          if (index >= entitySets.length) {
             toggleEmptyState(true);
-            setMessage("No readable Dataverse IT Tickets data was found. The Get Tickets flow is the real ticket source and may still need to be wired back in.", true, false);
-            return;
+            return Promise.resolve([]);
           }
 
-          safePowerPagesGet("/_api/" + entitySets[index] + "?$top=500&$count=true")
+          return safePowerPagesGet(appendNoCache("/_api/" + entitySets[index] + "?$top=500&$count=true"))
             .then(function (data) {
               var records = data && data.value ? data.value : [];
               var tickets = records.map(function (record) {
@@ -9399,23 +10755,25 @@ function submitTicketForm() {
                 return ticket.project && (!allowedProjects.length || allowedProjects.indexOf(ticket.project.toLowerCase()) !== -1);
               });
 
-              if (tickets.length) {
-                renderTicketRows(tickets);
-              } else {
-                toggleEmptyState(true);
-                setMessage("No ticket records were returned from Dataverse.", false, false);
-              }
+              renderTicketRows(tickets);
+              filterRows();
+              updateRequestSummary();
+              itopsApplyFinalUiFixes();
+
+              return tickets;
             })
             .catch(function (error) {
               if (isRetryableEntitySetError(error) && index < entitySets.length - 1) {
-                tryEntitySet(entitySets, index + 1);
-                return;
+                return tryEntitySet(index + 1);
               }
 
               toggleEmptyState(true);
               setMessage(error && error.message ? error.message : "Unable to load ticket records from Dataverse.", true, false);
+              return [];
             });
         }
+
+        return tryEntitySet(0);
       }
 
       function loadTicketRowsFromFlow() {
@@ -9433,9 +10791,12 @@ function submitTicketForm() {
         }
 
         var payload = {
+          Operation: "List",
+          Source: "Dataverse",
           Email: currentHubEmail,
           FullName: currentHubName,
           SelectedProject: normalize(projectFilter ? projectFilter.value : ""),
+          ViewName: activeQuickView || "",
           AllowedProjects: allowedProjects
         };
 
@@ -9499,6 +10860,7 @@ function submitTicketForm() {
             }
 
             toggleEmptyState(true);
+            setMessage("No ticket records were returned from Dataverse.", false, false);
           });
       }
 
@@ -9610,7 +10972,43 @@ function submitTicketForm() {
         }
       }
 
-      function normalizeTicketAttachments(value) {
+      function normalizeFlowTicketRecord(record) {
+        function pick(names) {
+          for (var i = 0; i < names.length; i += 1) {
+            if (record[names[i]] !== undefined && record[names[i]] !== null) {
+              return record[names[i]];
+            }
+          }
+
+          return "";
+        }
+
+        return {
+          entitySet: "flow",
+          recordId: normalize(pick(["ID", "Id", "id"])),
+          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "Ticket ID", "ticket_id", "ticketId", "new_ticket_id", "new_ticketid", "ID", "Id", "id"])),
+          title: normalize(pick(["Ticket_Title", "Ticket Title", "Title", "ticket_title", "ticketTitle", "new_ticket_title", "new_title"])),
+          type: normalize(pick([
+            "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType",
+            "Request_Type", "RequestType", "issue_type", "issueType", "type", "ticket_type", "request_type",
+            "new_issue_type", "new_type", "new_ticket_type", "new_request_type"
+          ])),
+          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project", "new_applicationproject", "new_project"])),
+          module: normalize(pick(["Module", "module", "new_module"])),
+          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule", "new_sub_module", "new_submodule"])),
+          status: normalize(pick(["Status", "status", "Current_Status", "Current Status", "Ticket_Status", "Ticket Status", "new_status", "new_current_status"])),
+          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee", "new_defaultassignee", "new_assignedto"])),
+          businessUser: normalize(pick(["BusinessUsers", "businessUsers", "new_businessusers"])),
+          projectOwner: normalize(pick(["ProjectOwners", "projectOwners", "new_projectowners"])),
+          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution"])),
+          requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by"])),
+          requestorEmail: normalize(pick(["RequestorEmail", "Requestor Email", "requestorEmail", "new_requestoremail", "new_requestor_email"])),
+          followupComments: normalize(pick(["Followup_Comments", "Followup Comments", "followupComments", "new_followup_comments", "new_followup"])),
+          attachments: normalizeFlowAttachments(pick(["Attachments", "Attachment", "attachments", "attachment", "AttachmentFiles", "attachmentFiles"]))
+        };
+      }
+
+      function normalizeFlowAttachments(value) {
         value = parseMaybeJson(value);
 
         if (!value) {
@@ -9628,8 +11026,6 @@ function submitTicketForm() {
               name: normalize(item.name || item.Name || item.FileName || item.fileName || item.DisplayName || item.displayName || item.url || item.Url),
               url: normalize(item.url || item.Url || item.ServerRelativeUrl || item.AbsoluteUri || item.Link || item.link)
             };
-          }).filter(function (item) {
-            return !!item.name || !!item.url;
           });
         }
 
@@ -9640,56 +11036,12 @@ function submitTicketForm() {
           }).filter(Boolean);
         }
 
-        if (typeof value === "object") {
-          return [{
-            name: normalize(value.name || value.Name || value.FileName || value.fileName || value.DisplayName || value.displayName || value.url || value.Url),
-            url: normalize(value.url || value.Url || value.ServerRelativeUrl || value.AbsoluteUri || value.Link || value.link)
-          }].filter(function (item) {
-            return !!item.name || !!item.url;
-          });
-        }
-
         return [];
       }
 
-      function normalizeFlowTicketRecord(record) {
-        function pick(names) {
-          for (var i = 0; i < names.length; i += 1) {
-            if (record[names[i]] !== undefined && record[names[i]] !== null) {
-              return record[names[i]];
-            }
-          }
-
-          return "";
-        }
-
-        return {
-          entitySet: "flow",
-          recordId: normalize(pick(["ID", "Id", "id"])),
-          ticketId: normalize(pick(["Ticket_ID", "TicketId", "TicketID", "ticket_id", "ticketId", "new_ticket_id", "new_ticketid"])),
-          title: normalize(pick(["Ticket_Title", "Title", "ticket_title", "ticketTitle", "new_ticket_title", "new_title"])),
-          type: normalize(pick([
-            "Issue_Type", "IssueType", "Issue Type", "Type", "Ticket_Type", "TicketType",
-            "Request_Type", "RequestType", "issue_type", "issueType", "type", "ticket_type", "request_type",
-            "new_issue_type", "new_type", "new_ticket_type", "new_request_type"
-          ])),
-          project: normalize(pick(["ApplicationProject", "Project", "applicationProject", "project", "new_applicationproject", "new_project"])),
-          module: normalize(pick(["Module", "module", "new_module"])),
-          subModule: normalize(pick(["Sub_Module", "SubModule", "sub_module", "subModule", "new_sub_module", "new_submodule"])),
-          status: normalize(pick(["Status", "status", "Current_Status", "new_status", "new_current_status"])),
-          assignee: normalize(pick(["DefaultAssignee", "AssignedTo", "assignedTo", "defaultAssignee", "new_defaultassignee", "new_assignedto"])),
-          businessUser: normalize(pick(["BusinessUsers", "businessUsers", "new_businessusers"])),
-          projectOwner: normalize(pick(["ProjectOwners", "projectOwners", "new_projectowners"])),
-          resolution: normalize(pick(["Resolution", "Resolution_Comments", "resolution", "resolutionComments", "new_resolution_comments", "new_resolution"])),
-          requestor: normalize(pick(["Requestor", "requestor", "new_requestor", "new_requested_by"])),
-          requestorEmail: normalize(pick(["RequestorEmail", "requestorEmail", "new_requestoremail", "new_requestor_email"])),
-          followupComments: normalize(pick(["Followup_Comments", "followupComments", "new_followup_comments", "new_followup"])),
-          attachments: normalizeTicketAttachments(pick(["Attachments", "Attachment", "attachments", "attachment", "AttachmentFiles", "attachmentFiles"]))
-        };
-      }
-
       function getAllowedProjects() {
-        if (!projectFilter) {
+        /* Admin must be able to see all tickets, even when a project is not in IT_Security_List. */
+        if (isAdminUser || !projectFilter) {
           return [];
         }
 
@@ -9793,10 +11145,11 @@ function submitTicketForm() {
             "Followup_Comments", "Followup Comments", "followup_comments",
             "cr2b4_followup_comments"
           ])),
-          attachments: normalizeTicketAttachments(pick([
+          attachments: normalizeFlowAttachments(pick([
             "new_attachments", "new_attachment", "new_attachmentfiles", "new_attachment_files",
             "Attachments", "Attachment", "attachments", "attachment", "AttachmentFiles", "attachmentFiles",
-            "cr2b4_attachments", "cr2b4_attachment", "cr2b4_attachmentfiles"
+            "cr2b4_attachments", "cr2b4_attachment", "cr2b4_attachmentfiles",
+            "AttachmentName", "new_attachmentname", "cr2b4_attachmentname"
           ]))
         };
       }
@@ -9918,7 +11271,6 @@ function submitTicketForm() {
         var operator = document.getElementById("filter-operator");
 
         activeFilter = null;
-        activeQuickView = "home-all";
 
         if (value) value.value = "";
         if (column) column.value = "0";
