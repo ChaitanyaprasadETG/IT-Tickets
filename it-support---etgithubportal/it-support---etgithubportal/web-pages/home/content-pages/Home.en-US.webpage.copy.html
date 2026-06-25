@@ -10160,24 +10160,13 @@ function submitTicketForm() {
 
       function submitTicketPayload(ticketPayload) {
         /*
-          Prefer the Create Ticket flow when it is configured.
-          Custom portal pages do not always expose a request token for direct Dataverse writes.
+          Submit must go through the Power Automate HTTP trigger only.
         */
-        if (createTicketFlowUrl) {
-          return invokeCreateTicketFlow(ticketPayload).catch(function (error) {
-            if (canUseDirectDataverseSubmit()) {
-              return createTicketInDataverse(ticketPayload);
-            }
-
-            throw error;
-          });
+        if (!createTicketFlowUrl) {
+          return Promise.reject(new Error("Create Ticket Power Automate flow URL is not configured."));
         }
 
-        if (!canUseDirectDataverseSubmit()) {
-          return Promise.reject(new Error("Power Pages request token is not available on this page and the Create Ticket flow URL is not configured."));
-        }
-
-        return createTicketInDataverse(ticketPayload);
+        return invokeCreateTicketFlow(ticketPayload);
       }
 
       function buildCreateTicketFlowPayload(ticketPayload, createResult) {
