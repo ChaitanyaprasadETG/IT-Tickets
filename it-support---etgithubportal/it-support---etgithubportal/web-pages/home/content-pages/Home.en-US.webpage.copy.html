@@ -6000,6 +6000,7 @@ html {
       var accessRequestApprovedValue = "Approved";
       var serverTicketRows = [];
       var selectedCreateAttachmentFile = null;
+      var ticketLoadPromise = null;
       var editingUserRow = null;
       var editingProjectAccessRow = null;
 
@@ -7932,13 +7933,11 @@ function switchMainView(viewName) {
       }
 
       function refreshAllAccessAndProfileData() {
-        return refreshDataverseAfterFlow({
-          includeUsers: true,
-          includeProjectAccess: true,
-          includeTickets: true,
-          retries: 3,
-          delayMs: 900
-        });
+        return Promise.all([
+          loadAdminUsersFromDataverse().catch(function () { return []; }),
+          loadProjectAccessRowsFromDataverse().catch(function () { return []; }),
+          loadTicketRows().catch(function () { return []; })
+        ]);
       }
 
       function saveAdminUser() {
@@ -10715,14 +10714,29 @@ function submitTicketForm() {
       }
 
       function loadTicketRows() {
+        if (ticketLoadPromise) {
+          return ticketLoadPromise;
+        }
+
         resetTicketRows();
-        return loadTicketRowsFromDataverse();
+        ticketLoadPromise = loadTicketRowsFromDataverse()
+          .finally(function () {
+            ticketLoadPromise = null;
+          });
+
+        return ticketLoadPromise;
       }
 
       function resetTicketRows() {
         var body = document.getElementById("ticket-table-body");
+        var existingRows;
 
         if (!body) {
+          return;
+        }
+
+        existingRows = body.querySelectorAll("tr[data-row='true']");
+        if (existingRows && existingRows.length) {
           return;
         }
 
