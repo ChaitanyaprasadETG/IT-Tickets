@@ -1,0 +1,18 @@
+{
+  "endpoint": "GET /api/security-list",
+  "response": {
+    "count": "number",
+    "source": "string",
+    "items": [
+      {
+        "id": "string",
+        "applicationProject": "string",
+        "defaultAssignee": "string",
+        "requestedUser": "string",
+        "businessUsers": "string",
+        "projectOwners": "string"
+      }
+    ]
+  }
+}
+

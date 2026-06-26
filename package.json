@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "description": "Build scaffold for deploying the IT Support Power Pages export through Sites.",
   "scripts": {
-    "build": "node scripts/build-site.mjs"
+    "build": "node scripts/build-site.mjs",
+    "build:portal": "node scripts/build-site.mjs",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend run dev",
+    "start:backend": "npm --prefix backend run start"
   }
 }

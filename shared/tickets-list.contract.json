@@ -1,0 +1,26 @@
+{
+  "endpoint": "GET /api/tickets",
+  "response": {
+    "count": "number",
+    "source": "string",
+    "items": [
+      {
+        "id": "string",
+        "title": "string",
+        "type": "string",
+        "status": "string",
+        "project": "string",
+        "module": "string",
+        "subModule": "string",
+        "assignee": "string",
+        "requestor": "string",
+        "businessUsers": "string",
+        "projectOwners": "string",
+        "resolutionComments": "string",
+        "followupComments": "string",
+        "ticketDescription": "string",
+        "attachments": "string"
+      }
+    ]
+  }
+}
