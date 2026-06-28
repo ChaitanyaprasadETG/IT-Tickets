@@ -10,9 +10,14 @@ const outputDir = path.join(rootDir, "dist");
 const publicDir = path.join(outputDir, "public");
 const backendOutDir = path.join(outputDir, "backend", "src");
 const entryPointPath = path.join(outputDir, "index.mjs");
+const entrySourcePath = path.join(outputDir, "index-source.mjs");
 
 function npmCommand() {
   return process.platform === "win32" ? "npm.cmd" : "npm";
+}
+
+function npxCommand() {
+  return process.platform === "win32" ? "npx.cmd" : "npx";
 }
 
 async function removeIfExists(targetPath) {
@@ -308,7 +313,16 @@ async function main() {
   await fs.mkdir(outputDir, { recursive: true });
   await copyDirectory(frontendDistDir, publicDir);
   await copyDirectory(backendSrcDir, backendOutDir);
-  await fs.writeFile(entryPointPath, buildSiteEntryPoint(), "utf8");
+  await fs.writeFile(entrySourcePath, buildSiteEntryPoint(), "utf8");
+  execSync(
+    `${npxCommand()} --yes esbuild ${JSON.stringify(entrySourcePath)} --bundle --format=esm --platform=node --outfile=${JSON.stringify(entryPointPath)}`,
+    {
+      cwd: rootDir,
+      stdio: "inherit",
+      shell: true
+    }
+  );
+  await fs.rm(entrySourcePath, { force: true });
 
   console.log(`Built deployable site bundle into ${path.relative(rootDir, outputDir)}`);
 }
