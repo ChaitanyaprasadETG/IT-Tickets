@@ -294,7 +294,7 @@ function buildSiteEntryPoint() {
     "  }",
     "};",
     ""
-  ].join("\\n");
+  ].join("\n");
 }
 
 async function main() {
