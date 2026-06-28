@@ -1,12 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(currentDir, "..", ".env");
+const envPathCandidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "backend", ".env"),
+  path.resolve(process.cwd(), "..", ".env")
+];
 
 export function loadLocalEnv() {
-  if (!fs.existsSync(envPath)) {
+  const envPath = envPathCandidates.find((candidate) => fs.existsSync(candidate));
+
+  if (!envPath) {
     return;
   }
 
@@ -34,4 +38,3 @@ export function loadLocalEnv() {
     }
   }
 }
-
