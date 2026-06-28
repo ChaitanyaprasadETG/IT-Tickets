@@ -46,7 +46,6 @@ function buildSiteEntryPoint() {
   return [
     "import fs from 'node:fs/promises';",
     "import path from 'node:path';",
-    "import { fileURLToPath } from 'node:url';",
     "import { createAccessRequest, deleteAccessRequest, listAccessRequests, updateAccessRequest } from './backend/src/access-requests-service.js';",
     "import { createContact, deleteContact, listContacts, updateContact } from './backend/src/contacts-service.js';",
     "import { createSecurityListItem, deleteSecurityListItem, listSecurityList, updateSecurityListItem } from './backend/src/security-list-service.js';",
@@ -55,8 +54,7 @@ function buildSiteEntryPoint() {
     "",
     "loadLocalEnv();",
     "",
-    "const currentDir = path.dirname(fileURLToPath(import.meta.url));",
-    "const publicDir = path.join(currentDir, 'public');",
+    "const publicDir = path.join(process.cwd(), 'public');",
     "",
     "function getEntraConfig() {",
     "  return {",
