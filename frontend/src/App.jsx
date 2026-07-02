@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   createAccessRequest,
@@ -16,10 +17,56 @@ import {
 } from "./api/resources";
 import { DataTable } from "./components/DataTable";
 
+function getRuntimeConfig() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  if (window.__IT_PORTAL_CONFIG__) {
+    return window.__IT_PORTAL_CONFIG__;
+  }
+
+  const root = document.getElementById("root") || document.getElementById("it-support-portal-root");
+
+  if (!root) {
+    return {};
+  }
+
+  return {
+    currentUserName: root.dataset.currentUserName || "",
+    currentUserEmail: root.dataset.currentUserEmail || "",
+    currentUserRole: root.dataset.currentUserRole || "",
+    logoutUrl: root.dataset.logoutUrl || "",
+    signInUrl: root.dataset.signInUrl || "",
+    logoutPageUrl: root.dataset.logoutPageUrl || "",
+    apiBaseUrl: root.dataset.apiBaseUrl || ""
+  };
+}
+
+const runtimeConfig = getRuntimeConfig();
+
 const CURRENT_USER = {
-  name: "Chaitanya Prasad",
-  email: "chaitanya.prasad@etgworld.com"
+  name: String(runtimeConfig.currentUserName || "Chaitanya Prasad").trim(),
+  email: String(runtimeConfig.currentUserEmail || "chaitanya.prasad@etgworld.com").trim()
 };
+
+const CURRENT_USER_ROLE = String(runtimeConfig.currentUserRole || "").trim();
+const LOGOUT_URL = String(runtimeConfig.logoutUrl || "").trim();
+const SIGN_IN_URL = String(runtimeConfig.signInUrl || "/SignIn").trim() || "/SignIn";
+const LOGOUT_PAGE_URL = String(runtimeConfig.logoutPageUrl || "").trim();
+
+function getLogoutRedirectUrl() {
+  if (LOGOUT_URL) {
+    const separator = LOGOUT_URL.includes("?") ? "&" : "?";
+    return `${LOGOUT_URL}${separator}returnUrl=${encodeURIComponent(SIGN_IN_URL)}`;
+  }
+
+  if (LOGOUT_PAGE_URL) {
+    return LOGOUT_PAGE_URL;
+  }
+
+  return SIGN_IN_URL;
+}
 
 const ticketStatusLabelMap = {
   "0": "Closed",
@@ -95,8 +142,7 @@ const initialTicketForm = {
 
 const initialAccessForm = {
   recordId: "",
-  firstName: "",
-  lastName: "",
+  fullName: "",
   email: "",
   role: "",
   status: "Approved",
@@ -120,14 +166,6 @@ const initialServiceActionForm = {
   resolutionComments: ""
 };
 
-function splitName(fullName) {
-  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
-  return {
-    firstName: parts[0] || "",
-    lastName: parts.slice(1).join(" ")
-  };
-}
-
 function normalizeStatusLabel(value, map) {
   const normalized = String(value || "").trim();
   const lower = normalized.toLowerCase();
@@ -142,14 +180,38 @@ function splitPeople(rawValue) {
 }
 
 function includesUser(rawValue, email, name) {
-  const entries = splitPeople(rawValue);
+  const entries = splitPeople(rawValue).map((item) => item.toLowerCase());
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const normalizedName = String(name || "").trim().toLowerCase();
   return entries.includes(normalizedEmail) || entries.includes(normalizedName);
 }
 
-function getDisplayNameMap(accessRows, companyUsers) {
-  const map = new Map([[CURRENT_USER.email.toLowerCase(), CURRENT_USER.name]]);
+function getTicketSequenceValue(ticketId) {
+  const match = String(ticketId || "").trim().match(/(\d+)\s*$/);
+  if (!match) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getNextTicketSequence(ticketRows) {
+  const maxSequence = ticketRows.reduce((max, ticket) => {
+    return Math.max(max, getTicketSequenceValue(ticket.id));
+  }, 0);
+
+  return maxSequence + 1;
+}
+
+function formatTicketId(projectName, sequence) {
+  const prefix = String(projectName || "").trim().replace(/\s+/g, "-").toUpperCase();
+  const number = String(sequence || 0).padStart(3, "0");
+  return prefix ? `${prefix}-${number}` : number;
+}
+
+function getDisplayNameMap(accessRows, companyUsers, currentUser) {
+  const map = new Map([[String(currentUser?.email || CURRENT_USER.email).toLowerCase(), String(currentUser?.name || CURRENT_USER.name)]]);
 
   accessRows.forEach((row) => {
     const email = String(row.email || "").trim().toLowerCase();
@@ -168,6 +230,33 @@ function getDisplayNameMap(accessRows, companyUsers) {
   });
 
   return map;
+}
+
+function splitAttachmentNames(rawValue) {
+  return String(rawValue || "")
+    .split(/[\n,;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((name, index) => ({
+      id: `${name.toLowerCase()}-${index}`,
+      name
+    }));
+}
+
+function createAttachmentDownloadBlob(name) {
+  const content = `Attachment: ${name}\nGenerated from the ticket portal preview.\n`;
+  return new Blob([content], { type: "text/plain;charset=utf-8" });
+}
+
+function triggerAttachmentDownload(name) {
+  const safeName = String(name || "attachment").trim() || "attachment";
+  const blob = createAttachmentDownloadBlob(safeName);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeName.includes(".") ? safeName : `${safeName}.txt`;
+  link.click();
+  window.URL.revokeObjectURL(url);
 }
 
 function formatPerson(value, nameMap) {
@@ -279,13 +368,17 @@ function PeopleList({ value }) {
 }
 
 export default function App() {
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [loginEmail, setLoginEmail] = useState(CURRENT_USER.email);
+  const [currentUser, setCurrentUser] = useState(CURRENT_USER);
+  const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [accessRequests, setAccessRequests] = useState([]);
   const [securityList, setSecurityList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: "", error: false });
   const [activeAccordion, setActiveAccordion] = useState("home");
-  const [activeView, setActiveView] = useState("home-open");
+  const [activeView, setActiveView] = useState("home-all");
   const [projectFilter, setProjectFilter] = useState("");
   const [adminProfileExpanded, setAdminProfileExpanded] = useState(true);
   const [adminAccessExpanded, setAdminAccessExpanded] = useState(true);
@@ -363,32 +456,33 @@ export default function App() {
     return () => window.removeEventListener("click", handleWindowClick);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    getCompanyUsers("")
-      .then((response) => {
-        if (!cancelled) {
-          setCompanyUsers(Array.isArray(response.items) ? response.items : []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCompanyUsers([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const currentUserRole = useMemo(() => {
-    const match = accessRequests.find((item) => String(item.email || "").toLowerCase() === CURRENT_USER.email.toLowerCase());
-    return match?.role || "Admin";
-  }, [accessRequests]);
+    if (CURRENT_USER_ROLE === "Admin") {
+      return "Admin";
+    }
 
-  const displayNameMap = useMemo(() => getDisplayNameMap(accessRequests, companyUsers), [accessRequests, companyUsers]);
+    if (CURRENT_USER_ROLE === "Technician") {
+      return "Technician";
+    }
+
+    const normalizedEmail = currentUser.email.toLowerCase();
+    const accessMatch = accessRequests.find((item) => (
+      String(item.email || "").toLowerCase() === normalizedEmail &&
+      normalizeStatusLabel(item.accessStatus || item.status, accessStatusLabelMap) !== "Rejected"
+    ));
+
+    if (accessMatch?.role) {
+      return accessMatch.role;
+    }
+
+    if (CURRENT_USER_ROLE && CURRENT_USER_ROLE !== "Guest") {
+      return CURRENT_USER_ROLE;
+    }
+
+    return "User";
+  }, [accessRequests, currentUser.email]);
+
+  const displayNameMap = useMemo(() => getDisplayNameMap(accessRequests, companyUsers, currentUser), [accessRequests, companyUsers, currentUser]);
 
   const normalizedTickets = useMemo(() => {
     return tickets.map((ticket) => ({
@@ -413,12 +507,12 @@ export default function App() {
     }
 
     return securityList.filter((row) => (
-      includesUser(row.requestedUser, CURRENT_USER.email, CURRENT_USER.name) ||
-      includesUser(row.businessUsers, CURRENT_USER.email, CURRENT_USER.name) ||
-      includesUser(row.projectOwners, CURRENT_USER.email, CURRENT_USER.name) ||
-      includesUser(row.defaultAssignee, CURRENT_USER.email, CURRENT_USER.name)
+      includesUser(row.requestedUser, currentUser.email, currentUser.name) ||
+      includesUser(row.businessUsers, currentUser.email, currentUser.name) ||
+      includesUser(row.projectOwners, currentUser.email, currentUser.name) ||
+      includesUser(row.defaultAssignee, currentUser.email, currentUser.name)
     ));
-  }, [securityList, currentUserRole]);
+  }, [securityList, currentUserRole, currentUser]);
 
   const projectOptions = useMemo(() => {
     const projectNames = accessibleProjects.map((row) => row.applicationProject).filter(Boolean);
@@ -429,11 +523,10 @@ export default function App() {
   }, [accessibleProjects, currentUserRole, normalizedTickets]);
 
   useEffect(() => {
-    if (!projectFilter && projectOptions.length) {
-      setProjectFilter(projectOptions[0]);
-      setTicketForm((current) => ({ ...current, project: projectOptions[0] }));
-    }
-  }, [projectFilter, projectOptions]);
+    setSelectedTicket(null);
+    setActionMenu(null);
+    setIsUserSearchOpen(false);
+  }, [activeView, showCreateTicket]);
 
   useEffect(() => {
     if (!showCreateTicket || ticketForm.recordId) {
@@ -449,13 +542,13 @@ export default function App() {
 
     setTicketForm((current) => ({
       ...current,
-      project: projectName,
-      requestor: CURRENT_USER.name,
-      assignee: formatPerson(matchingProject.defaultAssignee, displayNameMap) || CURRENT_USER.name,
-      businessUsers: formatPeople(matchingProject.businessUsers, displayNameMap),
-      projectOwners: formatPeople(matchingProject.projectOwners, displayNameMap)
+      project: current.project || projectName,
+      requestor: current.requestor || currentUser.name,
+      assignee: current.assignee || formatPerson(matchingProject.defaultAssignee, displayNameMap) || currentUser.name,
+      businessUsers: current.businessUsers || formatPeople(matchingProject.businessUsers, displayNameMap),
+      projectOwners: current.projectOwners || formatPeople(matchingProject.projectOwners, displayNameMap)
     }));
-  }, [showCreateTicket, ticketForm.project, ticketForm.recordId, projectFilter, securityList, displayNameMap]);
+  }, [showCreateTicket, ticketForm.project, ticketForm.recordId, projectFilter, securityList, displayNameMap, currentUser.name]);
 
   const accessibleTickets = useMemo(() => {
     if (currentUserRole === "Admin") {
@@ -467,11 +560,11 @@ export default function App() {
 
   const serviceTickets = useMemo(() => {
     return accessibleTickets.filter((ticket) => (
-      includesUser(ticket.assignee, CURRENT_USER.email, CURRENT_USER.name) ||
-      includesUser(ticket.businessUsers, CURRENT_USER.email, CURRENT_USER.name) ||
-      includesUser(ticket.projectOwners, CURRENT_USER.email, CURRENT_USER.name)
+      includesUser(ticket.assignee, currentUser.email, currentUser.name) ||
+      includesUser(ticket.businessUsers, currentUser.email, currentUser.name) ||
+      includesUser(ticket.projectOwners, currentUser.email, currentUser.name)
     ));
-  }, [accessibleTickets]);
+  }, [accessibleTickets, currentUser]);
 
   const homeCounts = useMemo(() => ({
     open: accessibleTickets.filter((ticket) => ticket.statusLabel === "Open").length,
@@ -521,14 +614,10 @@ export default function App() {
   }, [activeView, accessibleTickets, projectFilter, serviceTickets, tableFilter]);
 
   const existingUsersRows = useMemo(() => (
-    normalizedAccessRequests.map((row) => {
-      const names = splitName(row.fullName);
-      return {
-        ...row,
-        firstName: names.firstName,
-        lastName: names.lastName
-      };
-    })
+    normalizedAccessRequests.map((row) => ({
+      ...row,
+      fullName: row.fullName || row.email
+    }))
   ), [normalizedAccessRequests]);
 
   const filteredProjectAccessRows = useMemo(() => {
@@ -560,6 +649,33 @@ export default function App() {
       )))
   ), [companyUsers, normalizedAccessRequests]);
 
+  const filteredReassignableUsers = useMemo(() => {
+    const query = String(serviceActionForm.reassignedTo || "").trim().toLowerCase();
+    if (query.length < 2) {
+      return [];
+    }
+
+    return reassignableUsers.filter((user) => {
+      const name = String(user.name || "").toLowerCase();
+      const email = String(user.email || "").toLowerCase();
+      return name.includes(query) || email.includes(query);
+    }).slice(0, 8);
+  }, [reassignableUsers, serviceActionForm.reassignedTo]);
+
+  const selectedAttachmentItems = useMemo(() => splitAttachmentNames(selectedTicket?.attachments), [selectedTicket?.attachments]);
+
+  function openAttachmentPreview(name) {
+    setAttachmentPreview({ name });
+  }
+
+  function closeAttachmentPreview() {
+    setAttachmentPreview(null);
+  }
+
+  function downloadAttachment(name) {
+    triggerAttachmentDownload(name);
+  }
+
   useEffect(() => {
     if (!isServiceDeskView || !canManageServiceRequests || !selectedTicket?.recordId) {
       return;
@@ -572,12 +688,12 @@ export default function App() {
       try {
         const response = await getCompanyUsers(query);
         if (!controller.signal.aborted) {
-          setCompanyUsers(Array.isArray(response.items) ? response.items : []);
+          if (Array.isArray(response.items) && response.items.length) {
+            setCompanyUsers(response.items);
+          }
         }
       } catch (error) {
-        if (!controller.signal.aborted) {
-          setCompanyUsers([]);
-        }
+        void error;
       }
     }, 250);
 
@@ -594,23 +710,49 @@ export default function App() {
   function resetTicketForm() {
     setTicketForm({
       ...initialTicketForm,
-      project: projectFilter || projectOptions[0] || ""
+      requestor: currentUser.name,
+      requestorEmail: currentUser.email,
+      assignee: currentUser.name,
+      project: projectFilter || projectOptions[0] || "",
+      status: "Open"
     });
     setTicketFiles([]);
   }
 
   function resetAccessForm() {
-    setAccessForm(initialAccessForm);
+    setAccessForm({
+      ...initialAccessForm,
+      approvedBy: currentUser.email
+    });
   }
 
   function resetProjectAccessForm() {
-    setProjectAccessForm(initialProjectAccessForm);
+    setProjectAccessForm({
+      ...initialProjectAccessForm,
+      requestedUser: currentUser.email
+    });
   }
 
   function openCreateTicket() {
     resetTicketForm();
     setSelectedTicket(null);
     setShowCreateTicket(true);
+  }
+
+  function handleLogin(event) {
+    event.preventDefault();
+    const normalizedEmail = String(loginEmail || "").trim() || CURRENT_USER.email;
+    setCurrentUser({
+      name: CURRENT_USER.name,
+      email: normalizedEmail
+    });
+    setLoginEmail(normalizedEmail);
+    setIsSignedIn(true);
+    setShowCreateTicket(false);
+    setSelectedTicket(null);
+    setActiveAccordion("home");
+    setActiveView("home-all");
+    setMessage({ text: "", error: false });
   }
 
   function editTicket(ticket) {
@@ -625,7 +767,7 @@ export default function App() {
       status: ticket.statusLabel,
       assignee: ticket.displayAssignee || ticket.assignee,
       requestor: ticket.requestor,
-      requestorEmail: ticket.requestorEmail || CURRENT_USER.email,
+      requestorEmail: ticket.requestorEmail || currentUser.email,
       businessUsers: ticket.displayBusinessUsers || ticket.businessUsers,
       projectOwners: ticket.displayProjectOwners || ticket.projectOwners,
       resolutionComments: ticket.resolutionComments,
@@ -642,13 +784,12 @@ export default function App() {
   function editAccessRequest(row) {
     setAccessForm({
       recordId: row.recordId,
-      firstName: row.firstName,
-      lastName: row.lastName,
+      fullName: row.fullName || "",
       email: row.email,
       role: row.role,
       status: row.status || "Approved",
       accessStatus: row.accessStatusLabel || "Approved",
-      approvedBy: CURRENT_USER.email,
+      approvedBy: currentUser.email,
       comments: row.comments || "Approved from admin portal"
     });
     setActiveView("admin-new-user");
@@ -671,8 +812,15 @@ export default function App() {
     event.preventDefault();
 
     try {
+      const nextTicketId = ticketForm.recordId
+        ? ticketForm.id
+        : formatTicketId(ticketForm.project || projectFilter || projectOptions[0] || "", getNextTicketSequence(tickets));
+
       const payload = {
         ...ticketForm,
+        id: nextTicketId,
+        requestor: ticketForm.requestor || currentUser.name,
+        requestorEmail: ticketForm.requestorEmail || currentUser.email,
         attachments: ticketFiles.length
           ? ticketFiles.map((file) => file.name).join(", ")
           : ticketForm.attachments
@@ -700,9 +848,7 @@ export default function App() {
     try {
       const payload = {
         recordId: accessForm.recordId,
-        firstName: accessForm.firstName,
-        lastName: accessForm.lastName,
-        fullName: `${accessForm.firstName} ${accessForm.lastName}`.trim(),
+        fullName: accessForm.fullName.trim() || accessForm.email.trim(),
         email: accessForm.email,
         role: accessForm.role,
         status: accessForm.status,
@@ -931,8 +1077,7 @@ export default function App() {
 
   const existingUsersColumns = useMemo(() => ([
     { key: "email", label: "Email" },
-    { key: "firstName", label: "First Name" },
-    { key: "lastName", label: "Last Name" },
+    { key: "fullName", label: "Full Name" },
     { key: "role", label: "Role" },
     {
       key: "action",
@@ -999,6 +1144,11 @@ export default function App() {
   }
 
   function renderCreateTicketPanel() {
+    const isProjectPrefilled = Boolean(ticketForm.project);
+    const isStatusPrefilled = Boolean(ticketForm.status);
+    const isRequestorPrefilled = Boolean(ticketForm.requestor);
+    const isAssigneePrefilled = Boolean(ticketForm.assignee);
+
     return (
       <section className="form-page">
         <div className="page-banner">
@@ -1015,8 +1165,8 @@ export default function App() {
             <h2><span className="section-icon section-icon-ticket" aria-hidden="true" />TICKET INFORMATION</h2>
             <div className="portal-grid portal-grid-4">
               <label><span>Ticket Title *</span><input value={ticketForm.title} onChange={(event) => setTicketForm({ ...ticketForm, title: event.target.value })} required /></label>
-              <label><span>Project *</span><input value={ticketForm.project} onChange={(event) => setTicketForm({ ...ticketForm, project: event.target.value })} required /></label>
-              <label><span>Ticket Status *</span><input value={ticketForm.status} onChange={(event) => setTicketForm({ ...ticketForm, status: event.target.value })} /></label>
+              <label><span>Project *</span><input className={isProjectPrefilled ? "prefilled-field" : ""} value={ticketForm.project} onChange={(event) => setTicketForm({ ...ticketForm, project: event.target.value })} required /></label>
+              <label><span>Ticket Status *</span><input className={isStatusPrefilled ? "prefilled-field" : ""} value={ticketForm.status} onChange={(event) => setTicketForm({ ...ticketForm, status: event.target.value })} /></label>
               <label><span>Type *</span><select value={ticketForm.type} onChange={(event) => setTicketForm({ ...ticketForm, type: event.target.value })} required><option value="">Select type</option><option value="Bug">Bug</option><option value="Enhancement">Enhancement</option><option value="Support">Support</option><option value="Access">Access</option></select></label>
             </div>
             <div className="portal-grid portal-grid-2 ticket-info-secondary-row">
@@ -1027,8 +1177,8 @@ export default function App() {
           <section className="portal-section">
             <h2><span className="section-icon section-icon-user" aria-hidden="true" />ASSIGNMENT</h2>
             <div className="portal-grid portal-grid-2">
-              <label><span>Requested by</span><input value={ticketForm.requestor} onChange={(event) => setTicketForm({ ...ticketForm, requestor: event.target.value })} /></label>
-              <label><span>Assignee</span><input value={ticketForm.assignee} onChange={(event) => setTicketForm({ ...ticketForm, assignee: event.target.value })} /></label>
+              <label><span>Requested by</span><input className={isRequestorPrefilled ? "prefilled-field" : ""} value={ticketForm.requestor} onChange={(event) => setTicketForm({ ...ticketForm, requestor: event.target.value })} /></label>
+              <label><span>Assignee</span><input className={isAssigneePrefilled ? "prefilled-field" : ""} value={ticketForm.assignee} onChange={(event) => setTicketForm({ ...ticketForm, assignee: event.target.value })} /></label>
             </div>
           </section>
           <div className="portal-split">
@@ -1072,8 +1222,7 @@ export default function App() {
             <div className="admin-card-body">
               <div className="section-title">USER DETAILS</div>
               <form className="form-grid form-grid-4" onSubmit={handleSaveAccessRequest}>
-                <label><span>First Name</span><input value={accessForm.firstName} onChange={(event) => setAccessForm({ ...accessForm, firstName: event.target.value })} required /></label>
-                <label><span>Last Name</span><input value={accessForm.lastName} onChange={(event) => setAccessForm({ ...accessForm, lastName: event.target.value })} required /></label>
+                <label className="form-span-2"><span>Full Name</span><input value={accessForm.fullName} onChange={(event) => setAccessForm({ ...accessForm, fullName: event.target.value })} required /></label>
                 <label><span>Email</span><input type="email" value={accessForm.email} onChange={(event) => setAccessForm({ ...accessForm, email: event.target.value })} required /></label>
                 <label><span>Role</span><select value={accessForm.role} onChange={(event) => setAccessForm({ ...accessForm, role: event.target.value })} required><option value="">Select role</option><option value="Admin">Admin</option><option value="Technician">Technician</option><option value="User">User</option></select></label>
                 <div className="form-actions form-span-4">
@@ -1203,7 +1352,27 @@ export default function App() {
     return renderTicketTable();
   }
 
-  return (
+  function renderLoginScreen() {
+    return (
+      <main className="login-shell">
+        <form className="login-card" onSubmit={handleLogin}>
+          <label className="login-field">
+            <span>Email</span>
+            <input
+              type="email"
+              value={loginEmail}
+              onChange={(event) => setLoginEmail(event.target.value)}
+              placeholder="Enter your email"
+              autoComplete="email"
+            />
+          </label>
+          <button className="login-button" type="submit">Login</button>
+        </form>
+      </main>
+    );
+  }
+
+  return isSignedIn ? (
     <main className={`app-shell ${selectedTicket ? "has-drawer" : ""}`}>
       <div className="portal-topbar">
         <div className="toolbar-left">
@@ -1219,10 +1388,18 @@ export default function App() {
         <div className="toolbar-right">
           <div className="user-badge">C</div>
           <div className="user-copy">
-            <strong>{CURRENT_USER.name}</strong>
+            <strong>{currentUser.name}</strong>
             <span>{currentUserRole}</span>
           </div>
-          <button className="secondary-button" type="button">Logout</button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => {
+              window.location.href = getLogoutRedirectUrl();
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -1232,7 +1409,7 @@ export default function App() {
           <div className="sidebar-card">
             {canView("Home", "Open") || canView("Home", "In Progress") || canView("Home", "Closed") ? (
               <section className="sidebar-section">
-                <button className="accordion-toggle" type="button" onClick={() => { setActiveAccordion("home"); setActiveView("home-open"); setShowCreateTicket(false); }}>
+                <button className="accordion-toggle" type="button" onClick={() => { setActiveAccordion("home"); setActiveView("home-all"); setShowCreateTicket(false); }}>
                   <span className="nav-title"><span className="nav-icon nav-icon-home" aria-hidden="true" /><span>Home</span></span>
                   <span className={`nav-chevron ${activeAccordion === "home" ? "is-open" : ""}`} aria-hidden="true" />
                 </button>
@@ -1331,7 +1508,39 @@ export default function App() {
           </div>
           <div className="drawer-section">
             <div className="drawer-heading">Attachments</div>
-            <div className="drawer-box">{selectedTicket.attachments || "No attachments available for this ticket in the current view."}</div>
+            <div className="drawer-box">
+              {selectedAttachmentItems.length ? (
+                <div className="attachment-list">
+                  {selectedAttachmentItems.map((attachment) => (
+                    <div className="attachment-item" key={attachment.id}>
+                      <span className="attachment-name">{attachment.name}</span>
+                      <div className="attachment-actions">
+                        <button
+                          className="icon-button"
+                          type="button"
+                          aria-label={`Preview ${attachment.name}`}
+                          title="Preview"
+                          onClick={() => openAttachmentPreview(attachment.name)}
+                        >
+                          <span className="icon-eye" aria-hidden="true" />
+                        </button>
+                        <button
+                          className="icon-button"
+                          type="button"
+                          aria-label={`Download ${attachment.name}`}
+                          title="Download"
+                          onClick={() => downloadAttachment(attachment.name)}
+                        >
+                          <span className="icon-download" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                "No attachments available for this ticket in the current view."
+              )}
+            </div>
             {isServiceDeskView && canManageServiceRequests ? (
               <label className="followup-upload drawer-upload">
                 <input type="file" multiple onChange={(event) => setServiceFiles(Array.from(event.target.files || []))} />
@@ -1349,20 +1558,21 @@ export default function App() {
                 <div className="user-search-shell">
                   <input
                     value={serviceActionForm.reassignedTo}
-                    onFocus={() => setIsUserSearchOpen(true)}
+                    onFocus={() => setIsUserSearchOpen(false)}
                     onBlur={() => {
                       setTimeout(() => setIsUserSearchOpen(false), 120);
                     }}
                     onChange={(event) => {
-                      setServiceActionForm({ ...serviceActionForm, reassignedTo: event.target.value });
-                      setIsUserSearchOpen(true);
+                      const nextValue = event.target.value;
+                      setServiceActionForm({ ...serviceActionForm, reassignedTo: nextValue });
+                      setIsUserSearchOpen(nextValue.trim().length >= 2);
                     }}
                     placeholder="Type ETG user name"
                     autoComplete="off"
                   />
-                  {isUserSearchOpen && String(serviceActionForm.reassignedTo || "").trim().length >= 2 && reassignableUsers.length ? (
+                  {isUserSearchOpen && filteredReassignableUsers.length ? (
                     <div className="user-search-results">
-                      {reassignableUsers.map((user) => (
+                      {filteredReassignableUsers.map((user) => (
                         <button
                           key={user.id}
                           type="button"
@@ -1433,7 +1643,22 @@ export default function App() {
           )}
         </aside>
       ) : null}
+      {attachmentPreview ? (
+        <div className="attachment-preview-backdrop" onMouseDown={closeAttachmentPreview}>
+          <div className="attachment-preview-modal" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="attachment-preview-header">
+              <strong>Attachment Preview</strong>
+              <button type="button" className="drawer-close" onClick={closeAttachmentPreview}>x</button>
+            </div>
+            <div className="attachment-preview-body">
+              <div className="attachment-preview-icon" aria-hidden="true" />
+              <div className="attachment-preview-name">{attachmentPreview.name}</div>
+              <p>The portal can preview the attachment name here and download it from the ticket drawer controls.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
-  );
+  ) : renderLoginScreen();
 }
 
