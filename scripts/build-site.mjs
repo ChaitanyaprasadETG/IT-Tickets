@@ -8,10 +8,11 @@ const frontendDistDir = path.join(frontendDir, "dist");
 const backendSrcDir = path.join(rootDir, "backend", "src");
 const outputDir = path.join(rootDir, "dist");
 const hostingManifestPath = path.join(rootDir, ".openai", "hosting.json");
+const serverOutDir = path.join(outputDir, "server");
 const publicDir = path.join(outputDir, "public");
 const openAiOutDir = path.join(outputDir, ".openai");
 const backendOutDir = path.join(outputDir, "backend", "src");
-const entryPointPath = path.join(outputDir, "index.mjs");
+const entryPointPath = path.join(serverOutDir, "index.js");
 const entrySourcePath = path.join(outputDir, "index-source.mjs");
 
 function npmCommand() {
@@ -311,6 +312,7 @@ async function main() {
 
   await removeIfExists(outputDir);
   await fs.mkdir(outputDir, { recursive: true });
+  await fs.mkdir(serverOutDir, { recursive: true });
   await fs.mkdir(openAiOutDir, { recursive: true });
   await copyDirectory(frontendDistDir, publicDir);
   await fs.copyFile(hostingManifestPath, path.join(openAiOutDir, "hosting.json"));
